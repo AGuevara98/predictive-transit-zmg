@@ -1,0 +1,23 @@
+# Core Spatial & Data
+duckdb==1.4.4
+geopandas>=1.1.2
+pyogrio>=0.10.0
+shapely>=2.0.6
+pyproj>=3.7.0
+
+# Network & Graph Analysis
+osmnx==2.1.0
+networkx>=3.4.2
+
+# Database & Integration
+psycopg2-binary>=2.9.10
+SQLAlchemy>=2.0.38
+geoalchemy2>=0.17.0
+
+# Machine Learning & Stats
+scikit-learn>=1.6.1
+pandas>=2.2.3
+numpy>=2.2.2
+
+# Formatting & Output
+tabulate>=0.9.0
