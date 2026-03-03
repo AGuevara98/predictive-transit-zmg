@@ -1,0 +1,6689 @@
+{
+  "type": "FeatureCollection",
+  "generator": "overpass-turbo",
+  "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.",
+  "timestamp": "2026-02-02T23:59:03Z",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1127889171",
+        "check_date": "2022-12-19",
+        "landuse": "railway",
+        "name": "Talleres y cocheras Línea 4 del Tren Eléctrico Urbano",
+        "opening_date": "2024-03-15",
+        "operator": "SITEUR",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -103.4344841,
+              20.4692934
+            ],
+            [
+              -103.4342818,
+              20.4693389
+            ],
+            [
+              -103.4340584,
+              20.4693653
+            ],
+            [
+              -103.4338454,
+              20.4693773
+            ],
+            [
+              -103.4336162,
+              20.4693668
+            ],
+            [
+              -103.4333897,
+              20.4693416
+            ],
+            [
+              -103.4332055,
+              20.4692777
+            ],
+            [
+              -103.4331391,
+              20.4692643
+            ],
+            [
+              -103.4330645,
+              20.4694387
+            ],
+            [
+              -103.4332025,
+              20.4695235
+            ],
+            [
+              -103.4352487,
+              20.4705128
+            ],
+            [
+              -103.4353481,
+              20.4705455
+            ],
+            [
+              -103.4354328,
+              20.4705532
+            ],
+            [
+              -103.4355181,
+              20.4705493
+            ],
+            [
+              -103.4356015,
+              20.4705264
+            ],
+            [
+              -103.4373149,
+              20.4699635
+            ],
+            [
+              -103.4374008,
+              20.4699215
+            ],
+            [
+              -103.4374599,
+              20.4698757
+            ],
+            [
+              -103.4375083,
+              20.4698096
+            ],
+            [
+              -103.4375395,
+              20.4697012
+            ],
+            [
+              -103.4376236,
+              20.4686837
+            ],
+            [
+              -103.4376262,
+              20.4685838
+            ],
+            [
+              -103.4376007,
+              20.4684792
+            ],
+            [
+              -103.4375468,
+              20.468402
+            ],
+            [
+              -103.4374655,
+              20.4683475
+            ],
+            [
+              -103.4373722,
+              20.4683099
+            ],
+            [
+              -103.4372684,
+              20.4683069
+            ],
+            [
+              -103.437132,
+              20.4684222
+            ],
+            [
+              -103.4344841,
+              20.4692934
+            ]
+          ]
+        ]
+      },
+      "id": "way/1127889171"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1180583733",
+        "building": "train_station",
+        "light_rail": "yes",
+        "name": "Real del Valle",
+        "network": "Línea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "public_transport": "station",
+        "railway": "station",
+        "station": "light_rail",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -103.3657691,
+              20.5591258
+            ],
+            [
+              -103.365754,
+              20.5591183
+            ],
+            [
+              -103.3657327,
+              20.5591061
+            ],
+            [
+              -103.3653202,
+              20.5597735
+            ],
+            [
+              -103.3653619,
+              20.5597974
+            ],
+            [
+              -103.3657691,
+              20.5591258
+            ]
+          ]
+        ]
+      },
+      "id": "way/1180583733"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1180583741",
+        "building": "train_station",
+        "light_rail": "yes",
+        "name": "Concepción del Valle",
+        "network": "Línea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "public_transport": "station",
+        "railway": "station",
+        "station": "light_rail",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -103.3841564,
+              20.5285075
+            ],
+            [
+              -103.3841161,
+              20.5284863
+            ],
+            [
+              -103.3837491,
+              20.5290972
+            ],
+            [
+              -103.3837895,
+              20.5291185
+            ],
+            [
+              -103.3841564,
+              20.5285075
+            ]
+          ]
+        ]
+      },
+      "id": "way/1180583741"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1180583742",
+        "building": "train_station",
+        "light_rail": "yes",
+        "name": "El Cuervo",
+        "network": "Línea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "public_transport": "station",
+        "railway": "station",
+        "station": "light_rail",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -103.3938716,
+              20.5065829
+            ],
+            [
+              -103.3938291,
+              20.5065669
+            ],
+            [
+              -103.393568,
+              20.5072323
+            ],
+            [
+              -103.3936077,
+              20.5072428
+            ],
+            [
+              -103.3938716,
+              20.5065829
+            ]
+          ]
+        ]
+      },
+      "id": "way/1180583742"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1180589390",
+        "building": "train_station",
+        "light_rail": "yes",
+        "name": "Lomas del Sur",
+        "network": "Línea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "public_transport": "station",
+        "railway": "station",
+        "station": "light_rail",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -103.4045516,
+              20.4863695
+            ],
+            [
+              -103.404528,
+              20.4863492
+            ],
+            [
+              -103.4038277,
+              20.4871097
+            ],
+            [
+              -103.403862,
+              20.4871358
+            ],
+            [
+              -103.4045516,
+              20.4863695
+            ]
+          ]
+        ]
+      },
+      "id": "way/1180589390"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1180589391",
+        "building": "train_station",
+        "light_rail": "yes",
+        "name": "CUTLAJO",
+        "network": "Línea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "public_transport": "station",
+        "railway": "station",
+        "station": "light_rail",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -103.4150151,
+              20.4692503
+            ],
+            [
+              -103.4149921,
+              20.469201
+            ],
+            [
+              -103.41417,
+              20.4695361
+            ],
+            [
+              -103.414193,
+              20.4695854
+            ],
+            [
+              -103.4150151,
+              20.4692503
+            ]
+          ]
+        ]
+      },
+      "id": "way/1180589391"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1180589392",
+        "building": "train_station",
+        "light_rail": "yes",
+        "name": "Tlajomulco Centro",
+        "network": "Línea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "public_transport": "station",
+        "railway": "station",
+        "station": "light_rail",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -103.437077,
+              20.4683756
+            ],
+            [
+              -103.437172,
+              20.4683299
+            ],
+            [
+              -103.4371477,
+              20.4682932
+            ],
+            [
+              -103.4370596,
+              20.4683388
+            ],
+            [
+              -103.4359811,
+              20.4686969
+            ],
+            [
+              -103.4359933,
+              20.4687327
+            ],
+            [
+              -103.437077,
+              20.4683756
+            ]
+          ]
+        ]
+      },
+      "id": "way/1180589392"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1212646495",
+        "building": "train_station",
+        "light_rail": "yes",
+        "name": "Jalisco 200 Años",
+        "network": "Línea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "public_transport": "station",
+        "railway": "station",
+        "station": "light_rail",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -103.3562614,
+              20.5745817
+            ],
+            [
+              -103.3562252,
+              20.5745567
+            ],
+            [
+              -103.3556166,
+              20.5754106
+            ],
+            [
+              -103.3556291,
+              20.5754233
+            ],
+            [
+              -103.3556529,
+              20.5754342
+            ],
+            [
+              -103.3562614,
+              20.5745817
+            ]
+          ]
+        ]
+      },
+      "id": "way/1212646495"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1232808557",
+        "building": "construction",
+        "light_rail": "yes",
+        "name": "Las Juntas",
+        "network": "Línea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "public_transport": "station",
+        "railway": "station",
+        "station": "light_rail",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -103.340985,
+              20.6070708
+            ],
+            [
+              -103.3409569,
+              20.6070623
+            ],
+            [
+              -103.3406582,
+              20.6082731
+            ],
+            [
+              -103.3406892,
+              20.6082805
+            ],
+            [
+              -103.340985,
+              20.6070708
+            ]
+          ]
+        ]
+      },
+      "id": "way/1232808557"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1409567646",
+        "building": "train_station",
+        "construction": "yes",
+        "light_rail": "yes",
+        "name": "Acueducto",
+        "network": "Línea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "public_transport": "station",
+        "railway": "station",
+        "station": "light_rail",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -103.346817,
+              20.5878966
+            ],
+            [
+              -103.3467907,
+              20.58788
+            ],
+            [
+              -103.3462164,
+              20.5886785
+            ],
+            [
+              -103.3462425,
+              20.588695
+            ],
+            [
+              -103.346817,
+              20.5878966
+            ]
+          ]
+        ]
+      },
+      "id": "way/1409567646"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1130777957",
+        "electrified": "contact_line",
+        "frequency": "0",
+        "gauge": "1435",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3791665,
+            20.5368022
+          ],
+          [
+            -103.3826767,
+            20.5310105
+          ],
+          [
+            -103.3828028,
+            20.5308037
+          ],
+          [
+            -103.3831636,
+            20.5301998
+          ],
+          [
+            -103.3834079,
+            20.5297922
+          ],
+          [
+            -103.3839943,
+            20.5288154
+          ],
+          [
+            -103.3843617,
+            20.5281946
+          ],
+          [
+            -103.3847717,
+            20.5274911
+          ],
+          [
+            -103.3851336,
+            20.5269161
+          ],
+          [
+            -103.3853934,
+            20.526548
+          ],
+          [
+            -103.3856078,
+            20.5263075
+          ],
+          [
+            -103.3860512,
+            20.5258838
+          ],
+          [
+            -103.3863008,
+            20.5256723
+          ],
+          [
+            -103.3894067,
+            20.5232287
+          ],
+          [
+            -103.3897705,
+            20.5228773
+          ],
+          [
+            -103.3901474,
+            20.5224405
+          ],
+          [
+            -103.3904988,
+            20.5219055
+          ],
+          [
+            -103.3906563,
+            20.5215641
+          ],
+          [
+            -103.3908811,
+            20.5210414
+          ],
+          [
+            -103.391004,
+            20.5204216
+          ],
+          [
+            -103.3915582,
+            20.5171655
+          ],
+          [
+            -103.3922009,
+            20.5130153
+          ],
+          [
+            -103.3923585,
+            20.5117686
+          ],
+          [
+            -103.3923999,
+            20.5114982
+          ],
+          [
+            -103.3925485,
+            20.5106715
+          ],
+          [
+            -103.3926441,
+            20.5101375
+          ],
+          [
+            -103.3927183,
+            20.5097911
+          ],
+          [
+            -103.3927952,
+            20.5094954
+          ],
+          [
+            -103.3929286,
+            20.5090535
+          ],
+          [
+            -103.3934024,
+            20.5078375
+          ],
+          [
+            -103.3935653,
+            20.5074301
+          ],
+          [
+            -103.3937839,
+            20.5068795
+          ],
+          [
+            -103.3945499,
+            20.5049022
+          ],
+          [
+            -103.3948897,
+            20.504006
+          ],
+          [
+            -103.3966227,
+            20.4995774
+          ],
+          [
+            -103.3991479,
+            20.49319
+          ],
+          [
+            -103.3994354,
+            20.492569
+          ],
+          [
+            -103.3996998,
+            20.4920756
+          ],
+          [
+            -103.4000524,
+            20.4915024
+          ],
+          [
+            -103.4003425,
+            20.4910834
+          ],
+          [
+            -103.4005701,
+            20.4907952
+          ],
+          [
+            -103.4009128,
+            20.4903704
+          ],
+          [
+            -103.4033861,
+            20.4876874
+          ],
+          [
+            -103.4036026,
+            20.4874633
+          ],
+          [
+            -103.4036632,
+            20.4873989
+          ],
+          [
+            -103.4038814,
+            20.4871498
+          ],
+          [
+            -103.4042022,
+            20.486778
+          ],
+          [
+            -103.4053146,
+            20.4855555
+          ],
+          [
+            -103.4056552,
+            20.4851781
+          ],
+          [
+            -103.4063461,
+            20.4844028
+          ],
+          [
+            -103.4065512,
+            20.484135
+          ],
+          [
+            -103.4067079,
+            20.4839012
+          ],
+          [
+            -103.4068856,
+            20.4835655
+          ],
+          [
+            -103.4070199,
+            20.4832075
+          ],
+          [
+            -103.407112,
+            20.4828807
+          ],
+          [
+            -103.4071642,
+            20.4825597
+          ],
+          [
+            -103.4071886,
+            20.4822662
+          ],
+          [
+            -103.4071461,
+            20.4817332
+          ],
+          [
+            -103.406863,
+            20.4800373
+          ],
+          [
+            -103.4068188,
+            20.4796121
+          ],
+          [
+            -103.4068184,
+            20.4791089
+          ],
+          [
+            -103.4068739,
+            20.4784305
+          ],
+          [
+            -103.4073906,
+            20.4739357
+          ],
+          [
+            -103.4074469,
+            20.4736342
+          ],
+          [
+            -103.4074897,
+            20.4734141
+          ],
+          [
+            -103.4075761,
+            20.4731543
+          ],
+          [
+            -103.4076827,
+            20.4729308
+          ],
+          [
+            -103.4078022,
+            20.472721
+          ],
+          [
+            -103.4079758,
+            20.472479
+          ],
+          [
+            -103.4081649,
+            20.4722755
+          ],
+          [
+            -103.4083479,
+            20.4721126
+          ],
+          [
+            -103.4085622,
+            20.4719537
+          ],
+          [
+            -103.408913,
+            20.4717486
+          ],
+          [
+            -103.4135033,
+            20.4698552
+          ],
+          [
+            -103.4141415,
+            20.4696159
+          ],
+          [
+            -103.4146079,
+            20.4694258
+          ],
+          [
+            -103.4150131,
+            20.4692606
+          ],
+          [
+            -103.4153415,
+            20.4690959
+          ],
+          [
+            -103.4168051,
+            20.4685026
+          ],
+          [
+            -103.4195258,
+            20.4673988
+          ]
+        ]
+      },
+      "id": "way/1130777957"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1180583736",
+        "electrified": "contact_line",
+        "frequency": "0",
+        "gauge": "1435",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.4195216,
+            20.4673547
+          ],
+          [
+            -103.4167866,
+            20.468461
+          ],
+          [
+            -103.4153259,
+            20.4690588
+          ],
+          [
+            -103.414994,
+            20.4691838
+          ],
+          [
+            -103.4145727,
+            20.4693527
+          ],
+          [
+            -103.4141236,
+            20.4695327
+          ],
+          [
+            -103.4134908,
+            20.4698107
+          ],
+          [
+            -103.4090864,
+            20.4716182
+          ],
+          [
+            -103.4088142,
+            20.4717404
+          ],
+          [
+            -103.4085477,
+            20.4719069
+          ],
+          [
+            -103.408315,
+            20.4720718
+          ],
+          [
+            -103.4081401,
+            20.4722323
+          ],
+          [
+            -103.4079347,
+            20.4724531
+          ],
+          [
+            -103.40776,
+            20.4726948
+          ],
+          [
+            -103.4076343,
+            20.4729153
+          ],
+          [
+            -103.4075304,
+            20.4731537
+          ],
+          [
+            -103.4074392,
+            20.4734041
+          ],
+          [
+            -103.4073916,
+            20.4736176
+          ],
+          [
+            -103.4073415,
+            20.473968
+          ],
+          [
+            -103.4068225,
+            20.4784451
+          ],
+          [
+            -103.406769,
+            20.4791085
+          ],
+          [
+            -103.4067799,
+            20.4796162
+          ],
+          [
+            -103.4068111,
+            20.480059
+          ],
+          [
+            -103.4071001,
+            20.4817595
+          ],
+          [
+            -103.4071275,
+            20.482265
+          ],
+          [
+            -103.4071096,
+            20.4825626
+          ],
+          [
+            -103.4070648,
+            20.4828672
+          ],
+          [
+            -103.4069754,
+            20.4831886
+          ],
+          [
+            -103.4068339,
+            20.4835389
+          ],
+          [
+            -103.4066606,
+            20.4838813
+          ],
+          [
+            -103.4065163,
+            20.4841052
+          ],
+          [
+            -103.4063035,
+            20.4843735
+          ],
+          [
+            -103.4056397,
+            20.4851117
+          ],
+          [
+            -103.4041464,
+            20.4867447
+          ],
+          [
+            -103.4036021,
+            20.4873494
+          ],
+          [
+            -103.4035435,
+            20.4874113
+          ],
+          [
+            -103.4033211,
+            20.4876407
+          ],
+          [
+            -103.4008656,
+            20.4903555
+          ],
+          [
+            -103.4002958,
+            20.4910665
+          ],
+          [
+            -103.400016,
+            20.4914842
+          ],
+          [
+            -103.3996666,
+            20.4920517
+          ],
+          [
+            -103.3993908,
+            20.4925557
+          ],
+          [
+            -103.3991014,
+            20.4931862
+          ],
+          [
+            -103.3965765,
+            20.4995785
+          ],
+          [
+            -103.394467,
+            20.5049234
+          ],
+          [
+            -103.39398,
+            20.5061164
+          ],
+          [
+            -103.3936882,
+            20.5068551
+          ],
+          [
+            -103.3934729,
+            20.5074185
+          ],
+          [
+            -103.3933289,
+            20.5078185
+          ],
+          [
+            -103.3928708,
+            20.5090462
+          ],
+          [
+            -103.3927457,
+            20.5094863
+          ],
+          [
+            -103.3926767,
+            20.5097851
+          ],
+          [
+            -103.3925975,
+            20.5101365
+          ],
+          [
+            -103.3925119,
+            20.510676
+          ],
+          [
+            -103.3923215,
+            20.5117665
+          ],
+          [
+            -103.3921428,
+            20.5130932
+          ],
+          [
+            -103.391514,
+            20.5171564
+          ],
+          [
+            -103.3909658,
+            20.5204179
+          ],
+          [
+            -103.3908433,
+            20.5210361
+          ],
+          [
+            -103.3906188,
+            20.5215547
+          ],
+          [
+            -103.3904612,
+            20.5218886
+          ],
+          [
+            -103.3901123,
+            20.5224177
+          ],
+          [
+            -103.3897429,
+            20.5228522
+          ],
+          [
+            -103.3893988,
+            20.5231781
+          ],
+          [
+            -103.3862715,
+            20.5256373
+          ],
+          [
+            -103.3859645,
+            20.5258904
+          ],
+          [
+            -103.3855795,
+            20.5262708
+          ],
+          [
+            -103.3853763,
+            20.5264992
+          ],
+          [
+            -103.3850839,
+            20.5268946
+          ],
+          [
+            -103.3847232,
+            20.5274721
+          ],
+          [
+            -103.3843049,
+            20.5281465
+          ],
+          [
+            -103.3839189,
+            20.5287888
+          ],
+          [
+            -103.3833379,
+            20.529766
+          ],
+          [
+            -103.3831052,
+            20.5301787
+          ],
+          [
+            -103.3827677,
+            20.5307864
+          ],
+          [
+            -103.3826425,
+            20.5309931
+          ],
+          [
+            -103.3791103,
+            20.5367911
+          ]
+        ]
+      },
+      "id": "way/1180583736"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1285644838",
+        "electrified": "contact_line",
+        "frequency": "0",
+        "gauge": "1435",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3410807,
+            20.6064625
+          ],
+          [
+            -103.3412619,
+            20.6058724
+          ],
+          [
+            -103.3427594,
+            20.5998034
+          ],
+          [
+            -103.34285,
+            20.5994454
+          ],
+          [
+            -103.3429222,
+            20.5990859
+          ],
+          [
+            -103.3430651,
+            20.5984438
+          ],
+          [
+            -103.3438224,
+            20.5945664
+          ],
+          [
+            -103.3441448,
+            20.5928758
+          ],
+          [
+            -103.3442007,
+            20.592578
+          ],
+          [
+            -103.3442534,
+            20.5923601
+          ],
+          [
+            -103.3442992,
+            20.5921921
+          ],
+          [
+            -103.3443409,
+            20.59204
+          ],
+          [
+            -103.3444069,
+            20.5918387
+          ],
+          [
+            -103.3445047,
+            20.5915626
+          ],
+          [
+            -103.3446248,
+            20.5912575
+          ],
+          [
+            -103.344716,
+            20.5910482
+          ],
+          [
+            -103.3448771,
+            20.5907311
+          ],
+          [
+            -103.3450495,
+            20.5904151
+          ],
+          [
+            -103.3452928,
+            20.5900364
+          ],
+          [
+            -103.3454291,
+            20.589848
+          ],
+          [
+            -103.3459534,
+            20.5891407
+          ],
+          [
+            -103.3462198,
+            20.5887595
+          ],
+          [
+            -103.346547,
+            20.5882967
+          ],
+          [
+            -103.3468401,
+            20.5878978
+          ],
+          [
+            -103.3484617,
+            20.5855592
+          ],
+          [
+            -103.3497271,
+            20.5837829
+          ],
+          [
+            -103.3510157,
+            20.5819844
+          ],
+          [
+            -103.3510916,
+            20.5818744
+          ],
+          [
+            -103.3529918,
+            20.5792018
+          ],
+          [
+            -103.3547623,
+            20.5766774
+          ],
+          [
+            -103.3553238,
+            20.575914
+          ]
+        ]
+      },
+      "id": "way/1285644838"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1285644839",
+        "bridge": "yes",
+        "electrified": "contact_line",
+        "frequency": "0",
+        "gauge": "1435",
+        "layer": "1",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.379125,
+            20.5368711
+          ],
+          [
+            -103.3791665,
+            20.5368022
+          ]
+        ]
+      },
+      "id": "way/1285644839"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1285644840",
+        "electrified": "contact_line",
+        "frequency": "0",
+        "gauge": "1435",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3552572,
+            20.5758848
+          ],
+          [
+            -103.3547219,
+            20.5766635
+          ],
+          [
+            -103.3529554,
+            20.5791791
+          ],
+          [
+            -103.351053,
+            20.581856
+          ],
+          [
+            -103.3509731,
+            20.5819638
+          ],
+          [
+            -103.3497015,
+            20.5837572
+          ],
+          [
+            -103.3484277,
+            20.5855458
+          ],
+          [
+            -103.346779,
+            20.5878554
+          ],
+          [
+            -103.3464929,
+            20.5882665
+          ],
+          [
+            -103.3461585,
+            20.5887286
+          ],
+          [
+            -103.3458869,
+            20.5891434
+          ],
+          [
+            -103.3453914,
+            20.5898346
+          ],
+          [
+            -103.3452643,
+            20.5900112
+          ],
+          [
+            -103.3450157,
+            20.5904034
+          ],
+          [
+            -103.3448359,
+            20.5907245
+          ],
+          [
+            -103.34469,
+            20.5910349
+          ],
+          [
+            -103.3445947,
+            20.5912516
+          ],
+          [
+            -103.3444691,
+            20.5915595
+          ],
+          [
+            -103.3443703,
+            20.5918372
+          ],
+          [
+            -103.3443091,
+            20.5920343
+          ],
+          [
+            -103.3442638,
+            20.5921846
+          ],
+          [
+            -103.3442201,
+            20.5923533
+          ],
+          [
+            -103.344167,
+            20.5925734
+          ],
+          [
+            -103.3441047,
+            20.5928679
+          ],
+          [
+            -103.3437812,
+            20.5945617
+          ],
+          [
+            -103.3430121,
+            20.5984401
+          ],
+          [
+            -103.3428757,
+            20.5990804
+          ],
+          [
+            -103.3428053,
+            20.599447
+          ],
+          [
+            -103.3427106,
+            20.5998134
+          ],
+          [
+            -103.342325,
+            20.6013569
+          ],
+          [
+            -103.3412253,
+            20.6058602
+          ],
+          [
+            -103.3410807,
+            20.6064625
+          ]
+        ]
+      },
+      "id": "way/1285644840"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1285644841",
+        "bridge": "yes",
+        "electrified": "contact_line",
+        "frequency": "0",
+        "gauge": "1435",
+        "layer": "1",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3791103,
+            20.5367911
+          ],
+          [
+            -103.3790705,
+            20.5368602
+          ]
+        ]
+      },
+      "id": "way/1285644841"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1285657762",
+        "electrified": "contact_line",
+        "frequency": "0",
+        "gauge": "1435",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3790705,
+            20.5368602
+          ],
+          [
+            -103.37771,
+            20.5391211
+          ]
+        ]
+      },
+      "id": "way/1285657762"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1285657763",
+        "electrified": "contact_line",
+        "frequency": "0",
+        "gauge": "1435",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3777585,
+            20.5391413
+          ],
+          [
+            -103.379125,
+            20.5368711
+          ]
+        ]
+      },
+      "id": "way/1285657763"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1285657764",
+        "bridge": "yes",
+        "electrified": "contact_line",
+        "frequency": "0",
+        "gauge": "1435",
+        "layer": "1",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3777061,
+            20.5392283
+          ],
+          [
+            -103.3777585,
+            20.5391413
+          ]
+        ]
+      },
+      "id": "way/1285657764"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1285657765",
+        "bridge": "yes",
+        "electrified": "contact_line",
+        "frequency": "0",
+        "gauge": "1435",
+        "layer": "1",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.37771,
+            20.5391211
+          ],
+          [
+            -103.3776573,
+            20.5392086
+          ]
+        ]
+      },
+      "id": "way/1285657765"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1324600321",
+        "electrified": "rail",
+        "frequency": "0",
+        "gauge": "1435",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.4215442,
+            20.4665873
+          ],
+          [
+            -103.4244645,
+            20.4654064
+          ],
+          [
+            -103.4248026,
+            20.4653153
+          ],
+          [
+            -103.4251482,
+            20.4652524
+          ],
+          [
+            -103.4255427,
+            20.4652127
+          ],
+          [
+            -103.4259668,
+            20.4652311
+          ],
+          [
+            -103.426308,
+            20.4652879
+          ],
+          [
+            -103.42664,
+            20.4653649
+          ],
+          [
+            -103.4269444,
+            20.4654611
+          ],
+          [
+            -103.4272292,
+            20.4655814
+          ],
+          [
+            -103.4276837,
+            20.4658593
+          ],
+          [
+            -103.4280989,
+            20.4661587
+          ],
+          [
+            -103.430501,
+            20.4680462
+          ],
+          [
+            -103.4307927,
+            20.4682655
+          ],
+          [
+            -103.4310583,
+            20.4684276
+          ],
+          [
+            -103.4313311,
+            20.4685674
+          ],
+          [
+            -103.4315953,
+            20.4686924
+          ],
+          [
+            -103.4321954,
+            20.468908
+          ],
+          [
+            -103.4326543,
+            20.46908
+          ],
+          [
+            -103.4331271,
+            20.4692206
+          ],
+          [
+            -103.4335238,
+            20.469306
+          ],
+          [
+            -103.4338959,
+            20.4693179
+          ],
+          [
+            -103.4343034,
+            20.4692726
+          ],
+          [
+            -103.434658,
+            20.4691986
+          ],
+          [
+            -103.4358563,
+            20.4688028
+          ]
+        ]
+      },
+      "id": "way/1324600321"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1324600322",
+        "bridge": "yes",
+        "electrified": "rail",
+        "frequency": "0",
+        "gauge": "1435",
+        "layer": "1",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.4200296,
+            20.4671963
+          ],
+          [
+            -103.4215442,
+            20.4665873
+          ]
+        ]
+      },
+      "id": "way/1324600322"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1324600323",
+        "electrified": "rail",
+        "frequency": "0",
+        "gauge": "1435",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.435117,
+            20.4689685
+          ],
+          [
+            -103.4346222,
+            20.4691318
+          ],
+          [
+            -103.4343058,
+            20.469201
+          ],
+          [
+            -103.433907,
+            20.4692448
+          ],
+          [
+            -103.433549,
+            20.4692424
+          ],
+          [
+            -103.4331317,
+            20.4691709
+          ],
+          [
+            -103.4326587,
+            20.4690245
+          ],
+          [
+            -103.4322198,
+            20.4688651
+          ],
+          [
+            -103.4317293,
+            20.4686901
+          ],
+          [
+            -103.4314,
+            20.4685536
+          ],
+          [
+            -103.4311059,
+            20.4684066
+          ],
+          [
+            -103.4308074,
+            20.4682367
+          ],
+          [
+            -103.4305324,
+            20.4680236
+          ],
+          [
+            -103.4281348,
+            20.4661273
+          ],
+          [
+            -103.4277057,
+            20.4658094
+          ],
+          [
+            -103.427241,
+            20.4655343
+          ],
+          [
+            -103.4269488,
+            20.4654048
+          ],
+          [
+            -103.426638,
+            20.4653113
+          ],
+          [
+            -103.426313,
+            20.4652392
+          ],
+          [
+            -103.4259666,
+            20.4651857
+          ],
+          [
+            -103.4255376,
+            20.4651711
+          ],
+          [
+            -103.4251427,
+            20.4652031
+          ],
+          [
+            -103.4247807,
+            20.4652645
+          ],
+          [
+            -103.4244505,
+            20.4653581
+          ],
+          [
+            -103.4214943,
+            20.4665629
+          ]
+        ]
+      },
+      "id": "way/1324600323"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1324600326",
+        "bridge": "yes",
+        "electrified": "rail",
+        "frequency": "0",
+        "gauge": "1435",
+        "layer": "1",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.4214943,
+            20.4665629
+          ],
+          [
+            -103.4199757,
+            20.4671724
+          ]
+        ]
+      },
+      "id": "way/1324600326"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1324600337",
+        "electrified": "contact_line",
+        "frequency": "0",
+        "gauge": "1435",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3776573,
+            20.5392086
+          ],
+          [
+            -103.377643,
+            20.5392324
+          ],
+          [
+            -103.3693316,
+            20.5530959
+          ],
+          [
+            -103.3684303,
+            20.5545774
+          ],
+          [
+            -103.36784,
+            20.5555623
+          ],
+          [
+            -103.3673607,
+            20.5563403
+          ],
+          [
+            -103.3660006,
+            20.5586112
+          ],
+          [
+            -103.3658842,
+            20.5588219
+          ],
+          [
+            -103.3657023,
+            20.5591046
+          ],
+          [
+            -103.3654785,
+            20.5594755
+          ],
+          [
+            -103.3652573,
+            20.5598422
+          ],
+          [
+            -103.3649179,
+            20.5604335
+          ],
+          [
+            -103.3643483,
+            20.5613938
+          ],
+          [
+            -103.3635051,
+            20.5627787
+          ]
+        ]
+      },
+      "id": "way/1324600337"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1324600338",
+        "electrified": "contact_line",
+        "frequency": "0",
+        "gauge": "1435",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3635328,
+            20.5628185
+          ],
+          [
+            -103.3649552,
+            20.5604636
+          ],
+          [
+            -103.3653263,
+            20.5598794
+          ],
+          [
+            -103.3655473,
+            20.5595119
+          ],
+          [
+            -103.36577,
+            20.5591415
+          ],
+          [
+            -103.3659305,
+            20.5588481
+          ],
+          [
+            -103.3660392,
+            20.5586629
+          ],
+          [
+            -103.3666645,
+            20.5576873
+          ],
+          [
+            -103.3674487,
+            20.5563682
+          ],
+          [
+            -103.3679199,
+            20.5556124
+          ],
+          [
+            -103.3684292,
+            20.5547367
+          ],
+          [
+            -103.3686646,
+            20.554309
+          ],
+          [
+            -103.3693894,
+            20.5531209
+          ],
+          [
+            -103.3776922,
+            20.5392514
+          ],
+          [
+            -103.3777061,
+            20.5392283
+          ]
+        ]
+      },
+      "id": "way/1324600338"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1324600339",
+        "bridge": "yes",
+        "electrified": "contact_line",
+        "frequency": "0",
+        "gauge": "1435",
+        "layer": "1",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3633788,
+            20.5630671
+          ],
+          [
+            -103.3635328,
+            20.5628185
+          ]
+        ]
+      },
+      "id": "way/1324600339"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1324600340",
+        "bridge": "yes",
+        "electrified": "contact_line",
+        "frequency": "0",
+        "gauge": "1435",
+        "layer": "1",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3635051,
+            20.5627787
+          ],
+          [
+            -103.3633504,
+            20.5630363
+          ]
+        ]
+      },
+      "id": "way/1324600340"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1347407392",
+        "electrified": "contact_line",
+        "frequency": "0",
+        "gauge": "1435",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3633504,
+            20.5630363
+          ],
+          [
+            -103.3610688,
+            20.56684
+          ],
+          [
+            -103.3579644,
+            20.5719072
+          ],
+          [
+            -103.3576011,
+            20.5724998
+          ],
+          [
+            -103.3573613,
+            20.5728885
+          ],
+          [
+            -103.3572638,
+            20.57303
+          ],
+          [
+            -103.3565458,
+            20.5740824
+          ],
+          [
+            -103.3558959,
+            20.5749884
+          ],
+          [
+            -103.3552572,
+            20.5758848
+          ]
+        ]
+      },
+      "id": "way/1347407392"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1347407393",
+        "electrified": "contact_line",
+        "frequency": "0",
+        "gauge": "1435",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3553238,
+            20.575914
+          ],
+          [
+            -103.3559654,
+            20.5750292
+          ],
+          [
+            -103.3566167,
+            20.5741018
+          ],
+          [
+            -103.357319,
+            20.5730466
+          ],
+          [
+            -103.3574148,
+            20.5728947
+          ],
+          [
+            -103.3576343,
+            20.5725182
+          ],
+          [
+            -103.358,
+            20.5719161
+          ],
+          [
+            -103.3611036,
+            20.566858
+          ],
+          [
+            -103.3633788,
+            20.5630671
+          ]
+        ]
+      },
+      "id": "way/1347407393"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1459191396",
+        "bridge": "yes",
+        "electrified": "rail",
+        "frequency": "0",
+        "gauge": "1435",
+        "layer": "1",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.4195258,
+            20.4673988
+          ],
+          [
+            -103.4200296,
+            20.4671963
+          ]
+        ]
+      },
+      "id": "way/1459191396"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1459191397",
+        "bridge": "yes",
+        "electrified": "rail",
+        "frequency": "0",
+        "gauge": "1435",
+        "layer": "1",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.4199757,
+            20.4671724
+          ],
+          [
+            -103.4195216,
+            20.4673547
+          ]
+        ]
+      },
+      "id": "way/1459191397"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1459723540",
+        "electrified": "rail",
+        "frequency": "0",
+        "gauge": "1435",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.4358563,
+            20.4688028
+          ],
+          [
+            -103.4365454,
+            20.4685827
+          ],
+          [
+            -103.4370874,
+            20.4683986
+          ]
+        ]
+      },
+      "id": "way/1459723540"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1459723541",
+        "electrified": "rail",
+        "frequency": "0",
+        "gauge": "1435",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "operator": "SITEUR",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.4370419,
+            20.4683246
+          ],
+          [
+            -103.4365163,
+            20.4685004
+          ],
+          [
+            -103.435117,
+            20.4689685
+          ]
+        ]
+      },
+      "id": "way/1459723541"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1459723542",
+        "electrified": "contact_line",
+        "frequency": "0",
+        "gauge": "1435",
+        "name": "Linea 4 del Tren Eléctrico Urbano de Guadalajara",
+        "railway": "light_rail",
+        "voltage": "750",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3410807,
+            20.6064625
+          ],
+          [
+            -103.3408296,
+            20.6075127
+          ],
+          [
+            -103.3406335,
+            20.6083061
+          ]
+        ]
+      },
+      "id": "way/1459723542"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1459723540",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.4358563,
+            20.4688028
+          ],
+          [
+            -103.4365454,
+            20.4685827
+          ],
+          [
+            -103.4370874,
+            20.4683986
+          ]
+        ]
+      },
+      "id": "way/1459723540"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1324600321",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.4215442,
+            20.4665873
+          ],
+          [
+            -103.4244645,
+            20.4654064
+          ],
+          [
+            -103.4248026,
+            20.4653153
+          ],
+          [
+            -103.4251482,
+            20.4652524
+          ],
+          [
+            -103.4255427,
+            20.4652127
+          ],
+          [
+            -103.4259668,
+            20.4652311
+          ],
+          [
+            -103.426308,
+            20.4652879
+          ],
+          [
+            -103.42664,
+            20.4653649
+          ],
+          [
+            -103.4269444,
+            20.4654611
+          ],
+          [
+            -103.4272292,
+            20.4655814
+          ],
+          [
+            -103.4276837,
+            20.4658593
+          ],
+          [
+            -103.4280989,
+            20.4661587
+          ],
+          [
+            -103.430501,
+            20.4680462
+          ],
+          [
+            -103.4307927,
+            20.4682655
+          ],
+          [
+            -103.4310583,
+            20.4684276
+          ],
+          [
+            -103.4313311,
+            20.4685674
+          ],
+          [
+            -103.4315953,
+            20.4686924
+          ],
+          [
+            -103.4321954,
+            20.468908
+          ],
+          [
+            -103.4326543,
+            20.46908
+          ],
+          [
+            -103.4331271,
+            20.4692206
+          ],
+          [
+            -103.4335238,
+            20.469306
+          ],
+          [
+            -103.4338959,
+            20.4693179
+          ],
+          [
+            -103.4343034,
+            20.4692726
+          ],
+          [
+            -103.434658,
+            20.4691986
+          ],
+          [
+            -103.4358563,
+            20.4688028
+          ]
+        ]
+      },
+      "id": "way/1324600321"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1324600322",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.4200296,
+            20.4671963
+          ],
+          [
+            -103.4215442,
+            20.4665873
+          ]
+        ]
+      },
+      "id": "way/1324600322"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1459191396",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.4195258,
+            20.4673988
+          ],
+          [
+            -103.4200296,
+            20.4671963
+          ]
+        ]
+      },
+      "id": "way/1459191396"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1130777957",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3791665,
+            20.5368022
+          ],
+          [
+            -103.3826767,
+            20.5310105
+          ],
+          [
+            -103.3828028,
+            20.5308037
+          ],
+          [
+            -103.3831636,
+            20.5301998
+          ],
+          [
+            -103.3834079,
+            20.5297922
+          ],
+          [
+            -103.3839943,
+            20.5288154
+          ],
+          [
+            -103.3843617,
+            20.5281946
+          ],
+          [
+            -103.3847717,
+            20.5274911
+          ],
+          [
+            -103.3851336,
+            20.5269161
+          ],
+          [
+            -103.3853934,
+            20.526548
+          ],
+          [
+            -103.3856078,
+            20.5263075
+          ],
+          [
+            -103.3860512,
+            20.5258838
+          ],
+          [
+            -103.3863008,
+            20.5256723
+          ],
+          [
+            -103.3894067,
+            20.5232287
+          ],
+          [
+            -103.3897705,
+            20.5228773
+          ],
+          [
+            -103.3901474,
+            20.5224405
+          ],
+          [
+            -103.3904988,
+            20.5219055
+          ],
+          [
+            -103.3906563,
+            20.5215641
+          ],
+          [
+            -103.3908811,
+            20.5210414
+          ],
+          [
+            -103.391004,
+            20.5204216
+          ],
+          [
+            -103.3915582,
+            20.5171655
+          ],
+          [
+            -103.3922009,
+            20.5130153
+          ],
+          [
+            -103.3923585,
+            20.5117686
+          ],
+          [
+            -103.3923999,
+            20.5114982
+          ],
+          [
+            -103.3925485,
+            20.5106715
+          ],
+          [
+            -103.3926441,
+            20.5101375
+          ],
+          [
+            -103.3927183,
+            20.5097911
+          ],
+          [
+            -103.3927952,
+            20.5094954
+          ],
+          [
+            -103.3929286,
+            20.5090535
+          ],
+          [
+            -103.3934024,
+            20.5078375
+          ],
+          [
+            -103.3935653,
+            20.5074301
+          ],
+          [
+            -103.3937839,
+            20.5068795
+          ],
+          [
+            -103.3945499,
+            20.5049022
+          ],
+          [
+            -103.3948897,
+            20.504006
+          ],
+          [
+            -103.3966227,
+            20.4995774
+          ],
+          [
+            -103.3991479,
+            20.49319
+          ],
+          [
+            -103.3994354,
+            20.492569
+          ],
+          [
+            -103.3996998,
+            20.4920756
+          ],
+          [
+            -103.4000524,
+            20.4915024
+          ],
+          [
+            -103.4003425,
+            20.4910834
+          ],
+          [
+            -103.4005701,
+            20.4907952
+          ],
+          [
+            -103.4009128,
+            20.4903704
+          ],
+          [
+            -103.4033861,
+            20.4876874
+          ],
+          [
+            -103.4036026,
+            20.4874633
+          ],
+          [
+            -103.4036632,
+            20.4873989
+          ],
+          [
+            -103.4038814,
+            20.4871498
+          ],
+          [
+            -103.4042022,
+            20.486778
+          ],
+          [
+            -103.4053146,
+            20.4855555
+          ],
+          [
+            -103.4056552,
+            20.4851781
+          ],
+          [
+            -103.4063461,
+            20.4844028
+          ],
+          [
+            -103.4065512,
+            20.484135
+          ],
+          [
+            -103.4067079,
+            20.4839012
+          ],
+          [
+            -103.4068856,
+            20.4835655
+          ],
+          [
+            -103.4070199,
+            20.4832075
+          ],
+          [
+            -103.407112,
+            20.4828807
+          ],
+          [
+            -103.4071642,
+            20.4825597
+          ],
+          [
+            -103.4071886,
+            20.4822662
+          ],
+          [
+            -103.4071461,
+            20.4817332
+          ],
+          [
+            -103.406863,
+            20.4800373
+          ],
+          [
+            -103.4068188,
+            20.4796121
+          ],
+          [
+            -103.4068184,
+            20.4791089
+          ],
+          [
+            -103.4068739,
+            20.4784305
+          ],
+          [
+            -103.4073906,
+            20.4739357
+          ],
+          [
+            -103.4074469,
+            20.4736342
+          ],
+          [
+            -103.4074897,
+            20.4734141
+          ],
+          [
+            -103.4075761,
+            20.4731543
+          ],
+          [
+            -103.4076827,
+            20.4729308
+          ],
+          [
+            -103.4078022,
+            20.472721
+          ],
+          [
+            -103.4079758,
+            20.472479
+          ],
+          [
+            -103.4081649,
+            20.4722755
+          ],
+          [
+            -103.4083479,
+            20.4721126
+          ],
+          [
+            -103.4085622,
+            20.4719537
+          ],
+          [
+            -103.408913,
+            20.4717486
+          ],
+          [
+            -103.4135033,
+            20.4698552
+          ],
+          [
+            -103.4141415,
+            20.4696159
+          ],
+          [
+            -103.4146079,
+            20.4694258
+          ],
+          [
+            -103.4150131,
+            20.4692606
+          ],
+          [
+            -103.4153415,
+            20.4690959
+          ],
+          [
+            -103.4168051,
+            20.4685026
+          ],
+          [
+            -103.4195258,
+            20.4673988
+          ]
+        ]
+      },
+      "id": "way/1130777957"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1285644839",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.379125,
+            20.5368711
+          ],
+          [
+            -103.3791665,
+            20.5368022
+          ]
+        ]
+      },
+      "id": "way/1285644839"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1285657763",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3777585,
+            20.5391413
+          ],
+          [
+            -103.379125,
+            20.5368711
+          ]
+        ]
+      },
+      "id": "way/1285657763"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1285657764",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3777061,
+            20.5392283
+          ],
+          [
+            -103.3777585,
+            20.5391413
+          ]
+        ]
+      },
+      "id": "way/1285657764"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1324600338",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3635328,
+            20.5628185
+          ],
+          [
+            -103.3649552,
+            20.5604636
+          ],
+          [
+            -103.3653263,
+            20.5598794
+          ],
+          [
+            -103.3655473,
+            20.5595119
+          ],
+          [
+            -103.36577,
+            20.5591415
+          ],
+          [
+            -103.3659305,
+            20.5588481
+          ],
+          [
+            -103.3660392,
+            20.5586629
+          ],
+          [
+            -103.3666645,
+            20.5576873
+          ],
+          [
+            -103.3674487,
+            20.5563682
+          ],
+          [
+            -103.3679199,
+            20.5556124
+          ],
+          [
+            -103.3684292,
+            20.5547367
+          ],
+          [
+            -103.3686646,
+            20.554309
+          ],
+          [
+            -103.3693894,
+            20.5531209
+          ],
+          [
+            -103.3776922,
+            20.5392514
+          ],
+          [
+            -103.3777061,
+            20.5392283
+          ]
+        ]
+      },
+      "id": "way/1324600338"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1324600339",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3633788,
+            20.5630671
+          ],
+          [
+            -103.3635328,
+            20.5628185
+          ]
+        ]
+      },
+      "id": "way/1324600339"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1347407393",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3553238,
+            20.575914
+          ],
+          [
+            -103.3559654,
+            20.5750292
+          ],
+          [
+            -103.3566167,
+            20.5741018
+          ],
+          [
+            -103.357319,
+            20.5730466
+          ],
+          [
+            -103.3574148,
+            20.5728947
+          ],
+          [
+            -103.3576343,
+            20.5725182
+          ],
+          [
+            -103.358,
+            20.5719161
+          ],
+          [
+            -103.3611036,
+            20.566858
+          ],
+          [
+            -103.3633788,
+            20.5630671
+          ]
+        ]
+      },
+      "id": "way/1347407393"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1285644838",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3410807,
+            20.6064625
+          ],
+          [
+            -103.3412619,
+            20.6058724
+          ],
+          [
+            -103.3427594,
+            20.5998034
+          ],
+          [
+            -103.34285,
+            20.5994454
+          ],
+          [
+            -103.3429222,
+            20.5990859
+          ],
+          [
+            -103.3430651,
+            20.5984438
+          ],
+          [
+            -103.3438224,
+            20.5945664
+          ],
+          [
+            -103.3441448,
+            20.5928758
+          ],
+          [
+            -103.3442007,
+            20.592578
+          ],
+          [
+            -103.3442534,
+            20.5923601
+          ],
+          [
+            -103.3442992,
+            20.5921921
+          ],
+          [
+            -103.3443409,
+            20.59204
+          ],
+          [
+            -103.3444069,
+            20.5918387
+          ],
+          [
+            -103.3445047,
+            20.5915626
+          ],
+          [
+            -103.3446248,
+            20.5912575
+          ],
+          [
+            -103.344716,
+            20.5910482
+          ],
+          [
+            -103.3448771,
+            20.5907311
+          ],
+          [
+            -103.3450495,
+            20.5904151
+          ],
+          [
+            -103.3452928,
+            20.5900364
+          ],
+          [
+            -103.3454291,
+            20.589848
+          ],
+          [
+            -103.3459534,
+            20.5891407
+          ],
+          [
+            -103.3462198,
+            20.5887595
+          ],
+          [
+            -103.346547,
+            20.5882967
+          ],
+          [
+            -103.3468401,
+            20.5878978
+          ],
+          [
+            -103.3484617,
+            20.5855592
+          ],
+          [
+            -103.3497271,
+            20.5837829
+          ],
+          [
+            -103.3510157,
+            20.5819844
+          ],
+          [
+            -103.3510916,
+            20.5818744
+          ],
+          [
+            -103.3529918,
+            20.5792018
+          ],
+          [
+            -103.3547623,
+            20.5766774
+          ],
+          [
+            -103.3553238,
+            20.575914
+          ]
+        ]
+      },
+      "id": "way/1285644838"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1459723541",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.4370419,
+            20.4683246
+          ],
+          [
+            -103.4365163,
+            20.4685004
+          ],
+          [
+            -103.435117,
+            20.4689685
+          ]
+        ]
+      },
+      "id": "way/1459723541"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1324600323",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.435117,
+            20.4689685
+          ],
+          [
+            -103.4346222,
+            20.4691318
+          ],
+          [
+            -103.4343058,
+            20.469201
+          ],
+          [
+            -103.433907,
+            20.4692448
+          ],
+          [
+            -103.433549,
+            20.4692424
+          ],
+          [
+            -103.4331317,
+            20.4691709
+          ],
+          [
+            -103.4326587,
+            20.4690245
+          ],
+          [
+            -103.4322198,
+            20.4688651
+          ],
+          [
+            -103.4317293,
+            20.4686901
+          ],
+          [
+            -103.4314,
+            20.4685536
+          ],
+          [
+            -103.4311059,
+            20.4684066
+          ],
+          [
+            -103.4308074,
+            20.4682367
+          ],
+          [
+            -103.4305324,
+            20.4680236
+          ],
+          [
+            -103.4281348,
+            20.4661273
+          ],
+          [
+            -103.4277057,
+            20.4658094
+          ],
+          [
+            -103.427241,
+            20.4655343
+          ],
+          [
+            -103.4269488,
+            20.4654048
+          ],
+          [
+            -103.426638,
+            20.4653113
+          ],
+          [
+            -103.426313,
+            20.4652392
+          ],
+          [
+            -103.4259666,
+            20.4651857
+          ],
+          [
+            -103.4255376,
+            20.4651711
+          ],
+          [
+            -103.4251427,
+            20.4652031
+          ],
+          [
+            -103.4247807,
+            20.4652645
+          ],
+          [
+            -103.4244505,
+            20.4653581
+          ],
+          [
+            -103.4214943,
+            20.4665629
+          ]
+        ]
+      },
+      "id": "way/1324600323"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1324600326",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.4214943,
+            20.4665629
+          ],
+          [
+            -103.4199757,
+            20.4671724
+          ]
+        ]
+      },
+      "id": "way/1324600326"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1459191397",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.4199757,
+            20.4671724
+          ],
+          [
+            -103.4195216,
+            20.4673547
+          ]
+        ]
+      },
+      "id": "way/1459191397"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1180583736",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.4195216,
+            20.4673547
+          ],
+          [
+            -103.4167866,
+            20.468461
+          ],
+          [
+            -103.4153259,
+            20.4690588
+          ],
+          [
+            -103.414994,
+            20.4691838
+          ],
+          [
+            -103.4145727,
+            20.4693527
+          ],
+          [
+            -103.4141236,
+            20.4695327
+          ],
+          [
+            -103.4134908,
+            20.4698107
+          ],
+          [
+            -103.4090864,
+            20.4716182
+          ],
+          [
+            -103.4088142,
+            20.4717404
+          ],
+          [
+            -103.4085477,
+            20.4719069
+          ],
+          [
+            -103.408315,
+            20.4720718
+          ],
+          [
+            -103.4081401,
+            20.4722323
+          ],
+          [
+            -103.4079347,
+            20.4724531
+          ],
+          [
+            -103.40776,
+            20.4726948
+          ],
+          [
+            -103.4076343,
+            20.4729153
+          ],
+          [
+            -103.4075304,
+            20.4731537
+          ],
+          [
+            -103.4074392,
+            20.4734041
+          ],
+          [
+            -103.4073916,
+            20.4736176
+          ],
+          [
+            -103.4073415,
+            20.473968
+          ],
+          [
+            -103.4068225,
+            20.4784451
+          ],
+          [
+            -103.406769,
+            20.4791085
+          ],
+          [
+            -103.4067799,
+            20.4796162
+          ],
+          [
+            -103.4068111,
+            20.480059
+          ],
+          [
+            -103.4071001,
+            20.4817595
+          ],
+          [
+            -103.4071275,
+            20.482265
+          ],
+          [
+            -103.4071096,
+            20.4825626
+          ],
+          [
+            -103.4070648,
+            20.4828672
+          ],
+          [
+            -103.4069754,
+            20.4831886
+          ],
+          [
+            -103.4068339,
+            20.4835389
+          ],
+          [
+            -103.4066606,
+            20.4838813
+          ],
+          [
+            -103.4065163,
+            20.4841052
+          ],
+          [
+            -103.4063035,
+            20.4843735
+          ],
+          [
+            -103.4056397,
+            20.4851117
+          ],
+          [
+            -103.4041464,
+            20.4867447
+          ],
+          [
+            -103.4036021,
+            20.4873494
+          ],
+          [
+            -103.4035435,
+            20.4874113
+          ],
+          [
+            -103.4033211,
+            20.4876407
+          ],
+          [
+            -103.4008656,
+            20.4903555
+          ],
+          [
+            -103.4002958,
+            20.4910665
+          ],
+          [
+            -103.400016,
+            20.4914842
+          ],
+          [
+            -103.3996666,
+            20.4920517
+          ],
+          [
+            -103.3993908,
+            20.4925557
+          ],
+          [
+            -103.3991014,
+            20.4931862
+          ],
+          [
+            -103.3965765,
+            20.4995785
+          ],
+          [
+            -103.394467,
+            20.5049234
+          ],
+          [
+            -103.39398,
+            20.5061164
+          ],
+          [
+            -103.3936882,
+            20.5068551
+          ],
+          [
+            -103.3934729,
+            20.5074185
+          ],
+          [
+            -103.3933289,
+            20.5078185
+          ],
+          [
+            -103.3928708,
+            20.5090462
+          ],
+          [
+            -103.3927457,
+            20.5094863
+          ],
+          [
+            -103.3926767,
+            20.5097851
+          ],
+          [
+            -103.3925975,
+            20.5101365
+          ],
+          [
+            -103.3925119,
+            20.510676
+          ],
+          [
+            -103.3923215,
+            20.5117665
+          ],
+          [
+            -103.3921428,
+            20.5130932
+          ],
+          [
+            -103.391514,
+            20.5171564
+          ],
+          [
+            -103.3909658,
+            20.5204179
+          ],
+          [
+            -103.3908433,
+            20.5210361
+          ],
+          [
+            -103.3906188,
+            20.5215547
+          ],
+          [
+            -103.3904612,
+            20.5218886
+          ],
+          [
+            -103.3901123,
+            20.5224177
+          ],
+          [
+            -103.3897429,
+            20.5228522
+          ],
+          [
+            -103.3893988,
+            20.5231781
+          ],
+          [
+            -103.3862715,
+            20.5256373
+          ],
+          [
+            -103.3859645,
+            20.5258904
+          ],
+          [
+            -103.3855795,
+            20.5262708
+          ],
+          [
+            -103.3853763,
+            20.5264992
+          ],
+          [
+            -103.3850839,
+            20.5268946
+          ],
+          [
+            -103.3847232,
+            20.5274721
+          ],
+          [
+            -103.3843049,
+            20.5281465
+          ],
+          [
+            -103.3839189,
+            20.5287888
+          ],
+          [
+            -103.3833379,
+            20.529766
+          ],
+          [
+            -103.3831052,
+            20.5301787
+          ],
+          [
+            -103.3827677,
+            20.5307864
+          ],
+          [
+            -103.3826425,
+            20.5309931
+          ],
+          [
+            -103.3791103,
+            20.5367911
+          ]
+        ]
+      },
+      "id": "way/1180583736"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1285644841",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3791103,
+            20.5367911
+          ],
+          [
+            -103.3790705,
+            20.5368602
+          ]
+        ]
+      },
+      "id": "way/1285644841"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1285657762",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3790705,
+            20.5368602
+          ],
+          [
+            -103.37771,
+            20.5391211
+          ]
+        ]
+      },
+      "id": "way/1285657762"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1285657765",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.37771,
+            20.5391211
+          ],
+          [
+            -103.3776573,
+            20.5392086
+          ]
+        ]
+      },
+      "id": "way/1285657765"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1324600337",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3776573,
+            20.5392086
+          ],
+          [
+            -103.377643,
+            20.5392324
+          ],
+          [
+            -103.3693316,
+            20.5530959
+          ],
+          [
+            -103.3684303,
+            20.5545774
+          ],
+          [
+            -103.36784,
+            20.5555623
+          ],
+          [
+            -103.3673607,
+            20.5563403
+          ],
+          [
+            -103.3660006,
+            20.5586112
+          ],
+          [
+            -103.3658842,
+            20.5588219
+          ],
+          [
+            -103.3657023,
+            20.5591046
+          ],
+          [
+            -103.3654785,
+            20.5594755
+          ],
+          [
+            -103.3652573,
+            20.5598422
+          ],
+          [
+            -103.3649179,
+            20.5604335
+          ],
+          [
+            -103.3643483,
+            20.5613938
+          ],
+          [
+            -103.3635051,
+            20.5627787
+          ]
+        ]
+      },
+      "id": "way/1324600337"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1324600340",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3635051,
+            20.5627787
+          ],
+          [
+            -103.3633504,
+            20.5630363
+          ]
+        ]
+      },
+      "id": "way/1324600340"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1347407392",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3633504,
+            20.5630363
+          ],
+          [
+            -103.3610688,
+            20.56684
+          ],
+          [
+            -103.3579644,
+            20.5719072
+          ],
+          [
+            -103.3576011,
+            20.5724998
+          ],
+          [
+            -103.3573613,
+            20.5728885
+          ],
+          [
+            -103.3572638,
+            20.57303
+          ],
+          [
+            -103.3565458,
+            20.5740824
+          ],
+          [
+            -103.3558959,
+            20.5749884
+          ],
+          [
+            -103.3552572,
+            20.5758848
+          ]
+        ]
+      },
+      "id": "way/1347407392"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1285644840",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3552572,
+            20.5758848
+          ],
+          [
+            -103.3547219,
+            20.5766635
+          ],
+          [
+            -103.3529554,
+            20.5791791
+          ],
+          [
+            -103.351053,
+            20.581856
+          ],
+          [
+            -103.3509731,
+            20.5819638
+          ],
+          [
+            -103.3497015,
+            20.5837572
+          ],
+          [
+            -103.3484277,
+            20.5855458
+          ],
+          [
+            -103.346779,
+            20.5878554
+          ],
+          [
+            -103.3464929,
+            20.5882665
+          ],
+          [
+            -103.3461585,
+            20.5887286
+          ],
+          [
+            -103.3458869,
+            20.5891434
+          ],
+          [
+            -103.3453914,
+            20.5898346
+          ],
+          [
+            -103.3452643,
+            20.5900112
+          ],
+          [
+            -103.3450157,
+            20.5904034
+          ],
+          [
+            -103.3448359,
+            20.5907245
+          ],
+          [
+            -103.34469,
+            20.5910349
+          ],
+          [
+            -103.3445947,
+            20.5912516
+          ],
+          [
+            -103.3444691,
+            20.5915595
+          ],
+          [
+            -103.3443703,
+            20.5918372
+          ],
+          [
+            -103.3443091,
+            20.5920343
+          ],
+          [
+            -103.3442638,
+            20.5921846
+          ],
+          [
+            -103.3442201,
+            20.5923533
+          ],
+          [
+            -103.344167,
+            20.5925734
+          ],
+          [
+            -103.3441047,
+            20.5928679
+          ],
+          [
+            -103.3437812,
+            20.5945617
+          ],
+          [
+            -103.3430121,
+            20.5984401
+          ],
+          [
+            -103.3428757,
+            20.5990804
+          ],
+          [
+            -103.3428053,
+            20.599447
+          ],
+          [
+            -103.3427106,
+            20.5998134
+          ],
+          [
+            -103.342325,
+            20.6013569
+          ],
+          [
+            -103.3412253,
+            20.6058602
+          ],
+          [
+            -103.3410807,
+            20.6064625
+          ]
+        ]
+      },
+      "id": "way/1285644840"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1459723542",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3410807,
+            20.6064625
+          ],
+          [
+            -103.3408296,
+            20.6075127
+          ],
+          [
+            -103.3406335,
+            20.6083061
+          ]
+        ]
+      },
+      "id": "way/1459723542"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1127889171",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.4344841,
+            20.4692934
+          ],
+          [
+            -103.4342818,
+            20.4693389
+          ],
+          [
+            -103.4340584,
+            20.4693653
+          ],
+          [
+            -103.4338454,
+            20.4693773
+          ],
+          [
+            -103.4336162,
+            20.4693668
+          ],
+          [
+            -103.4333897,
+            20.4693416
+          ],
+          [
+            -103.4332055,
+            20.4692777
+          ],
+          [
+            -103.4331391,
+            20.4692643
+          ],
+          [
+            -103.4330645,
+            20.4694387
+          ],
+          [
+            -103.4332025,
+            20.4695235
+          ],
+          [
+            -103.4352487,
+            20.4705128
+          ],
+          [
+            -103.4353481,
+            20.4705455
+          ],
+          [
+            -103.4354328,
+            20.4705532
+          ],
+          [
+            -103.4355181,
+            20.4705493
+          ],
+          [
+            -103.4356015,
+            20.4705264
+          ],
+          [
+            -103.4373149,
+            20.4699635
+          ],
+          [
+            -103.4374008,
+            20.4699215
+          ],
+          [
+            -103.4374599,
+            20.4698757
+          ],
+          [
+            -103.4375083,
+            20.4698096
+          ],
+          [
+            -103.4375395,
+            20.4697012
+          ],
+          [
+            -103.4376236,
+            20.4686837
+          ],
+          [
+            -103.4376262,
+            20.4685838
+          ],
+          [
+            -103.4376007,
+            20.4684792
+          ],
+          [
+            -103.4375468,
+            20.468402
+          ],
+          [
+            -103.4374655,
+            20.4683475
+          ],
+          [
+            -103.4373722,
+            20.4683099
+          ],
+          [
+            -103.4372684,
+            20.4683069
+          ],
+          [
+            -103.437132,
+            20.4684222
+          ],
+          [
+            -103.4344841,
+            20.4692934
+          ]
+        ]
+      },
+      "id": "way/1127889171"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1180589392",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.437077,
+            20.4683756
+          ],
+          [
+            -103.437172,
+            20.4683299
+          ],
+          [
+            -103.4371477,
+            20.4682932
+          ],
+          [
+            -103.4370596,
+            20.4683388
+          ],
+          [
+            -103.4359811,
+            20.4686969
+          ],
+          [
+            -103.4359933,
+            20.4687327
+          ],
+          [
+            -103.437077,
+            20.4683756
+          ]
+        ]
+      },
+      "id": "way/1180589392"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1180589391",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.4150151,
+            20.4692503
+          ],
+          [
+            -103.4149921,
+            20.469201
+          ],
+          [
+            -103.41417,
+            20.4695361
+          ],
+          [
+            -103.414193,
+            20.4695854
+          ],
+          [
+            -103.4150151,
+            20.4692503
+          ]
+        ]
+      },
+      "id": "way/1180589391"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1180589390",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.4045516,
+            20.4863695
+          ],
+          [
+            -103.404528,
+            20.4863492
+          ],
+          [
+            -103.4038277,
+            20.4871097
+          ],
+          [
+            -103.403862,
+            20.4871358
+          ],
+          [
+            -103.4045516,
+            20.4863695
+          ]
+        ]
+      },
+      "id": "way/1180589390"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1180583742",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3938716,
+            20.5065829
+          ],
+          [
+            -103.3938291,
+            20.5065669
+          ],
+          [
+            -103.393568,
+            20.5072323
+          ],
+          [
+            -103.3936077,
+            20.5072428
+          ],
+          [
+            -103.3938716,
+            20.5065829
+          ]
+        ]
+      },
+      "id": "way/1180583742"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1180583741",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3841564,
+            20.5285075
+          ],
+          [
+            -103.3841161,
+            20.5284863
+          ],
+          [
+            -103.3837491,
+            20.5290972
+          ],
+          [
+            -103.3837895,
+            20.5291185
+          ],
+          [
+            -103.3841564,
+            20.5285075
+          ]
+        ]
+      },
+      "id": "way/1180583741"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1180583733",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3657691,
+            20.5591258
+          ],
+          [
+            -103.365754,
+            20.5591183
+          ],
+          [
+            -103.3657327,
+            20.5591061
+          ],
+          [
+            -103.3653202,
+            20.5597735
+          ],
+          [
+            -103.3653619,
+            20.5597974
+          ],
+          [
+            -103.3657691,
+            20.5591258
+          ]
+        ]
+      },
+      "id": "way/1180583733"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1212646495",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.3562614,
+            20.5745817
+          ],
+          [
+            -103.3562252,
+            20.5745567
+          ],
+          [
+            -103.3556166,
+            20.5754106
+          ],
+          [
+            -103.3556291,
+            20.5754233
+          ],
+          [
+            -103.3556529,
+            20.5754342
+          ],
+          [
+            -103.3562614,
+            20.5745817
+          ]
+        ]
+      },
+      "id": "way/1212646495"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1409567646",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.346817,
+            20.5878966
+          ],
+          [
+            -103.3467907,
+            20.58788
+          ],
+          [
+            -103.3462164,
+            20.5886785
+          ],
+          [
+            -103.3462425,
+            20.588695
+          ],
+          [
+            -103.346817,
+            20.5878966
+          ]
+        ]
+      },
+      "id": "way/1409567646"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1232808557",
+        "@relations": [
+          {
+            "role": "",
+            "rel": 15962948,
+            "reltags": {
+              "colour": "orange",
+              "interval": "7",
+              "name": "Mi Tren Línea 4",
+              "network": "Mi Tren",
+              "opening_hours": "06:00-21:00",
+              "operator": "SITEUR",
+              "ref": "TL-4",
+              "route_master": "light_rail",
+              "type": "route_master",
+              "wikidata": "Q109312470",
+              "wikipedia": "en:Line 4 (Sistema de Tren Eléctrico Urbano)"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -103.340985,
+            20.6070708
+          ],
+          [
+            -103.3409569,
+            20.6070623
+          ],
+          [
+            -103.3406582,
+            20.6082731
+          ],
+          [
+            -103.3406892,
+            20.6082805
+          ],
+          [
+            -103.340985,
+            20.6070708
+          ]
+        ]
+      },
+      "id": "way/1232808557"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/1790742395",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3452643,
+          20.5900112
+        ]
+      },
+      "id": "node/1790742395"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10538357957",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.4215442,
+          20.4665873
+        ]
+      },
+      "id": "node/10538357957"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10538360233",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3693894,
+          20.5531209
+        ]
+      },
+      "id": "node/10538360233"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10538360234",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3776922,
+          20.5392514
+        ]
+      },
+      "id": "node/10538360234"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10538360235",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3826767,
+          20.5310105
+        ]
+      },
+      "id": "node/10538360235"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10538360236",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3828028,
+          20.5308037
+        ]
+      },
+      "id": "node/10538360236"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10964757263",
+        "railway": "crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3659305,
+          20.5588481
+        ]
+      },
+      "id": "node/10964757263"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10964757264",
+        "railway": "crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3658842,
+          20.5588219
+        ]
+      },
+      "id": "node/10964757264"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10964757265",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3693316,
+          20.5530959
+        ]
+      },
+      "id": "node/10964757265"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10964757269",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.377643,
+          20.5392324
+        ]
+      },
+      "id": "node/10964757269"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10964757270",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3826425,
+          20.5309931
+        ]
+      },
+      "id": "node/10964757270"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10964757271",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3827677,
+          20.5307864
+        ]
+      },
+      "id": "node/10964757271"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10964820828",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.4035435,
+          20.4874113
+        ]
+      },
+      "id": "node/10964820828"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10964820829",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.4036021,
+          20.4873494
+        ]
+      },
+      "id": "node/10964820829"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10964820830",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.4036026,
+          20.4874633
+        ]
+      },
+      "id": "node/10964820830"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10964820831",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.4036632,
+          20.4873989
+        ]
+      },
+      "id": "node/10964820831"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10964820868",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.4214943,
+          20.4665629
+        ]
+      },
+      "id": "node/10964820868"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10964820897",
+        "railway": "buffer_stop"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.4370419,
+          20.4683246
+        ]
+      },
+      "id": "node/10964820897"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/11234863336",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3452928,
+          20.5900364
+        ]
+      },
+      "id": "node/11234863336"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/11721667932",
+        "railway": "buffer_stop"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3406335,
+          20.6083061
+        ]
+      },
+      "id": "node/11721667932"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12257710028",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.4167866,
+          20.468461
+        ]
+      },
+      "id": "node/12257710028"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12257710030",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.4168051,
+          20.4685026
+        ]
+      },
+      "id": "node/12257710030"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12463722079",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3509731,
+          20.5819638
+        ]
+      },
+      "id": "node/12463722079"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12463722080",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.351053,
+          20.581856
+        ]
+      },
+      "id": "node/12463722080"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12463722081",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3573613,
+          20.5728885
+        ]
+      },
+      "id": "node/12463722081"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12463722084",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3510157,
+          20.5819844
+        ]
+      },
+      "id": "node/12463722084"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12463722085",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3510916,
+          20.5818744
+        ]
+      },
+      "id": "node/12463722085"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12463722086",
+        "railway": "level_crossing"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3574148,
+          20.5728947
+        ]
+      },
+      "id": "node/12463722086"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12699030494",
+        "light_rail": "yes",
+        "name": "Las Juntas",
+        "operator": "SITEUR",
+        "public_transport": "stop_position",
+        "railway": "stop"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3408296,
+          20.6075127
+        ]
+      },
+      "id": "node/12699030494"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12699030496",
+        "light_rail": "yes",
+        "name": "El Cuervo",
+        "operator": "SITEUR",
+        "public_transport": "stop_position",
+        "railway": "stop"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3937839,
+          20.5068795
+        ]
+      },
+      "id": "node/12699030496"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12699030497",
+        "light_rail": "yes",
+        "name": "El Cuervo",
+        "operator": "SITEUR",
+        "public_transport": "stop_position",
+        "railway": "stop"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3936882,
+          20.5068551
+        ]
+      },
+      "id": "node/12699030497"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12699030498",
+        "light_rail": "yes",
+        "name": "Lomas del Sur",
+        "operator": "SITEUR",
+        "public_transport": "stop_position",
+        "railway": "stop"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.4042022,
+          20.486778
+        ]
+      },
+      "id": "node/12699030498"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12699030499",
+        "light_rail": "yes",
+        "name": "Lomas del Sur",
+        "operator": "SITEUR",
+        "public_transport": "stop_position",
+        "railway": "stop"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.4041464,
+          20.4867447
+        ]
+      },
+      "id": "node/12699030499"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12699030500",
+        "light_rail": "yes",
+        "name": "CUTLAJO",
+        "operator": "SITEUR",
+        "public_transport": "stop_position",
+        "railway": "stop"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.4146079,
+          20.4694258
+        ]
+      },
+      "id": "node/12699030500"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12699043501",
+        "light_rail": "yes",
+        "name": "CUTLAJO",
+        "operator": "SITEUR",
+        "public_transport": "stop_position",
+        "railway": "stop"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.4145727,
+          20.4693527
+        ]
+      },
+      "id": "node/12699043501"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12699043502",
+        "light_rail": "yes",
+        "name": "Tlajomulco Centro",
+        "operator": "SITEUR",
+        "public_transport": "stop_position",
+        "railway": "stop"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.4365454,
+          20.4685827
+        ]
+      },
+      "id": "node/12699043502"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12699043503",
+        "light_rail": "yes",
+        "name": "Tlajomulco Centro",
+        "operator": "SITEUR",
+        "public_transport": "stop_position",
+        "railway": "stop"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.4365163,
+          20.4685004
+        ]
+      },
+      "id": "node/12699043503"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12699043504",
+        "light_rail": "yes",
+        "name": "Concepción del Valle",
+        "operator": "SITEUR",
+        "public_transport": "stop_position",
+        "railway": "stop"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3839943,
+          20.5288154
+        ]
+      },
+      "id": "node/12699043504"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12699043505",
+        "light_rail": "yes",
+        "name": "Concepción del Valle",
+        "operator": "SITEUR",
+        "public_transport": "stop_position",
+        "railway": "stop"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3839189,
+          20.5287888
+        ]
+      },
+      "id": "node/12699043505"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12699043506",
+        "light_rail": "yes",
+        "name": "Jalisco 200 Años",
+        "operator": "SITEUR",
+        "public_transport": "stop_position",
+        "railway": "stop"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3558959,
+          20.5749884
+        ]
+      },
+      "id": "node/12699043506"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12699043507",
+        "light_rail": "yes",
+        "name": "Jalisco 200 Años",
+        "operator": "SITEUR",
+        "public_transport": "stop_position",
+        "railway": "stop"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3559654,
+          20.5750292
+        ]
+      },
+      "id": "node/12699043507"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12699043508",
+        "light_rail": "yes",
+        "name": "Real del Valle",
+        "operator": "SITEUR",
+        "public_transport": "stop_position",
+        "railway": "stop"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3654785,
+          20.5594755
+        ]
+      },
+      "id": "node/12699043508"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12699043509",
+        "light_rail": "yes",
+        "name": "Real del Valle",
+        "operator": "SITEUR",
+        "public_transport": "stop_position",
+        "railway": "stop"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3655473,
+          20.5595119
+        ]
+      },
+      "id": "node/12699043509"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12843745571",
+        "railway": "switch",
+        "railway:switch": "default"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3684303,
+          20.5545774
+        ]
+      },
+      "id": "node/12843745571"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12843745573",
+        "railway": "switch",
+        "railway:switch": "default"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3679199,
+          20.5556124
+        ]
+      },
+      "id": "node/12843745573"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12843745574",
+        "railway": "switch",
+        "railway:switch": "default"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.36784,
+          20.5555623
+        ]
+      },
+      "id": "node/12843745574"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12843745577",
+        "railway": "switch",
+        "railway:switch": "default"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3666645,
+          20.5576873
+        ]
+      },
+      "id": "node/12843745577"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12952466831",
+        "light_rail": "yes",
+        "name": "Acueducto",
+        "operator": "SITEUR",
+        "public_transport": "stop_position",
+        "railway": "stop"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.346547,
+          20.5882967
+        ]
+      },
+      "id": "node/12952466831"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12952466832",
+        "light_rail": "yes",
+        "name": "Acueducto",
+        "operator": "SITEUR",
+        "public_transport": "stop_position",
+        "railway": "stop"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -103.3464929,
+          20.5882665
+        ]
+      },
+      "id": "node/12952466832"
+    }
+  ]
+}
