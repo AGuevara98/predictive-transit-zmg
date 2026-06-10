@@ -15,13 +15,21 @@ import os
 # Database Configuration (PostgreSQL + PostGIS)
 # =============================================================================
 PG_USER = os.getenv("PG_USER", "aguevara")
-PG_PASS = os.getenv("PG_PASS", "550800")
+PG_PASS = os.getenv("PG_PASS", "")
 PG_HOST = os.getenv("PG_HOST", "localhost")
 PG_PORT = os.getenv("PG_PORT", "5432")
 PG_DB = os.getenv("PG_DB", "gdl_metro")
 
 # Construct connection URI for SQLAlchemy
-PG_URI = f"postgresql://{PG_USER}:{PG_PASS}@{PG_HOST}:{PG_PORT}/{PG_DB}"
+# When running inside WSL, PGHOST env var points to the Unix socket dir.
+import socket as _socket
+_pg_host_override = os.getenv("PGHOST", PG_HOST)
+# Detect if running in WSL (socket path override)
+if _pg_host_override.startswith("/"):
+    # Unix socket: postgresql+psycopg2:///dbname?host=/var/run/postgresql
+    PG_URI = f"postgresql+psycopg2://{PG_USER}:{PG_PASS}@/{PG_DB}?host={_pg_host_override}"
+else:
+    PG_URI = f"postgresql://{PG_USER}:{PG_PASS}@{_pg_host_override}:{PG_PORT}/{PG_DB}"
 
 # =============================================================================
 # Project Spatial Configuration
@@ -101,3 +109,8 @@ DB_SCHEMAS = {
     "base": "Normalized, transformed, indexed tables (EPSG:6372)",
     "features": "AGEB-aggregated features for modeling",
 }
+# =============================================================================
+# API Credentials
+# =============================================================================
+INEGI_TOKEN = os.getenv("INEGI_TOKEN", "")
+NASA_JWT = os.getenv("NASA_JWT", "")
