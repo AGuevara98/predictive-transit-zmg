@@ -1,0 +1,62 @@
+{
+  "positive_rate": 0.8166431593794076,
+  "n_rows": 1418,
+  "duplicate_ageb_ids": 0,
+  "shared_train_test_feature_vectors": 0,
+  "conflicting_label_vectors": 0,
+  "top_univariate_pr_auc": [
+    {
+      "feature": "stops_400m",
+      "best_direction": "positive",
+      "best_pr_auc": 0.9836818853679201
+    },
+    {
+      "feature": "stops_800m",
+      "best_direction": "positive",
+      "best_pr_auc": 0.9743240428597696
+    },
+    {
+      "feature": "min_stop_dist_m",
+      "best_direction": "negative",
+      "best_pr_auc": 0.9538714991762768
+    },
+    {
+      "feature": "employment_proxy",
+      "best_direction": "positive",
+      "best_pr_auc": 0.9278818626812106
+    },
+    {
+      "feature": "route_km_800m",
+      "best_direction": "positive",
+      "best_pr_auc": 0.9244990566825431
+    },
+    {
+      "feature": "slope_mean",
+      "best_direction": "negative",
+      "best_pr_auc": 0.8495654029252564
+    }
+  ],
+  "label_shuffle_sanity": {
+    "random_forest": {
+      "mean_pr_auc": 0.7936268020036108,
+      "std_pr_auc": 0.010924809790966127,
+      "folds": [
+        0.8029940638601233,
+        0.7783027759963723,
+        0.7995835661543367
+      ]
+    },
+    "lightgbm": {
+      "mean_pr_auc": 0.8030914625519504,
+      "std_pr_auc": 0.018302747319615793,
+      "folds": [
+        0.7811733812604834,
+        0.8021264047603165,
+        0.8259746016350518
+      ]
+    }
+  },
+  "risk_flags": [
+    "A single feature nearly separates classes (top stops_400m PR-AUC=0.9837)"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "run_id": "phase2_20260508_130123",
+  "feature_columns": [
+    "stops_400m",
+    "stops_800m",
+    "min_stop_dist_m",
+    "employment_proxy",
+    "route_km_800m",
+    "slope_mean"
+  ],
+  "artifacts": {
+    "random_forest": "C:\\Users\\aguev\\Documents\\Maestria_UDG\\tesis\\predictive-transit-zmg\\outputs\\phase2\\models\\phase2_20260508_130123_random_forest.pkl",
+    "lightgbm": "C:\\Users\\aguev\\Documents\\Maestria_UDG\\tesis\\predictive-transit-zmg\\outputs\\phase2\\models\\phase2_20260508_130123_lightgbm.pkl"
+  },
+  "metrics_cv_csv": "C:\\Users\\aguev\\Documents\\Maestria_UDG\\tesis\\predictive-transit-zmg\\outputs\\phase2\\metrics\\phase2_20260508_130123_cv_metrics.csv",
+  "metrics_test_csv": "C:\\Users\\aguev\\Documents\\Maestria_UDG\\tesis\\predictive-transit-zmg\\outputs\\phase2\\metrics\\phase2_20260508_130123_test_metrics.csv"
+}
