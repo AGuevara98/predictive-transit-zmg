@@ -98,7 +98,9 @@ Place all source files in the `data/` directory:
 - `INEGI_DENUE_UTF8.csv` (DENUE economic data)
 - `ageb_zmg_2020_v2.gpkg` (AGEB boundaries)
 - `linea_4.geojson` (Line 4 rail geometry)
-- `continuonacional_15m.tif` (DEM raster for slope calculations)
+- `continuonacional_15m.tif` (DEM raster for slope calculations — **not tracked in git, ~7.2 GB**)
+
+> **Obtaining the DEM raster:** Download from the [INEGI CEM 3.0 portal](https://www.inegi.org.mx/app/geo2/elevacionesmexicanas/) — select the Jalisco/ZMG extent at 15m resolution and save as `data/continuonacional_15m.tif`. See `data/download_dem.sh` for step-by-step instructions.
 
 Then run the data loader:
 
@@ -265,6 +267,7 @@ predictive-transit-zmg/
 │   └── copilot-instructions.md   # AI agent instructions for development
 ├── data/
 │   ├── _load_gdl_data.sh          # Data import script
+│   ├── download_dem.sh            # Instructions to obtain DEM raster (gitignored, ~7.2 GB)
 │   ├── encuesta_origen_destino/   # Raw OD survey data (gitignored, large)
 │   ├── *.txt                      # GTFS files
 │   ├── *.csv                      # DENUE economic data
@@ -322,15 +325,4 @@ The study area covers 10 municipalities in the ZMG:
 7. Ixtlahuacán de los Membrillos
 8. Juanacatlán
 9. Zapotlanejo
-10. Acatlán de Juárez
-
-### Feature Engineering
-
-Each AGEB (Área Geoestadística Básica) receives computed features:
-
-| Feature | Source | Calculation |
-|---------|--------|-------------|
-| **Accessibility** | GTFS stops | Count stops within 400m/800m buffers; min distance |
-| **Employment** | DENUE | Establishment counts by SCIAN sector; employment proxy |
-| **Topography** | DEM raster | Mean slope (degrees) |
-| **Route Supply**
+10. Acatlán de Juár
