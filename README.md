@@ -325,4 +325,56 @@ The study area covers 10 municipalities in the ZMG:
 7. Ixtlahuacán de los Membrillos
 8. Juanacatlán
 9. Zapotlanejo
-10. Acatlán de Juár
+10. Acatlán de Juárez
+
+### Feature Engineering
+
+Each AGEB (Área Geoestadística Básica) receives computed features:
+
+| Feature | Source | Calculation |
+|---------|--------|-------------|
+| **Accessibility** | GTFS stops | Count stops within 400m/800m buffers; min distance |
+| **Employment** | DENUE | Establishment counts by SCIAN sector; employment proxy |
+| **Topography** | DEM raster | Mean slope (degrees) |
+| **Route Supply** | Transit routes | Transit kilometers within 800m buffer |
+
+## Troubleshooting
+
+### Projection Mismatch Errors
+If spatial joins fail silently, verify both tables use EPSG:6372:
+```sql
+SELECT ST_SRID(geom) FROM base.ageb LIMIT 1;
+SELECT ST_SRID(geom) FROM base.gtfs_stops LIMIT 1;
+```
+
+### Slow Spatial Queries
+Ensure GIST indexes exist on all geometry columns:
+```sql
+CREATE INDEX IF NOT EXISTS idx_ageb_geom ON base.ageb USING GIST (geom);
+ANALYZE base.ageb;
+```
+
+### DENUE Duplication Issues
+Verify `denue_id` uniqueness before aggregation:
+```sql
+SELECT denue_id, COUNT(*) FROM raw.denue GROUP BY denue_id HAVING COUNT(*) > 1;
+```
+
+### Raster Null Values
+DEM slope calculations may return NaN for water/no-data areas. Coalesce in queries:
+```sql
+COALESCE(slope_mean, 0) AS slope_safe
+```
+
+## Contributing
+
+When adding new features:
+1. Create aggregation query in **features** schema (see [db_setup/DDL.sql](db_setup/DDL.sql))
+2. Ensure AGEB-level granularity (`GROUP BY a.cvegeo`)
+3. Add GIST index on `ageb_id`; run `ANALYZE`
+4. Update `features.master_suitability` to include new feature
+5. Document SCIAN filters or distance thresholds used
+
+## Citation
+
+Master's thesis, Universidad de Guadalajara. [Add thesis details here]
