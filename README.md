@@ -142,6 +142,117 @@ psql -U user -d gdl_metro -c "SELECT PostGIS_Version();"
 psql -U user -d gdl_metro -c "SELECT table_name FROM information_schema.tables WHERE table_schema IN ('raw', 'base', 'features');"
 ```
 
+## Predictive Framework: Six-Phase Pipeline
+
+This project implements a data-driven **NPP-V (Node-Place-People-Vitality)** framework applied to 2,068 AGEBs across the ZMG. All weights are computed objectively — no expert subjectivity.
+
+### Phase 1: Data Acquisition
+
+**Goal:** Ingest all raw geospatial, socioeconomic, and transit data into the database.
+
+```bash
+python src/run_phase1.py
+
+# Individual components:
+python src/phase1_osm_extraction.py        # OSM street network & POIs
+python src/phase1_denue_acquisition.py     # DENUE economic establishments
+python src/phase1_census_indicators.py     # INEGI Census (population, marginalization)
+python src/phase1_viirs_acquisition.py     # NASA VIIRS night-time light raster
+python src/phase1_ridership_acquisition.py # GTFS ridership data
+python src/phase1_report.py                # Phase 1 summary report
+```
+
+**Outputs:**
+- Raw tables in `raw` schema: OSM streets/POIs, DENUE establishments, Census AGEBs, VIIRS raster, GTFS feeds
+- `outputs/phase1/phase1_report.md`
+
+### Phase 2: Feature Engineering
+
+**Goal:** Normalize and engineer 16 NPP-V features at the AGEB level.
+
+```bash
+python src/run_phase2.py
+
+# Individual components:
+python src/phase2_db_setup.py          # Initialize feature schema
+python src/phase2_feature_engineering.py  # Compute all 16 NPP-V features
+python src/phase2_train_models.py      # Train RF + LightGBM classifiers
+python src/phase2_predict_surface.py   # Score all AGEBs
+python src/phase2_shap_analysis.py     # SHAP global feature importance
+python src/phase2_report.py            # Phase 2 report
+```
+
+**Outputs:**
+- `features.nppv_features`: 16 normalized NPP-V indicators per AGEB
+- `features.ageb_suitability_predictions`: RF and LightGBM scores
+- `features.model_feature_importance`: SHAP feature importance
+- `outputs/phase2/models/*.pkl`, `outputs/phase2/shap/*.png`
+- `outputs/phase2/phase2_report.md`
+
+### Phase 3: Objective Weighting (CRITIC + EWM)
+
+**Goal:** Compute objective indicator weights using an ensemble of CRITIC and Entropy Weight Method (EWM).
+
+```bash
+bash scripts/run_phase3_wsl.sh
+
+# Or directly:
+python src/phase3_weighting.py   # Compute CRITIC & EWM weights
+python src/phase3_report.py      # Phase 3 report
+```
+
+**Outputs:**
+- `features.nppv_weights`: Objective weights for all 16 indicators
+- `outputs/phase3/phase3_report.md`
+
+### Phase 4: Transit Suitability Typologies
+
+**Goal:** Cluster AGEBs into 3 transit suitability typologies (A/B/C) using K-Means++.
+
+```bash
+bash scripts/run_phase4_wsl.sh
+
+python src/phase4_clustering.py   # K-Means++ clustering
+python src/phase4_report.py       # Typology profiling report
+```
+
+**Outputs:**
+- `features.ageb_typologies`: Cluster assignments per AGEB
+- `outputs/phase4/phase4_report.md`
+
+### Phase 5: Predictive Modeling & Interpretability
+
+**Goal:** Train Random Forest and XGBoost multi-class classifiers to predict typology membership; explain predictions with SHAP.
+
+```bash
+bash scripts/run_phase5_wsl.sh
+
+python src/phase5_predictive_modeling.py   # RF + XGBoost, 5-fold Stratified CV
+python src/phase5_report.py                # Metrics and SHAP interpretability report
+```
+
+**Outputs:**
+- Model artifacts: `outputs/phase5/models/*.pkl`
+- CV metrics (primary metric: macro F1 ~1.0)
+- SHAP plots per typology: `outputs/phase5/shap/*.png`
+- `outputs/phase5/phase5_report.md`
+
+**Key findings:** `v_ridership_annual` and `pe_marginacion` are the primary drivers across all typologies.
+
+### Phase 6: Final Synthesis
+
+**Goal:** Compile all phase reports and visualizations into a single master thesis document.
+
+```bash
+bash scripts/run_phase6_wsl.sh
+
+python src/phase6_synthesis.py   # Consolidate all phase reports
+```
+
+**Outputs:**
+- `outputs/phase6/synthesis_report.md`: Master thesis synthesis document
+- `outputs/phase6/images/`: All phase visualizations consolidated
+
 ## Project Structure
 
 ```
@@ -152,20 +263,38 @@ predictive-transit-zmg/
 ├── config.sh                      # Shell configuration (credentials, constants)
 ├── .github/
 │   └── copilot-instructions.md   # AI agent instructions for development
-├── db_setup/
-│   ├── setup_postgis_gdl.sh       # Database & PostGIS setup script
-│   └── DDL.sql                    # Schema initialization & feature engineering
 ├── data/
 │   ├── _load_gdl_data.sh          # Data import script
+│   ├── encuesta_origen_destino/   # Raw OD survey data (gitignored, large)
 │   ├── *.txt                      # GTFS files
 │   ├── *.csv                      # DENUE economic data
 │   ├── *.gpkg                     # AGEB boundaries
 │   └── *.geojson                  # Line 4 rail geometry
+├── db_setup/
+│   ├── setup_postgis_gdl.sh       # Database & PostGIS setup script
+│   └── DDL.sql                    # Schema initialization & feature engineering
+├── scripts/
+│   ├── run_phase2_wsl.sh          # WSL runner: feature engineering
+│   ├── run_phase3_wsl.sh          # WSL runner: objective weighting
+│   ├── run_phase4_wsl.sh          # WSL runner: clustering
+│   ├── run_phase5_wsl.sh          # WSL runner: predictive modeling
+│   ├── run_phase6_wsl.sh          # WSL runner: synthesis
+│   └── debug/                     # Development/debug utilities
 ├── src/
+│   ├── run_phase1.py              # Phase 1 orchestrator
+│   ├── run_phase2.py              # Phase 2 orchestrator
+│   ├── phase1_*.py                # Phase 1 acquisition modules
+│   ├── phase2_*.py                # Phase 2 feature engineering modules
+│   ├── phase3_*.py                # Phase 3 weighting modules
+│   ├── phase4_*.py                # Phase 4 clustering modules
+│   ├── phase5_*.py                # Phase 5 predictive modeling modules
+│   ├── phase6_synthesis.py        # Phase 6 synthesis
 │   ├── geo_restrictions.py        # OSM extraction for 10 municipalities
 │   └── overture_extraction.py     # POI extraction from Overture S3
-└── notebooks/
-    └── to_ageb.ipynb              # AGEB-level aggregation workflow
+├── notebooks/
+│   └── to_ageb.ipynb              # AGEB-level aggregation workflow
+└── outputs/
+    ├── phase1/ … phase6/          # Generated reports, models, visualizations
 ```
 
 ## Key Concepts
@@ -204,45 +333,4 @@ Each AGEB (Área Geoestadística Básica) receives computed features:
 | **Accessibility** | GTFS stops | Count stops within 400m/800m buffers; min distance |
 | **Employment** | DENUE | Establishment counts by SCIAN sector; employment proxy |
 | **Topography** | DEM raster | Mean slope (degrees) |
-| **Route Supply** | Transit routes | Transit kilometers within 800m buffer |
-
-## Troubleshooting
-
-### Projection Mismatch Errors
-If spatial joins fail silently, verify both tables use EPSG:6372:
-```sql
-SELECT ST_SRID(geom) FROM base.ageb LIMIT 1;
-SELECT ST_SRID(geom) FROM base.gtfs_stops LIMIT 1;
-```
-
-### Slow Spatial Queries
-Ensure GIST indexes exist on all geometry columns:
-```sql
-CREATE INDEX IF NOT EXISTS idx_ageb_geom ON base.ageb USING GIST (geom);
-ANALYZE base.ageb;
-```
-
-### DENUE Duplication Issues
-Verify `denue_id` uniqueness before aggregation:
-```sql
-SELECT denue_id, COUNT(*) FROM raw.denue GROUP BY denue_id HAVING COUNT(*) > 1;
-```
-
-### Raster Null Values
-DEM slope calculations may return NaN for water/no-data areas. Coalesce in queries:
-```sql
-COALESCE(slope_mean, 0) AS slope_safe
-```
-
-## Contributing
-
-When adding new features:
-1. Create aggregation query in **features** schema (see [db_setup/DDL.sql](db_setup/DDL.sql))
-2. Ensure AGEB-level granularity (`GROUP BY a.cvegeo`)
-3. Add GIST index on `ageb_id`; run `ANALYZE`
-4. Update `features.master_suitability` to include new feature
-5. Document SCIAN filters or distance thresholds used
-
-## Citation
-
-Master's thesis, Universidad de Guadalajara. [Add thesis details here]
+| **Route Supply**
