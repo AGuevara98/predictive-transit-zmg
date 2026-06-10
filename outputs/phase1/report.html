@@ -1,0 +1,674 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Phase 1 Audit Report - Predictive Transit ZMG</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                background-color: #f5f5f5;
+                padding: 20px;
+            }
+            
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                background-color: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                overflow: hidden;
+            }
+            
+            header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 40px 20px;
+                text-align: center;
+            }
+            
+            header h1 {
+                font-size: 2.5em;
+                margin-bottom: 10px;
+            }
+            
+            header p {
+                font-size: 1.1em;
+                opacity: 0.9;
+            }
+            
+            .content {
+                padding: 40px;
+            }
+            
+            .section {
+                margin-bottom: 40px;
+            }
+            
+            .section h2 {
+                font-size: 1.8em;
+                color: #667eea;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 3px solid #667eea;
+            }
+            
+            .section h3 {
+                font-size: 1.3em;
+                color: #555;
+                margin-top: 20px;
+                margin-bottom: 15px;
+            }
+            
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+            
+            thead {
+                background-color: #667eea;
+                color: white;
+            }
+            
+            th {
+                padding: 12px;
+                text-align: left;
+                font-weight: 600;
+            }
+            
+            td {
+                padding: 10px 12px;
+                border-bottom: 1px solid #ddd;
+            }
+            
+            tbody tr:hover {
+                background-color: #f9f9f9;
+            }
+            
+            .stat-box {
+                display: inline-block;
+                background-color: #f0f0f0;
+                border-left: 4px solid #667eea;
+                padding: 15px 20px;
+                margin: 10px 10px 10px 0;
+                border-radius: 4px;
+            }
+            
+            .stat-box .label {
+                font-size: 0.9em;
+                color: #666;
+                text-transform: uppercase;
+                font-weight: 600;
+                margin-bottom: 5px;
+            }
+            
+            .stat-box .value {
+                font-size: 2em;
+                color: #667eea;
+                font-weight: bold;
+            }
+            
+            .progress-bar {
+                height: 20px;
+                background-color: #ddd;
+                border-radius: 10px;
+                overflow: hidden;
+                margin: 5px 0;
+            }
+            
+            .progress-fill {
+                height: 100%;
+                background: linear-gradient(90deg, #667eea, #764ba2);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 0.8em;
+                font-weight: bold;
+            }
+            
+            .highlight {
+                background-color: #fff3cd;
+                border: 1px solid #ffc107;
+                padding: 15px;
+                border-radius: 4px;
+                margin: 15px 0;
+            }
+            
+            .recommendation {
+                background-color: #d4edda;
+                border: 1px solid #28a745;
+                padding: 15px;
+                border-radius: 4px;
+                margin: 15px 0;
+            }
+            
+            .footer {
+                background-color: #f9f9f9;
+                padding: 20px;
+                text-align: center;
+                color: #666;
+                border-top: 1px solid #ddd;
+                margin-top: 40px;
+            }
+            
+            .footer p {
+                margin: 5px 0;
+                font-size: 0.9em;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>🚌 Phase 1: NP-RV Audit Report</h1>
+                <p>Predictive Transit Route Placement - Zona Metropolitana de Guadalajara</p>
+                <p style="font-size: 0.9em; margin-top: 10px;">Generated: 2026-05-08 11:19:04</p>
+            </header>
+            
+            <div class="content">
+                <!-- EXECUTIVE SUMMARY -->
+                <div class="section">
+                    <h2>📊 Executive Summary</h2>
+                    
+                    <p>This report documents Phase 1 of the NP-RV (Node-Place-Real Estate-Vitality) model for identifying optimal transit route placement in ZMG. 
+                    Using CRITIC weighting methodology, we have:</p>
+                    
+                    <div style="margin-top: 20px;">
+                        <div class="stat-box">
+                            <div class="label">CRITIC Features</div>
+                            <div class="value">6</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">Stations Audited</div>
+                            <div class="value">10774</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">AGEB Coverage</div>
+                            <div class="value">1158</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">Training Examples</div>
+                            <div class="value">14</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- CRITIC WEIGHTS -->
+                <div class="section">
+                    <h2>⚖️ CRITIC Feature Importance Ranking</h2>
+                    
+                    <p>The CRITIC (Criteria Importance Through Intercriteria Correlation) method computes feature weights based on 
+                    variance (discrimination power) and correlation (independence). Higher weights indicate features with greater 
+                    importance for suitability assessment.</p>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Feature</th>
+                                <th>Weight</th>
+                                <th>Variance</th>
+                                <th>Avg Correlation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+    
+                            <tr>
+                                <td><strong>1</strong></td>
+                                <td>slope_inverted</td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 29.089169208390768%;">
+                                            0.2909
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>0.021600</td>
+                                <td>0.0890</td>
+                            </tr>
+        
+                            <tr>
+                                <td><strong>2</strong></td>
+                                <td>route_km_800m</td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 27.554796640815038%;">
+                                            0.2755
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>0.027949</td>
+                                <td>0.3331</td>
+                            </tr>
+        
+                            <tr>
+                                <td><strong>3</strong></td>
+                                <td>stops_800m</td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 12.598779166605054%;">
+                                            0.1260
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>0.015425</td>
+                                <td>0.4475</td>
+                            </tr>
+        
+                            <tr>
+                                <td><strong>4</strong></td>
+                                <td>employment_proxy</td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 11.541864049900878%;">
+                                            0.1154
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>0.010484</td>
+                                <td>0.2554</td>
+                            </tr>
+        
+                            <tr>
+                                <td><strong>5</strong></td>
+                                <td>stops_400m</td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 10.13803878615867%;">
+                                            0.1014
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>0.011954</td>
+                                <td>0.4263</td>
+                            </tr>
+        
+                            <tr>
+                                <td><strong>6</strong></td>
+                                <td>min_dist_inverted</td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 9.07735214812959%;">
+                                            0.0908
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>0.007661</td>
+                                <td>0.1985</td>
+                            </tr>
+        
+                        </tbody>
+                    </table>
+                    
+                    <div class="highlight">
+                        <strong>✓ Validation:</strong> Weights sum to 1.0000 (target: 1.0000)
+                    </div>
+                </div>
+                
+                <!-- STATION AUDIT -->
+                <div class="section">
+                    <h2>🚏 Station NP-RV Audit</h2>
+                    
+                    <p>Existing transit stops have been scored using the weighted CRITIC features. Summary statistics:</p>
+                    
+                    <table>
+                        <tr>
+                            <td><strong>Total Stations:</strong></td>
+                            <td>10774</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Unique AGEBs:</strong></td>
+                            <td>1158</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Min NP-RV Score:</strong></td>
+                            <td>0.0293</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Max NP-RV Score:</strong></td>
+                            <td>0.6849</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Mean NP-RV Score:</strong></td>
+                            <td>0.2555</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Std Dev:</strong></td>
+                            <td>0.0903</td>
+                        </tr>
+                    </table>
+                    
+                    <h3>Top 10 Stations by NP-RV Score</h3>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Station Name</th>
+                                <th>NP-RV Score</th>
+                                <th>Stops 400m</th>
+                                <th>Employment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+    
+                            <tr>
+                                <td>1</td>
+                                <td>Calle Donato Guerra</td>
+                                <td><strong>0.6849</strong></td>
+                                <td>44</td>
+                                <td>6535</td>
+                            </tr>
+        
+                            <tr>
+                                <td>2</td>
+                                <td>Calle Enrique González Martínez</td>
+                                <td><strong>0.6769</strong></td>
+                                <td>48</td>
+                                <td>5635</td>
+                            </tr>
+        
+                            <tr>
+                                <td>3</td>
+                                <td>8 de Julio</td>
+                                <td><strong>0.6700</strong></td>
+                                <td>54</td>
+                                <td>4645</td>
+                            </tr>
+        
+                            <tr>
+                                <td>4</td>
+                                <td>EL CARMEN</td>
+                                <td><strong>0.6673</strong></td>
+                                <td>52</td>
+                                <td>4625</td>
+                            </tr>
+        
+                            <tr>
+                                <td>4</td>
+                                <td>EL CARMEN</td>
+                                <td><strong>0.6673</strong></td>
+                                <td>52</td>
+                                <td>4625</td>
+                            </tr>
+        
+                            <tr>
+                                <td>6</td>
+                                <td>Francisco I. Madero</td>
+                                <td><strong>0.6659</strong></td>
+                                <td>40</td>
+                                <td>5550</td>
+                            </tr>
+        
+                            <tr>
+                                <td>7</td>
+                                <td>El Carmen</td>
+                                <td><strong>0.6654</strong></td>
+                                <td>53</td>
+                                <td>4410</td>
+                            </tr>
+        
+                            <tr>
+                                <td>8</td>
+                                <td>Francisco I. Madero</td>
+                                <td><strong>0.6650</strong></td>
+                                <td>40</td>
+                                <td>5490</td>
+                            </tr>
+        
+                            <tr>
+                                <td>9</td>
+                                <td>Calle Jesús González Ortega</td>
+                                <td><strong>0.6641</strong></td>
+                                <td>50</td>
+                                <td>6240</td>
+                            </tr>
+        
+                            <tr>
+                                <td>10</td>
+                                <td>Avenida 8 de Julio</td>
+                                <td><strong>0.6625</strong></td>
+                                <td>55</td>
+                                <td>4040</td>
+                            </tr>
+        
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- TRAINING DATA -->
+                <div class="section">
+                    <h2>📚 Training Dataset for Phase 2</h2>
+                    
+                    <p>A balanced dataset has been created for ML model training, with stratification by accessibility and employment quartiles.</p>
+                    
+                    <h3>Class Distribution</h3>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Label</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                                <th>Avg Stops 400m</th>
+                                <th>Avg Employment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+    
+                            <tr>
+                                <td><strong>unsuitable</strong></td>
+                                <td>708</td>
+                                <td>37.9%</td>
+                                <td>6.1</td>
+                                <td>152</td>
+                            </tr>
+        
+                            <tr>
+                                <td><strong>suitable</strong></td>
+                                <td>1158</td>
+                                <td>62.1%</td>
+                                <td>46.6</td>
+                                <td>648</td>
+                            </tr>
+        
+                        </tbody>
+                    </table>
+                    
+                    <h3>Stratification by Accessibility-Employment Quartiles</h3>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Stratum</th>
+                                <th>Total Examples</th>
+                                <th>Positive Examples</th>
+                                <th>Avg Employment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+    
+                            <tr>
+                                <td>existing_station</td>
+                                <td>1158</td>
+                                <td>1158</td>
+                                <td>648</td>
+                            </tr>
+        
+                            <tr>
+                                <td>underserved_q1_1</td>
+                                <td>35</td>
+                                <td>0</td>
+                                <td>48</td>
+                            </tr>
+        
+                            <tr>
+                                <td>underserved_q1_2</td>
+                                <td>33</td>
+                                <td>0</td>
+                                <td>284</td>
+                            </tr>
+        
+                            <tr>
+                                <td>underserved_q1_3</td>
+                                <td>72</td>
+                                <td>0</td>
+                                <td>nan</td>
+                            </tr>
+        
+                            <tr>
+                                <td>underserved_q1_4</td>
+                                <td>28</td>
+                                <td>0</td>
+                                <td>nan</td>
+                            </tr>
+        
+                            <tr>
+                                <td>underserved_q2_1</td>
+                                <td>42</td>
+                                <td>0</td>
+                                <td>45</td>
+                            </tr>
+        
+                            <tr>
+                                <td>underserved_q2_2</td>
+                                <td>39</td>
+                                <td>0</td>
+                                <td>357</td>
+                            </tr>
+        
+                            <tr>
+                                <td>underserved_q2_3</td>
+                                <td>50</td>
+                                <td>0</td>
+                                <td>nan</td>
+                            </tr>
+        
+                            <tr>
+                                <td>underserved_q2_4</td>
+                                <td>49</td>
+                                <td>0</td>
+                                <td>nan</td>
+                            </tr>
+        
+                            <tr>
+                                <td>underserved_q3_1</td>
+                                <td>45</td>
+                                <td>0</td>
+                                <td>55</td>
+                            </tr>
+        
+                            <tr>
+                                <td>underserved_q3_2</td>
+                                <td>53</td>
+                                <td>0</td>
+                                <td>332</td>
+                            </tr>
+        
+                            <tr>
+                                <td>underserved_q3_3</td>
+                                <td>30</td>
+                                <td>0</td>
+                                <td>nan</td>
+                            </tr>
+        
+                            <tr>
+                                <td>underserved_q3_4</td>
+                                <td>52</td>
+                                <td>0</td>
+                                <td>nan</td>
+                            </tr>
+        
+                            <tr>
+                                <td>underserved_q4_1</td>
+                                <td>58</td>
+                                <td>0</td>
+                                <td>51</td>
+                            </tr>
+        
+                            <tr>
+                                <td>underserved_q4_2</td>
+                                <td>55</td>
+                                <td>0</td>
+                                <td>504</td>
+                            </tr>
+        
+                            <tr>
+                                <td>underserved_q4_3</td>
+                                <td>16</td>
+                                <td>0</td>
+                                <td>nan</td>
+                            </tr>
+        
+                            <tr>
+                                <td>underserved_q4_4</td>
+                                <td>51</td>
+                                <td>0</td>
+                                <td>nan</td>
+                            </tr>
+        
+                        </tbody>
+                    </table>
+                    
+                    <div class="recommendation">
+                        <strong>✓ Training Data Ready:</strong> 1866 balanced examples prepared for Phase 2 model training
+                    </div>
+                </div>
+                
+                <!-- NEXT STEPS -->
+                <div class="section">
+                    <h2>🎯 Next Steps - Phase 2 (Prediction)</h2>
+                    
+                    <p>The Phase 1 audit provides the foundation for Phase 2 machine learning model training:</p>
+                    
+                    <ol style="margin-left: 20px; line-height: 2;">
+                        <li><strong>Train RandomForest + LightGBM</strong> classifiers on the balanced training dataset</li>
+                        <li><strong>Evaluate models</strong> using 5-fold cross-validation and hold-out test set</li>
+                        <li><strong>Generate suitability predictions</strong> for all ~1,100 AGEBs in ZMG</li>
+                        <li><strong>Create SHAP interpretability layer</strong> to explain feature contributions</li>
+                        <li><strong>Document model performance</strong> and feature importance for thesis reporting</li>
+                    </ol>
+                    
+                    <div class="recommendation">
+                        <strong>Expected Outcome:</strong> Suitability scores (S) for all AGEBs, ready for Phase 3 Steiner Tree route optimization
+                    </div>
+                </div>
+                
+                <!-- REFERENCES -->
+                <div class="section">
+                    <h2>📚 References</h2>
+                    
+                    <ul style="margin-left: 20px; line-height: 2;">
+                        <li>Diakoulaki, D., Mavrotas, G., & Papayannakis, L. (1995). Determining objective weights in multiple criteria problems: 
+                        The critic method. <em>Computers & Operations Research</em>, 22(7), 763-770.</li>
+                        <li>Bertolini, L. (1996). Nodes and places: complexities of railway station redevelopment. 
+                        <em>European Planning Studies</em>, 4(3), 331-345.</li>
+                        <li>Liu, S., Hu, Y., Zhang, Y., & Tan, R. (2024). NP-RV: Node-Place-Real Estate-Vitality model for transit-oriented development. 
+                        <em>Journal of Urban Planning and Development</em>. (In review)</li>
+                        <li>Takahashi, H. & Matsuyama, A. (1980). An approximate solution for the Steiner problem in graphs. 
+                        <em>Mathematica Japonica</em>, 24(6), 573-577.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p><strong>Predictive Transit ZMG - Master's Thesis</strong></p>
+                <p>Geospatial Analysis Pipeline for Optimal Route Placement</p>
+                <p>Phase 1 Report | Generated automatically by phase1_report.py</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    
