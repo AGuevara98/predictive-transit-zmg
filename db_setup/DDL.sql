@@ -237,12 +237,7 @@ SELECT
         ELSE 0 END) AS employment_proxy
 FROM base.ageb a
 LEFT JOIN raw.denue d ON ST_Intersects(a.geom, ST_Transform(d.geom, 6372))
-WHERE (d.scian_codigo IS NULL OR 
-      (LEFT(d.scian_codigo::text, 2) IN ('31','32','33','43','46','54','55','61','62','71') 
-       OR d.scian_codigo::text LIKE '561%' 
-       OR d.scian_codigo::text LIKE '722%' 
-       OR d.scian_codigo::text LIKE '931%')
-      AND d.estrato_personal NOT IN ('0 a 5 personas', '6 a 10 personas'))
+WHERE d.estrato_personal NOT IN ('0 a 5 personas', '6 a 10 personas')
 GROUP BY a.cvegeo;
 
 CREATE INDEX idx_ageb_emp_id ON features.ageb_employment (ageb_id);
@@ -268,9 +263,15 @@ DROP TABLE IF EXISTS features.ageb_topography CASCADE;
 CREATE TABLE features.ageb_topography AS
 SELECT 
     a.cvegeo AS ageb_id,
-    (ST_SummaryStats(ST_Slope(ST_Union(ST_Clip(r.rast, a.geom)), 1, '32BF'))).mean AS slope_mean
+    (ST_SummaryStats(
+        ST_Slope(
+            ST_Union(ST_Clip(ST_Transform(r.rast, 6372), a.geom)),
+            1,
+            '32BF'
+        )
+    )).mean AS slope_mean
 FROM base.ageb a
-JOIN raw.dem r ON ST_Intersects(r.rast, a.geom)
+JOIN raw.dem r ON ST_Intersects(ST_Transform(r.rast, 6372), a.geom)
 GROUP BY a.cvegeo;
 
 CREATE INDEX idx_ageb_topo_id ON features.ageb_topography (ageb_id);
@@ -315,11 +316,11 @@ SELECT
     acc.min_stop_dist_m,
     emp.employment_proxy,
     COALESCE(rs.route_km_within_800m, 0) AS route_km_800m,
-    topo.slope_mean
+    COALESCE(topo.slope_mean, 0) AS slope_mean
 FROM base.ageb a
 JOIN features.ageb_accessibility acc ON a.cvegeo = acc.ageb_id
 JOIN features.ageb_employment emp ON a.cvegeo = emp.ageb_id
-JOIN features.ageb_topography topo ON a.cvegeo = topo.ageb_id
+LEFT JOIN features.ageb_topography topo ON a.cvegeo = topo.ageb_id
 LEFT JOIN features.ageb_route_supply rs ON a.cvegeo = rs.ageb_id;
 
 ANALYZE features.master_suitability;
