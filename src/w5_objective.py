@@ -12,16 +12,16 @@ def load_ageb_context(cvegeos: List[str], engine) -> List[AgebContext]:
         return []
     query = text("""
         SELECT
-            g.ageb_id                              AS cvegeo,
+            g.cve_ageb                             AS cvegeo,
             t.transit_demand,
-            COALESCE(g.coverage_gap_normalized, 0) AS unserved_fraction,
+            COALESCE(g.coverage_gap_n, 0)          AS unserved_fraction,
             COALESCE(p.equity_score, 0)            AS equity_score
         FROM features.ageb_coverage_gap g
         JOIN features.ageb_trip_ends t
-            ON t.cve_ageb = g.ageb_id
+            ON t.cve_ageb = g.cve_ageb
         LEFT JOIN features.nppv_prioritization p
-            ON p.cvegeo = g.ageb_id
-        WHERE g.ageb_id = ANY(:ids)
+            ON p.cve_ageb = g.cve_ageb
+        WHERE g.cve_ageb = ANY(:ids)
     """)
     with engine.connect() as conn:
         rows = conn.execute(query, {"ids": list(cvegeos)}).fetchall()
