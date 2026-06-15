@@ -14,7 +14,7 @@ Master's thesis: a **7-phase geospatial ML pipeline** to predict optimal transit
 - W2 (Survey Calibration): ✅ Complete — EOD 2022 ingested; beta=2.0 retained (calibrated optimum worse); see W2 section below
 - W3 (Supply & Coverage-Gap Layer): ✅ Complete — accessibility surface + coverage-gap index in DB; model retrained on external target; see W3 section below
 - W4 (Reposition NPP-V): ✅ Complete — features.nppv_prioritization in DB; 14 NODE+PLACE+PEOPLE features; final_score=(0.80*npp_score)+(0.20*equity_score); see W4 section below
-- W5 (Multi-objective function): 📋 Planned
+- W5 (Multi-objective function): ✅ Complete — code skeleton (types, objective, constraints, Pareto) + spec contract for W6/W7; 39 tests; see W5 section below
 - W6 (New corridor generation): 📋 Planned
 - W7 (Existing route audit): 📋 Planned
 - W8 (Validation): 📋 Planned
@@ -426,15 +426,67 @@ W4 repositions Phase 3's CRITIC/EWM weighting as a place-based prioritization ma
 - Equity term (α=0.20) is transparent and documented; thesis can report sensitivity analysis with α∈{0.10, 0.20, 0.30}
 - W4 scores all AGEBs; W6 applies W3 gap as pre-filter when selecting anchors — clean separation of concerns
 
-**Next: W5 multi-objective function (depends on no upstream changes)**
+**Next: W6 new corridor generation (depends on W3 + W5)**
 
 ---
 
-**W5 — Multi-objective function (blocks W6 and W7)**
-- Define the formal optimality criterion: maximize demand-weighted accessibility gain, minimize route-km cost, add equity term (W4), add transfer penalty
-- Specify constraints: max detour ratio, stop-spacing standards, minimum demand threshold, route-length cap
-- Recommend Pareto/NSGA-II framing so trade-offs are explicit
-- Output: a written spec + code skeleton reused by both W6 and W7
+## W5 — Multi-Objective Function (completed 2026-06-15)
+
+W5 defines the formal evaluation framework that W6 (corridor generation) and W7 (route audit) use to score and rank route candidates against three competing objectives.
+
+**Completed sub-tasks:**
+
+1. **W5.1 — Data types and config** (`src/w5_types.py`)
+   - `W5Config` — all tunable parameters with defaults (weights, constraints, gain factors)
+   - `RouteCandidate` — input interface: `served_ageb_ids`, `route_km`, `n_stops`, `straight_line_km`, `connects_to_existing`
+   - `AgebContext` — per-AGEB context fetched from DB: `transit_demand`, `unserved_fraction`, `equity_score`
+   - `ObjectiveResult` — scored output: `f1_demand_gain`, `f2_route_km`, `f3_equity`, `composite_score`, `total_score`
+   - `ConstraintResult` / `ConstraintViolation` — feasibility status with named violation details
+
+2. **W5.2 — Objective function** (`src/w5_objective.py`)
+   - `load_ageb_context(cvegeos, engine)` — parameterized DB fetch joining `ageb_coverage_gap` + `ageb_trip_ends` + `nppv_prioritization`; uses `ANY(:ids)` (no SQL injection)
+   - `evaluate_objective(candidate, contexts, config)` — pure math, no DB:
+     - `f1 = sum(demand_i × gain_factor × unserved_fraction_i) / sum(demand_i)` [maximize]
+     - `f2 = route_km` [minimize]
+     - `f3 = mean(equity_score_i)` [maximize]
+     - `gain_factor = 0.50` if connected to SITEUR, else `0.20`
+     - `transfer_penalty = 0.10` for isolated routes (flat deduction from composite)
+     - `composite = 0.50 × f1_scaled + 0.25 × efficiency + 0.25 × f3`
+     - `total_score = composite - transfer_penalty`
+
+3. **W5.3 — Constraint checker** (`src/w5_constraints.py`)
+   - `check_constraints(candidate, contexts, config)` — accumulates all violations (not short-circuit):
+     - `detour_ratio = route_km / straight_line_km ≤ 1.8`
+     - `stop_spacing = route_km × 1000 / (n_stops − 1) ∈ [300, 1000] m`
+     - `sum(transit_demand) ≥ 500 trips/day`
+     - `route_km ≤ 30.0 km`
+
+4. **W5.4 — Pareto ranking** (`src/w5_pareto.py`)
+   - `pareto_objectives(results)` — returns `(n, 3)` matrix minimizing `(-f1, f2, -f3)`
+   - `dominates(a, b)` — standard weak-domination: `all(a ≤ b) and any(a < b)`
+   - `pareto_rank(results)` — fast non-dominated sort (O(n²)); rank 1 = Pareto front
+
+5. **W5.5 — Demo orchestrator + spec** (`src/run_w5.py`)
+   - Fetches top-10 High-gap AGEBs; builds 3 synthetic candidates; evaluates + constrains + Pareto-ranks
+   - Writes `outputs/w5/w5_spec.md` (interface contract for W6/W7), `w5_report.md`, `w5_pareto_demo.png`
+
+**Orchestrator:** `python src/run_w5.py` — no DB migration (W6 owns `features.route_candidates`)
+
+**Key files (all created):**
+- `src/w5_types.py`, `src/w5_objective.py`, `src/w5_constraints.py`, `src/w5_pareto.py`, `src/run_w5.py`
+- `tests/test_w5_types.py`, `tests/test_w5_objective.py`, `tests/test_w5_constraints.py`, `tests/test_w5_pareto.py` (39 tests)
+- `outputs/w5/{w5_spec.md, w5_report.md, w5_pareto_demo.png}`
+
+**DB schema notes (actual column names, differ from plan):**
+- `features.ageb_coverage_gap`: PK column is `cve_ageb` (not `ageb_id`); normalized gap column is `coverage_gap_n` (not `coverage_gap_normalized`)
+- `features.nppv_prioritization`: join key is `cve_ageb` (not `cvegeo`)
+- `base.ageb`: geometry column is `geom` (not `geometry`)
+
+**Invariants maintained:**
+- All W5 functions are pure or DB-read-only; no writes to DB
+- `f1_demand_gain` stored raw (unscaled) in `ObjectiveResult` for correct Pareto comparisons; scaling only applied inside composite calculation
+- `unserved_fraction` sourced from `coverage_gap_n` — 1.0 = completely unserved, 0.0 = well-served
+- W6/W7 interface fully documented in `outputs/w5/w5_spec.md`
 
 **W6 — New corridor generation (depends on W3 + W5)**
 - Anchor selection from `features.ageb_coverage_gap` (high-gap AGEBs) using Jenks natural breaks, not arbitrary thresholds
