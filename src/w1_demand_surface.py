@@ -92,7 +92,12 @@ def write_demand_surface(df: pd.DataFrame):
                     WHERE cve_ageb = :cve_ageb"""),
             records
         )
-    print(f"  [OK] {len(records):,} rows updated")
+        updated = conn.execute(
+            text("SELECT COUNT(*) FROM features.ageb_trip_ends WHERE transit_demand IS NOT NULL")
+        ).scalar()
+    if updated != len(records):
+        raise RuntimeError(f"Expected {len(records)} rows updated, but only {updated} have transit_demand set.")
+    print(f"  [OK] {updated:,} rows updated")
 
 
 def main():
