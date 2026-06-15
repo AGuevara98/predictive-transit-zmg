@@ -12,7 +12,6 @@ Usage:
 """
 import subprocess
 import sys
-import traceback
 from pathlib import Path
 from sqlalchemy import create_engine, text
 
@@ -23,8 +22,8 @@ from config import PG_URI
 def run_sql_file(engine, sql_file: Path, description: str) -> bool:
     print(f"\n{'='*70}\n  {description}\n{'='*70}")
     try:
+        sql_text = sql_file.read_text(encoding="utf-8")
         with engine.begin() as conn:
-            sql_text = sql_file.read_text(encoding="utf-8")
             print(f"  Executing: {sql_file.name}...")
             conn.execute(text(sql_text))
         print(f"  [OK] {description} -- COMPLETE")
@@ -34,15 +33,19 @@ def run_sql_file(engine, sql_file: Path, description: str) -> bool:
         return False
 
 
-def run_python_script(script: Path, description: str, timeout: int = 3600) -> bool:
+def run_python_script(_engine, script: Path, description: str, timeout: int = 3600) -> bool:
     print(f"\n{'='*70}\n  {description}\n{'='*70}")
     try:
         result = subprocess.run(
             [sys.executable, str(script)],
-            timeout=timeout
+            capture_output=True, text=True, timeout=timeout
         )
+        if result.stdout:
+            print(result.stdout)
         if result.returncode != 0:
-            print(f"  [ERR] {description} returned exit code {result.returncode}")
+            print(f"  [ERR] {description}:")
+            if result.stderr:
+                print(result.stderr)
             return False
         print(f"  [OK] {description} -- COMPLETE")
         return True
@@ -51,7 +54,6 @@ def run_python_script(script: Path, description: str, timeout: int = 3600) -> bo
         return False
     except Exception as e:
         print(f"  [ERR] {description}: {e}")
-        traceback.print_exc()
         return False
 
 
@@ -65,21 +67,15 @@ def main():
     mig_dir      = project_root / "db_setup" / "migrations"
     engine       = create_engine(PG_URI)
 
-    # Step 1: DDL
-    if not run_sql_file(engine, mig_dir / "002_w1_demand_tables.sql", "Step 1: DDL -- W1 output tables"):
-        print(f"\n[ERR] W1 pipeline aborted.")
-        engine.dispose()
-        sys.exit(1)
-
-    # Step 2-4: Python scripts
-    scripts = [
-        (src_dir / "w1_trip_generation.py",    "Step 2: W1.1 -- Trip generation"),
-        (src_dir / "w1_gravity_model.py",      "Step 3: W1.2 -- Gravity model"),
-        (src_dir / "w1_demand_surface.py",     "Step 4: W1.3 -- Transit-demand surface"),
+    steps = [
+        (run_sql_file,      engine, mig_dir / "002_w1_demand_tables.sql", "Step 1: DDL -- W1 output tables"),
+        (run_python_script, None,   src_dir / "w1_trip_generation.py",    "Step 2: W1.1 -- Trip generation"),
+        (run_python_script, None,   src_dir / "w1_gravity_model.py",      "Step 3: W1.2 -- Gravity model"),
+        (run_python_script, None,   src_dir / "w1_demand_surface.py",     "Step 4: W1.3 -- Transit-demand surface"),
     ]
 
-    for script, description in scripts:
-        if not run_python_script(script, description):
+    for fn, *args in steps:
+        if not fn(*args):
             print(f"\n[ERR] W1 pipeline aborted.")
             engine.dispose()
             sys.exit(1)
