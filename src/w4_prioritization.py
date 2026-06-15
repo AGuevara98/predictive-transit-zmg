@@ -284,7 +284,7 @@ def generate_cluster_profiles(scores_df: pd.DataFrame, out_dir: Path):
     print(profile.to_string(index=False))
 
 
-def write_report(weights_df: pd.DataFrame, scores_df: pd.DataFrame, out_dir: Path):
+def write_report(weights_df: pd.DataFrame, scores_df: pd.DataFrame, features_df: pd.DataFrame, out_dir: Path):
     print("[Step 11] Writing w4_report.md...")
     import datetime
     from scipy.stats import spearmanr
@@ -299,26 +299,14 @@ def write_report(weights_df: pd.DataFrame, scores_df: pd.DataFrame, out_dir: Pat
     q5_count = int((scores_df["priority_quintile"] == 5).sum())
     q1_count = int((scores_df["priority_quintile"] == 1).sum())
 
-    # Sensitivity: Spearman rank correlation for alpha values vs alpha=0.20
-    engine = _get_engine()
-    with engine.raw_connection() as conn:
-        feat_df = pd.read_sql(
-            "SELECT cve_ageb, " + ", ".join(NPP_FEATURES) +
-            " FROM features.nppv_features", conn
-        )
-    for col in NPP_FEATURES:
-        feat_df[col] = pd.to_numeric(feat_df[col], errors="coerce").fillna(0.0)
-
-    critic_w = compute_critic_weights(feat_df[NPP_FEATURES])
-    ewm_w = compute_ewm_weights(feat_df[NPP_FEATURES])
-    ensemble_w = compute_ensemble_weights(critic_w, ewm_w)
-
-    base_scores = compute_scores(feat_df, ensemble_w, alpha=0.20)
-    base_ranks = base_scores.set_index("cve_ageb")["priority_rank"]
+    # Sensitivity: Spearman rank correlation for alpha values vs alpha=0.20.
+    # Reuse features_df and weights_df passed in — no redundant DB round-trip.
+    ensemble_w_from_df = dict(zip(weights_df["feature"], weights_df["ensemble_weight"]))
+    base_ranks = scores_df.set_index("cve_ageb")["priority_rank"]
 
     sensitivity_rows = []
     for alpha_val in [0.10, 0.20, 0.30]:
-        alt = compute_scores(feat_df, ensemble_w, alpha=alpha_val)
+        alt = compute_scores(features_df, ensemble_w_from_df, alpha=alpha_val)
         alt_ranks = alt.set_index("cve_ageb")["priority_rank"]
         aligned_base, aligned_alt = base_ranks.align(alt_ranks, join="inner")
         rho, _ = spearmanr(aligned_base, aligned_alt)
@@ -388,6 +376,7 @@ can be changed to use other equity indicators.
 - `outputs/w4/nppv_w4_weights_bar.png`
 - `outputs/w4/nppv_score_vs_equity.png`
 - `outputs/w4/cluster_priority_profiles.csv`
+- `outputs/w4/w4_report.md`
 """
     (out_dir / "w4_report.md").write_text(report, encoding="utf-8")
     print(f"  [OK] outputs/w4/w4_report.md")
@@ -454,7 +443,7 @@ def main():
     generate_cluster_profiles(scores_df, out_dir)
 
     # Report
-    write_report(weights_df, scores_df, out_dir)
+    write_report(weights_df, scores_df, features_df, out_dir)
 
     print("\n" + "="*70)
     print(" [OK] W4 NPP PRIORITIZATION LAYER COMPLETE")
@@ -470,6 +459,9 @@ def main():
     print("  nppv_score_vs_equity.png")
     print("  cluster_priority_profiles.csv")
     print("  w4_report.md")
+
+    if _ENGINE is not None:
+        _ENGINE.dispose()
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 # W4 NPP Prioritization Layer Report
-*Generated: 2026-06-15 14:04:00*
+*Generated: 2026-06-15 14:58:44*
 
 ## Methodology
 
@@ -89,3 +89,4 @@ can be changed to use other equity indicators.
 - `outputs/w4/nppv_w4_weights_bar.png`
 - `outputs/w4/nppv_score_vs_equity.png`
 - `outputs/w4/cluster_priority_profiles.csv`
+- `outputs/w4/w4_report.md`
