@@ -1,8 +1,8 @@
 -- 005_w4_tables.sql
 -- W4 NPP Prioritization Layer — output tables
 
-DROP TABLE IF EXISTS features.nppv_w4_weights CASCADE;
 DROP TABLE IF EXISTS features.nppv_prioritization CASCADE;
+DROP TABLE IF EXISTS features.nppv_w4_weights CASCADE;
 
 CREATE TABLE features.nppv_w4_weights (
     feature          VARCHAR(50) PRIMARY KEY,
@@ -24,4 +24,5 @@ CREATE TABLE features.nppv_prioritization (
 CREATE INDEX nppv_prioritization_final_score_idx
     ON features.nppv_prioritization (final_score DESC);
 
+ANALYZE features.nppv_w4_weights;
 ANALYZE features.nppv_prioritization;
