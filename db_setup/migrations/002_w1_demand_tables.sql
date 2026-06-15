@@ -27,7 +27,6 @@ CREATE TABLE features.ageb_od_matrix (
 COMMENT ON TABLE features.ageb_od_matrix IS
     'W1 doubly-constrained gravity model OD flows; sparse (flow >= 0.5 threshold)';
 
-CREATE INDEX ageb_od_origin_idx ON features.ageb_od_matrix (origin_cve_ageb);
 CREATE INDEX ageb_od_dest_idx   ON features.ageb_od_matrix (dest_cve_ageb);
 
 ANALYZE features.ageb_trip_ends;
