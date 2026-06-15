@@ -20,7 +20,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import psycopg2.extras
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import PG_URI
@@ -112,8 +112,14 @@ def compute_scores(df: pd.DataFrame, ensemble_w: dict, alpha: float = ALPHA) -> 
     })
 
 
+_ENGINE = None
+
+
 def _get_engine():
-    return create_engine(PG_URI)
+    global _ENGINE
+    if _ENGINE is None:
+        _ENGINE = create_engine(PG_URI)
+    return _ENGINE
 
 
 # ---------------------------------------------------------------------------
