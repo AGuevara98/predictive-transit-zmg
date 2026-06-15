@@ -133,6 +133,9 @@ def write_od_matrix(cve_list: list, T: np.ndarray, D: np.ndarray):
                 page_size=5000
             )
         conn.commit()
+        with conn.cursor() as cur:
+            cur.execute("ANALYZE features.ageb_od_matrix")
+        conn.commit()
     print(f"  [OK] OD matrix written")
 
 
@@ -145,6 +148,11 @@ def main():
     centroids = load_centroids()
     merged    = trip_ends.merge(centroids, on="cve_ageb", how="inner")
     print(f"  [OK] {len(merged):,} AGEBs in both trip_ends and centroids")
+    if len(merged) < len(centroids):
+        missing = len(centroids) - len(merged)
+        print(f"  [WARN] {missing} AGEBs in base.ageb have no trip_ends -- run w1_trip_generation.py first.")
+        if len(merged) < 0.95 * len(centroids):
+            raise RuntimeError(f"Too many missing AGEBs ({missing}); aborting to prevent partial OD matrix.")
 
     D     = build_distance_matrix(merged)
     prods = merged["productions"].values.astype(float)
@@ -155,7 +163,7 @@ def main():
 
     write_od_matrix(merged["cve_ageb"].tolist(), T, D)
 
-    out_path = Path("outputs/w1")
+    out_path = Path(__file__).parent.parent / "outputs" / "w1"
     out_path.mkdir(parents=True, exist_ok=True)
     stored   = int((T >= FLOW_THRESHOLD).sum())
     pd.DataFrame([{
