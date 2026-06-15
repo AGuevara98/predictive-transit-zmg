@@ -59,7 +59,9 @@ def load_census_population(census_path: Path) -> pd.DataFrame:
 
     if "P_15A29" not in census.columns:
         for c in ["P_15A17", "P_18A24"]:
-            census[c] = pd.to_numeric(census.get(c, pd.Series(0)), errors="coerce").fillna(0)
+            if c not in census.columns:
+                census[c] = 0
+            census[c] = pd.to_numeric(census[c], errors="coerce").fillna(0)
         census["P_15A29"] = census["P_15A17"] + census["P_18A24"]
     else:
         census["P_15A29"] = pd.to_numeric(census["P_15A29"], errors="coerce").fillna(0)
@@ -72,6 +74,8 @@ def load_census_population(census_path: Path) -> pd.DataFrame:
 
 
 def load_place_features() -> pd.DataFrame:
+    # Raw (non-normalized) columns required: p_poi_density and p_retail_density are
+    # in units of POIs/km2; compute_attractions() multiplies by area_km2 to recover counts.
     print("[Step 3] Loading place features from nppv_features...")
     with ENGINE.raw_connection() as conn:
         df = pd.read_sql(
@@ -97,7 +101,7 @@ def compute_attractions(merged: pd.DataFrame) -> pd.Series:
 
 
 def write_trip_ends(df: pd.DataFrame):
-    print("[Step 5] Writing trip ends to database...")
+    print("[Step 5] Writing trip ends to database...")  # Step 5 in main(): 1=load_agebs, 2=load_census, 3=load_place, 4=compute, 5=write
     records = df[["cve_ageb", "productions", "attractions"]].to_dict("records")
     with ENGINE.begin() as conn:
         conn.execute(text("DELETE FROM features.ageb_trip_ends"))
@@ -128,6 +132,8 @@ def main():
     print("[Step 4] Computing productions & attractions...")
     merged = agebs.merge(pop_df, on="cve_ageb", how="left")
     merged = merged.merge(place_df, on="cve_ageb", how="left").fillna(0)
+    # Exclude A-suffix AGEBs (manzana aggregates that bypass base.ageb DDL filter)
+    merged = merged[~merged["cve_ageb"].str.contains("A", na=False)].reset_index(drop=True)
 
     merged["productions"] = compute_productions(merged)
     merged["attractions"] = compute_attractions(merged)
