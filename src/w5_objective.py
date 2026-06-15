@@ -10,8 +10,7 @@ def load_ageb_context(cvegeos: List[str], engine) -> List[AgebContext]:
     """Fetch transit_demand, unserved_fraction, equity_score for a set of AGEBs."""
     if not cvegeos:
         return []
-    placeholders = ", ".join(f"'{c}'" for c in cvegeos)
-    query = text(f"""
+    query = text("""
         SELECT
             g.ageb_id                              AS cvegeo,
             t.transit_demand,
@@ -22,10 +21,10 @@ def load_ageb_context(cvegeos: List[str], engine) -> List[AgebContext]:
             ON t.cve_ageb = g.ageb_id
         LEFT JOIN features.nppv_prioritization p
             ON p.cvegeo = g.ageb_id
-        WHERE g.ageb_id IN ({placeholders})
+        WHERE g.ageb_id = ANY(:ids)
     """)
     with engine.connect() as conn:
-        rows = conn.execute(query).fetchall()
+        rows = conn.execute(query, {"ids": list(cvegeos)}).fetchall()
     return [
         AgebContext(
             cvegeo=str(r.cvegeo),
@@ -60,7 +59,9 @@ def evaluate_objective(
         else config.isolated_gain_factor
     )
 
-    total_demand = sum(c.transit_demand for c in ageb_contexts) or 1.0
+    total_demand = sum(c.transit_demand for c in ageb_contexts)
+    if total_demand <= 0.0:
+        total_demand = 1.0  # zero-demand corridor: gain will be 0 regardless
 
     # f1: demand-weighted accessibility gain, rescaled to [0, 1] via gain_factor
     weighted_gain = sum(
@@ -68,7 +69,7 @@ def evaluate_objective(
         for c in ageb_contexts
     )
     f1_raw = weighted_gain / total_demand          # in [0, gain_factor]
-    f1_scaled = f1_raw / gain_factor               # in [0, 1] for composite
+    f1_scaled = f1_raw / gain_factor if gain_factor > 0.0 else 0.0
 
     # f2: route km (stored raw; composite uses efficiency instead)
     f2 = candidate.route_km
@@ -80,7 +81,10 @@ def evaluate_objective(
     penalty = 0.0 if candidate.connects_to_existing else config.transfer_penalty
 
     # efficiency: higher score for shorter routes
-    efficiency = max(0.0, 1.0 - f2 / config.max_route_km)
+    if config.max_route_km > 0.0:
+        efficiency = max(0.0, 1.0 - f2 / config.max_route_km)
+    else:
+        efficiency = 0.0
 
     composite = (
         config.w_demand_gain * f1_scaled

@@ -85,3 +85,41 @@ def test_composite_bounded_above_one(cfg):
     contexts = [make_ctx("A", 1e6, 1.0, 1.0)]
     result = evaluate_objective(candidate, contexts, cfg)
     assert result.composite_score <= 1.0 + 1e-9
+
+
+def test_zero_demand_corridor_returns_zero_f1(cfg):
+    candidate = make_candidate("R_zero", ["A"], connected=True)
+    contexts = [make_ctx("A", 0.0, 0.8, 0.5)]
+    result = evaluate_objective(candidate, contexts, cfg)
+    assert result.f1_demand_gain == 0.0
+
+
+def test_fully_served_ageb_returns_zero_f1(cfg):
+    candidate = make_candidate("R_served", ["A"], connected=True)
+    contexts = [make_ctx("A", 1000.0, 0.0, 0.5)]
+    result = evaluate_objective(candidate, contexts, cfg)
+    assert result.f1_demand_gain == 0.0
+
+
+def test_route_km_exceeds_max_gives_zero_efficiency(cfg):
+    # route_km=35 > max_route_km=30 -> efficiency=0, composite only from f1+f3
+    candidate = make_candidate("R_long", ["A"], route_km=35.0, n_stops=50, straight_km=20.0, connected=True)
+    contexts = [make_ctx("A", 1000.0, 0.5, 0.5)]
+    result = evaluate_objective(candidate, contexts, cfg)
+    f1_scaled = result.f1_demand_gain / cfg.connected_gain_factor
+    expected_composite = cfg.w_demand_gain * f1_scaled + cfg.w_equity * result.f3_equity
+    assert result.composite_score == pytest.approx(expected_composite, rel=1e-6)
+
+
+def test_zero_route_km_gives_max_efficiency(cfg):
+    # route_km=0 -> efficiency = max(0, 1 - 0/30) = 1.0
+    candidate = make_candidate("R_zero_km", ["A"], route_km=0.0, n_stops=2, straight_km=0.0, connected=True)
+    contexts = [make_ctx("A", 500.0, 0.5, 0.5)]
+    result = evaluate_objective(candidate, contexts, cfg)
+    f1_scaled = result.f1_demand_gain / cfg.connected_gain_factor
+    expected_composite = (
+        cfg.w_demand_gain * f1_scaled
+        + cfg.w_efficiency * 1.0
+        + cfg.w_equity * result.f3_equity
+    )
+    assert result.composite_score == pytest.approx(expected_composite, rel=1e-6)
