@@ -65,3 +65,25 @@ def test_constraint_result_infeasible_with_violation():
     cr = ConstraintResult(feasible=False, violations=[v])
     assert cr.feasible is False
     assert cr.violations[0].name == "detour_ratio"
+
+
+def test_constraint_result_violations_are_independent():
+    cr1 = ConstraintResult(feasible=True)
+    cr2 = ConstraintResult(feasible=True)
+    cr1.violations.append(ConstraintViolation("x", 1.0, 0.5, "msg"))
+    assert cr2.violations == []
+
+
+def test_objective_result_instantiation():
+    obj = ObjectiveResult(
+        candidate_id="R1",
+        f1_demand_gain=0.35,
+        f2_route_km=8.5,
+        f3_equity=0.62,
+        transfer_penalty=0.10,
+        composite_score=0.55,
+        total_score=0.45,
+    )
+    assert obj.candidate_id == "R1"
+    assert obj.total_score == 0.45
+    assert obj.composite_score != obj.total_score
