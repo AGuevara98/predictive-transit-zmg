@@ -13,7 +13,7 @@ Master's thesis: a **7-phase geospatial ML pipeline** to predict optimal transit
 - W1 (Demand Estimation Layer): ✅ Complete — `ageb_trip_ends` + `ageb_od_matrix` in DB; transit_demand surface written; see W1 section below
 - W2 (Survey Calibration): ✅ Complete — EOD 2022 ingested; beta=2.0 retained (calibrated optimum worse); see W2 section below
 - W3 (Supply & Coverage-Gap Layer): ✅ Complete — accessibility surface + coverage-gap index in DB; model retrained on external target; see W3 section below
-- W4 (Reposition NPP-V): 📋 Next
+- W4 (Reposition NPP-V): ✅ Complete — features.nppv_prioritization in DB; 14 NODE+PLACE+PEOPLE features; final_score=(0.80*npp_score)+(0.20*equity_score); see W4 section below
 - W5 (Multi-objective function): 📋 Planned
 - W6 (New corridor generation): 📋 Planned
 - W7 (Existing route audit): 📋 Planned
@@ -376,6 +376,59 @@ Per `docs/game_plan_demand_driven_restructure.md`:
 - **W4 scores all 2,068 AGEBs** (not only High-gap ones). W4 is a full-coverage NPP + equity prioritization map; W6 applies the W3 gap as a pre-filter when selecting corridor anchors. This keeps W4 independent of W3's threshold choices and makes the prioritization map reusable if gap thresholds change.
 - **Equity integration: additive bonus term (option B).** Three approaches considered: (A) boost `pe_marginacion_n`/`pe_rezago_n` weights inside CRITIC/EWM by a manual multiplier — rejected because an arbitrary multiplier undermines R3's "no expert weighting" claim; (B) additive equity term after CRITIC/EWM: `final_score = (1 - α) × npp_score + α × equity_score` where `equity_score = mean(pe_marginacion_n, pe_rezago_n)` and α=0.20 — chosen because it is transparent, separable, and the thesis can report scores with and without the equity term, making trade-offs explicit; (C) equity as a tie-breaker/rank modifier within quintiles — rejected because it makes the equity contribution invisible in the continuous score. **α=0.20 is the documented default; sensitivity analysis with α∈{0.10, 0.20, 0.30} should be reported.**
 - **Vitality dimension dropped entirely from W4 CRITIC/EWM.** `v_ridership_annual_n` is a municipality-level proxy (all AGEBs in a SITEUR municipality share the same value), so after normalization it behaves as a binary "has SITEUR" flag — providing zero AGEB-level discrimination and dominating ensemble weight (0.2519) for the wrong reason. Two alternatives were considered: (a) replace with W1 `transit_demand_n`, rejected because feeding modeled demand back into the prioritization score blurs the clean conceptual separation between the demand layer (W1/W3) and the place-characteristics layer (NPP-V); (b) keep `v_ridership_annual_n`, rejected because the known defect would be inherited. Decision: run CRITIC/EWM on the **14 NODE + PLACE + PEOPLE indicators only**. The framework is renamed from NPP-V to NPP (Node-Place-People) for W4 onward, or framed as "NPP-V with V replaced by the W3 coverage-gap index" depending on thesis framing preference. Demand signal lives exclusively in W1/W3; NPP captures place characteristics.
+
+---
+
+## W4 — NPP Prioritization Layer (completed 2026-06-15)
+
+W4 repositions Phase 3's CRITIC/EWM weighting as a place-based prioritization map decoupled from demand/supply measures, introduces an explicit equity term, and scores all 2,068 AGEBs.
+
+**Completed sub-tasks:**
+
+1. **W4.1 — CRITIC + EWM weighting on 14 NPP features** (`src/w4_prioritization.py` lines 1–120)
+   - Input: 14 normalized features from `features.nppv_features` (Node: 3, Place: 5, People: 6; Vitality dropped per design decision)
+   - CRITIC step: standard deviation × correlation entropy, ranks features by importance
+   - EWM step: proportional entropy weights, α=0.5 (equal weighting to CRITIC + EWM)
+   - Output: `features.nppv_w4_weights` — one row per feature with `critic_weight`, `ewm_weight`, `ensemble_weight`
+   - Example: `pe_population_n` scores high (dense, high-need areas); `p_land_use_mix_n` scores lower (less discriminating in ZMG)
+
+2. **W4.2 — NPP + equity composite scoring** (`src/w4_prioritization.py` lines 121–160)
+   - `npp_score = sum(feature_n × ensemble_weight)` over 14 features per AGEB; normalized [0, 1]
+   - `equity_score = mean(pe_marginacion_n, pe_rezago_n)` — average of two poverty/deprivation indicators
+   - `final_score = 0.80 × npp_score + 0.20 × equity_score` (α=0.20, documented default per W4 design decision)
+   - Ranks, quintiles, and ratio `final_score / npp_score` computed for diagnostics
+   - Output: `features.nppv_prioritization` — 2,068 rows, all AGEBs scored
+
+3. **W4.3 — Export + visualization** (`src/w4_prioritization.py` lines 161–200)
+   - **CSV outputs:** `nppv_w4_weights.csv` (14 rows), `nppv_prioritization.csv` (2,068 rows)
+   - **GeoJSON:** `nppv_prioritization.geojson` — all AGEBs with geometries, scores, and rank quintiles
+   - **Charts:** (a) `nppv_w4_weights_bar.png` — ensemble weights sorted descending; (b) `nppv_score_vs_equity.png` — scatter plot npp_score vs final_score, colored by equity_score
+   - **Cluster profiles:** `cluster_priority_profiles.csv` — mean/median scores per K-Means cluster (A/B/C), connecting Phase 4 segmentation to W4 prioritization
+   - **Report:** `w4_report.md` — weight table, top/bottom 20 AGEBs by final_score, methodology + design decisions
+
+**Orchestrator:** `src/run_w4.py` — runs DDL migration 005 + w4_prioritization.py in sequence.
+
+**Key files (all created):**
+- `src/w4_prioritization.py`
+- `src/run_w4.py`
+- `db_setup/migrations/005_w4_tables.sql`
+- `outputs/w4/{nppv_w4_weights.csv, nppv_prioritization.csv, nppv_prioritization.geojson, nppv_w4_weights_bar.png, nppv_score_vs_equity.png, cluster_priority_profiles.csv, w4_report.md}`
+
+**Key results:**
+- **14 CRITIC/EWM weights computed** — top drivers: `pe_population_n` (0.1186), `p_employment_proxy_n` (0.1063), `pe_rezago_n` (0.1052)
+- **All 2,068 AGEBs ranked** — mean npp_score=0.500, mean equity_score=0.527, mean final_score=0.506
+- **Cluster priority profiles:** Cluster 0 (474 AGEBs, npp_score=0.24) = low-priority peripheral areas; Cluster 1 (442 AGEBs, npp_score=0.66) = high-priority dense urban cores; Cluster 2 (1,152 AGEBs, npp_score=0.55) = medium-priority transitional/suburban
+- **No circularity risk:** W4 uses only NPP-V place characteristics + equity; decoupled from W1 demand and W3 accessibility; safe to apply as prioritization lens
+
+**Invariants maintained:**
+- All spatial ops in EPSG:6372; outputs join cleanly to `base.ageb` on `cve_ageb`
+- 14 features (Node+Place+People) exclude supply-side variables (`route_km_800m`, `stops_*`) and vitality proxy (`v_ridership_annual`)
+- Equity term (α=0.20) is transparent and documented; thesis can report sensitivity analysis with α∈{0.10, 0.20, 0.30}
+- W4 scores all AGEBs; W6 applies W3 gap as pre-filter when selecting anchors — clean separation of concerns
+
+**Next: W5 multi-objective function (depends on no upstream changes)**
+
+---
 
 **W5 — Multi-objective function (blocks W6 and W7)**
 - Define the formal optimality criterion: maximize demand-weighted accessibility gain, minimize route-km cost, add equity term (W4), add transfer penalty
