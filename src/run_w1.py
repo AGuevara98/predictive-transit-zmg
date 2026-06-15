@@ -12,6 +12,7 @@ Usage:
 """
 import subprocess
 import sys
+import traceback
 from pathlib import Path
 from sqlalchemy import create_engine, text
 
@@ -23,17 +24,21 @@ def run_sql_file(engine, sql_file: Path, description: str) -> bool:
     print(f"\n{'='*70}\n  {description}\n{'='*70}")
     try:
         sql_text = sql_file.read_text(encoding="utf-8")
+        statements = [s.strip() for s in sql_text.split(";") if s.strip()]
         with engine.begin() as conn:
-            print(f"  Executing: {sql_file.name}...")
-            conn.execute(text(sql_text))
+            for stmt in statements:
+                print(f"  Executing: {stmt[:80]}...")
+                conn.execute(text(stmt))
         print(f"  [OK] {description} -- COMPLETE")
         return True
     except Exception as e:
         print(f"  [ERR] {description}: {e}")
+        traceback.print_exc()
         return False
 
 
 def run_python_script(_engine, script: Path, description: str, timeout: int = 3600) -> bool:
+    # _engine kept for uniform (fn, engine, ...) dispatch signature; not used here
     print(f"\n{'='*70}\n  {description}\n{'='*70}")
     try:
         result = subprocess.run(
@@ -65,6 +70,7 @@ def main():
     project_root = Path(__file__).parent.parent
     src_dir      = project_root / "src"
     mig_dir      = project_root / "db_setup" / "migrations"
+    print("\nConnecting to PostgreSQL...")
     engine       = create_engine(PG_URI)
 
     steps = [
