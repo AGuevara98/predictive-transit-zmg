@@ -19,14 +19,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import psycopg2.extras
-from sqlalchemy import create_engine, text
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import PG_URI
-
-ENGINE = create_engine(PG_URI)
-PROJECT_ROOT = Path(__file__).parent.parent
 
 ALPHA = 0.20  # equity bonus weight; sensitivity tested at 0.10, 0.20, 0.30
 

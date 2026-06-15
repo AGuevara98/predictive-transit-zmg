@@ -95,6 +95,7 @@ def test_scores_priority_rank_range():
     result = compute_scores(df, ensemble, alpha=0.20)
     assert result["priority_rank"].min() == 1
     assert result["priority_rank"].max() == len(df)
+    assert set(result["priority_rank"]) == set(range(1, len(df) + 1))
 
 
 def test_scores_priority_quintile_values():
