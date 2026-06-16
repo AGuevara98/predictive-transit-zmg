@@ -1,0 +1,55 @@
+{
+  "positive_rate": 0.20696324951644102,
+  "n_rows": 2068,
+  "top_univariate_pr_auc": [
+    {
+      "feature": "pe_population_n",
+      "best_direction": "positive",
+      "best_pr_auc": 0.4241356378985302
+    },
+    {
+      "feature": "pe_rezago_n",
+      "best_direction": "positive",
+      "best_pr_auc": 0.3169684771330383
+    },
+    {
+      "feature": "pe_youth_share_n",
+      "best_direction": "positive",
+      "best_pr_auc": 0.2790550294876738
+    },
+    {
+      "feature": "pe_pop_density_n",
+      "best_direction": "positive",
+      "best_pr_auc": 0.2558877964058527
+    },
+    {
+      "feature": "p_retail_density_n",
+      "best_direction": "positive",
+      "best_pr_auc": 0.25482826775994305
+    },
+    {
+      "feature": "pe_dep_ratio_n",
+      "best_direction": "positive",
+      "best_pr_auc": 0.2519373405998966
+    }
+  ],
+  "label_shuffle_sanity": {
+    "random_forest": {
+      "mean_pr_auc": 0.1900321231049734,
+      "folds": [
+        0.1829699384369912,
+        0.2046326678409083,
+        0.18249376303702064
+      ]
+    },
+    "lightgbm": {
+      "mean_pr_auc": 0.20485382109660663,
+      "folds": [
+        0.19645398910494205,
+        0.23255960777908732,
+        0.1855478664057905
+      ]
+    }
+  },
+  "risk_flags": []
+}

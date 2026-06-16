@@ -1,380 +1,326 @@
 # predictive-transit-zmg
-Master's thesis repo. Optimal public transit routes framework
-## Project Overview
 
-This is a **geospatial analysis pipeline** for identifying optimal public transit route placement opportunities in the Zona Metropolitana de Guadalajara (ZMG). The project ingests GTFS, OSM, and economic (DENUE) data to predict suitable areas (AGEBs) by analyzing employment, accessibility gaps, topography, and existing infrastructure.
+Master's thesis: a demand-driven, transferable framework for optimal public transit network design in Mexican metropolitan areas. Applied to the Zona Metropolitana de Guadalajara (ZMG) with a second-city demonstration on Monterrey.
+
+## What This Does
+
+The pipeline answers two research questions:
+
+- **R1 — Where should new routes go?** Identifies unserved, high-demand corridors using a modeled transit-demand surface and a coverage-gap index.
+- **R2 — Are existing routes optimal?** Scores all SITEUR GTFS routes against a formal multi-objective function and flags low-demand, indirect, and redundant routes.
+
+The framework is **transferable**: it runs on Tier-1 data (INEGI census, DENUE, OSM, GTFS) available in any Mexican city. OD survey data, when available, calibrates the demand model but is not required.
+
+The unit of analysis is the **AGEB** (Área Geoestadística Básica — census enumeration area). ZMG has 2,068 urban AGEBs across 10 municipalities.
+
+---
+
+## Workstream Status
+
+| Workstream | Description | Status |
+|---|---|---|
+| W0 | Remediation (integrity fixes) | ✅ Complete |
+| W1 | Demand estimation layer (4-step model) | ✅ Complete |
+| W2 | Survey calibration (EOD 2022) | ✅ Complete |
+| W3 | Supply & coverage-gap layer | ✅ Complete |
+| W4 | NPP prioritization (CRITIC + EWM + equity) | ✅ Complete |
+| W5 | Multi-objective function | ✅ Complete |
+| W6 | New corridor generation | ✅ Complete |
+| W7 | Existing route audit | ✅ Complete |
+| W8 | Validation (backtest + benchmark + metrics) | ✅ Complete |
+| W9 | Transferability — Monterrey Tier-1 pipeline | 🔄 In progress |
+
+---
 
 ## Quick Start
 
 ### Prerequisites
 
-- **Python 3.9+** (with virtualenv)
-- **PostgreSQL 14+** with **PostGIS 3.2+** (includes PostGIS raster)
-- **Ubuntu/WSL** (for shell scripts; Windows users: WSL2 recommended)
-- **QGIS** (optional, for spatial data inspection)
-- **ogr2ogr** and **raster2pgsql** (GDAL/PostGIS tools)
+- Python 3.9+
+- PostgreSQL 14+ with PostGIS 3.2+ (raster extension required)
+- GDAL tools: `ogr2ogr`, `raster2pgsql`
+- Ubuntu/WSL recommended for shell scripts
 
-### 1. Set Up Python Environment
+### 1. Python Environment
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\Activate.ps1
-
+source .venv/bin/activate        # Windows: .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-### 2. Configure Database Credentials
+### 2. Configure Credentials
 
-All database and project settings are centralized in two files:
+Edit `config.py` (Python scripts) and `config.sh` (shell scripts), or override via environment variables:
 
-**For Python scripts:** Edit `config.py` at project root
-```python
-PG_USER = "user"
-PG_PASS = "password"
-PG_HOST = "localhost"
-PG_PORT = "5432"
-PG_DB = "gdl_metro"
-```
-
-**For shell scripts:** Edit `config.sh` at project root
-```bash
-DB_USER="user"
-DB_PASS="password"
-DB_HOST="localhost"
-DB_PORT="5432"
-DB_NAME="gdl_metro"
-```
-
-**Production:** Override via environment variables (recommended):
 ```bash
 export PG_USER=your_user
 export PG_PASS=your_password
-export PG_HOST=your_host
-export DB_PORT=5432
+export PG_HOST=localhost
+export PG_PORT=5432
 export PG_DB=gdl_metro
 ```
 
-### 3. Set Up PostgreSQL + PostGIS Database
+### 3. Set Up PostgreSQL + PostGIS
 
-**Option A: Automated Setup (Ubuntu/WSL)**
-
+**Automated (Ubuntu/WSL):**
 ```bash
 sudo bash db_setup/setup_postgis_gdl.sh
 ```
 
-This script will:
-- Install PostgreSQL and PostGIS
-- Create database user and database
-- Enable PostGIS extensions
-- Create schemas (raw, base, features, meta)
-- Configure password authentication for localhost
-- Generate `.pgpass` file for passwordless tool access
-
-Customize with environment variables:
+**Manual:**
 ```bash
-DB_NAME=gdl_metro DB_USER=user DB_PASS=change_me sudo bash db_setup/setup_postgis_gdl.sh
-```
-
-**Option B: Manual Setup**
-
-```bash
-# Create database and user
 createdb -U postgres gdl_metro
-psql -U postgres -d gdl_metro -c "CREATE ROLE user WITH LOGIN PASSWORD 'password';"
-psql -U postgres -d gdl_metro -c "ALTER DATABASE gdl_metro OWNER TO user;"
-
-# Enable extensions
-psql -U user -d gdl_metro -c "CREATE EXTENSION postgis;"
-psql -U user -d gdl_metro -c "CREATE EXTENSION postgis_raster;"
-
-# Create schemas
-psql -U user -d gdl_metro -f db_setup/DDL.sql
+psql -U postgres -d gdl_metro -c "CREATE ROLE <user> WITH LOGIN PASSWORD '<pass>';"
+psql -U postgres -d gdl_metro -c "ALTER DATABASE gdl_metro OWNER TO <user>;"
+psql -U <user> -d gdl_metro -c "CREATE EXTENSION postgis;"
+psql -U <user> -d gdl_metro -c "CREATE EXTENSION postgis_raster;"
+psql -U <user> -d gdl_metro -f db_setup/DDL.sql
 ```
 
-### 4. Load Source Data
+### 4. Place Source Data
 
-Place all source files in the `data/` directory:
-- `stops.txt`, `routes.txt`, `trips.txt`, `stop_times.txt`, `shapes.txt`, `calendar.txt`, `frequencies.txt` (GTFS)
-- `INEGI_DENUE_UTF8.csv` (DENUE economic data)
-- `ageb_zmg_2020_v2.gpkg` (AGEB boundaries)
-- `linea_4.geojson` (Line 4 rail geometry)
-- `continuonacional_15m.tif` (DEM raster for slope calculations — **not tracked in git, ~7.2 GB**)
+```
+data/
+├── gtfs/                          # ZMG GTFS feed (SITEUR)
+│   ├── agency.txt
+│   ├── calendar.txt
+│   ├── calendar_dates.txt
+│   ├── fare_attributes.txt
+│   ├── frequencies.txt
+│   ├── routes.txt
+│   ├── shapes.txt
+│   ├── stop_times.txt
+│   ├── stops.txt
+│   └── trips.txt
+├── ageb_zmg_2020_v2.gpkg          # ZMG AGEB boundaries (INEGI 2020)
+├── INEGI_DENUE_UTF8.csv           # DENUE economic establishments (ZMG)
+├── linea_4.geojson                # W8 benchmark: Línea 4 rail geometry
+├── osm_zmg_drive.graphml          # ZMG OSM drive graph (auto-downloaded if missing)
+├── transporte_publico.gpkg        # Public transport layer
+├── continuonacional_15m.tif       # DEM raster — NOT in git (~7.2 GB)
+│                                  # Download: INEGI CEM 3.0 portal → see data/download_dem.sh
+├── encuesta_origen_destino/       # EOD 2022 (W2 calibration) — gitignored
+├── 2020_1_19_A/                   # Monterrey AGEB shapefile (W9)
+├── ageb_mza_urbana_19_cpv2020_csv/ # Monterrey CPV2020 census (W9)
+├── denue_19_0420_csv/             # Monterrey DENUE (W9)
+├── osm_mty_drive.graphml          # Monterrey OSM drive graph (W9)
+└── lineas_transporte_masivo_mty.gpkg  # Monterrey mass transit lines (W9)
+```
 
-> **Obtaining the DEM raster:** Download from the [INEGI CEM 3.0 portal](https://www.inegi.org.mx/app/geo2/elevacionesmexicanas/) — select the Jalisco/ZMG extent at 15m resolution and save as `data/continuonacional_15m.tif`. See `data/download_dem.sh` for step-by-step instructions.
-
-Then run the data loader:
-
+Load ZMG source data into PostgreSQL:
 ```bash
 cd data
 bash _load_gdl_data.sh
 cd ..
 ```
 
-This script will:
-- Import GTFS files (stops, routes, trips, shapes)
-- Load AGEB boundaries (GeoPackage)
-- Import DENUE economic establishments (CSV)
-- Load Line 4 rail geometry (GeoJSON)
-- Import DEM raster for topography analysis
+---
 
-Customize database connection:
-```bash
-DB_USER=my_user DB_PASS=my_pass DB_HOST=db.example.com bash data/_load_gdl_data.sh
-```
+## Running the Pipeline
 
-### 5. Run Feature Engineering Pipeline
-
-Execute the SQL feature engineering queries from the database setup:
+Each workstream has an orchestrator in `src/`. Run them in dependency order (W0→W1→W3→W5→W6/W7→W8; W2 alongside W1; W4 alongside W3; W9 after W1):
 
 ```bash
-psql -U user -d gdl_metro -f db_setup/DDL.sql
+# W1 — Demand estimation (trip generation → gravity model → demand surface)
+python src/run_w1.py
+
+# W2 — EOD calibration (runs after W1; beta=2.0 prior retained)
+python src/run_w2.py
+
+# W3 — Accessibility + coverage-gap index + model retrain
+python src/run_w3.py          # note: accessibility step ~20 min
+
+# W4 — NPP prioritization (CRITIC/EWM weights + equity composite)
+python src/run_w4.py
+
+# W5 — Multi-objective function demo + spec
+python src/run_w5.py
+
+# W6 — New corridor generation
+python src/run_w6.py
+
+# W7 — Existing route audit
+python src/run_w7.py
+
+# W8 — Validation (backtest + benchmark + before/after metrics)
+python src/run_w8.py
+
+# W9 — Monterrey Tier-1 pipeline
+python src/w9_run_tier1.py
 ```
 
-This materializes:
-- **features.ageb_accessibility**: Stop counts at 400m/800m buffers
-- **features.ageb_employment**: Employment proxies aggregated by SCIAN sector
-- **features.ageb_topography**: Mean slope from DEM
-- **features.ageb_route_supply**: Transit kilometers within 800m
-- **features.master_suitability**: Master table joining all features by AGEB
+---
 
-### 6. Verify Database Setup
+## Architecture
 
-```bash
-psql -U user -d gdl_metro -c "SELECT PostGIS_Version();"
-psql -U user -d gdl_metro -c "SELECT table_name FROM information_schema.tables WHERE table_schema IN ('raw', 'base', 'features');"
+### Two-Tier Data Model
+
+| Tier | Data | Role |
+|---|---|---|
+| **Tier 1** | INEGI census, DENUE, OSM, GTFS | Core pipeline — runs in any Mexican city |
+| **Tier 2** | EOD OD survey | Calibration/validation only — not a hard dependency |
+
+### Demand-Driven Pipeline
+
+```
+W1: Trip generation (census + DENUE) → OD gravity model → transit-demand surface
+W2: EOD 2022 calibration of gravity model beta (β=2.0 retained as prior)
+W3: GTFS accessibility surface → coverage-gap index (demand/supply gap)
+W4: CRITIC + EWM objective weights on 14 NPP indicators → final_score = 0.80×npp + 0.20×equity
+W5: Multi-objective function (maximize demand gain + equity; minimize route-km)
+W6: Anchor selection from W3 gap → MST on OSM graph → W5 evaluation → BRT corridors
+W7: SITEUR routes → W5 scoring → low-demand / indirect / redundant flags + modification proposals
+W8: Backtest (mask high-ridership routes; test W6 re-proposes them) + benchmark vs Línea 4
 ```
 
-## Predictive Framework: Six-Phase Pipeline
+### Database Schema
 
-This project implements a data-driven **NPP-V (Node-Place-People-Vitality)** framework applied to 2,068 AGEBs across the ZMG. All weights are computed objectively — no expert subjectivity.
+| Schema | Contents |
+|---|---|
+| `raw` | Original ingested data, no transformations |
+| `base` | Normalized tables, EPSG:6372, GIST-indexed |
+| `features` | AGEB-level metrics, model outputs, weights, scores |
 
-### Phase 1: Data Acquisition
+**Key feature tables:**
 
-**Goal:** Ingest all raw geospatial, socioeconomic, and transit data into the database.
+| Table | Description |
+|---|---|
+| `features.ageb_trip_ends` | W1 productions, attractions, vehicle rate, transit demand |
+| `features.ageb_od_matrix` | W1 doubly-constrained gravity model OD flows |
+| `features.ageb_accessibility` | W3 cumulative-opportunities accessibility (jobs reachable in 45 min) |
+| `features.ageb_coverage_gap` | W3 coverage-gap index, quintile ranks, gap category |
+| `features.nppv_features` | 14 normalized NPP indicators per AGEB |
+| `features.nppv_prioritization` | W4 npp_score, equity_score, final_score for all 2,068 AGEBs |
+| `features.route_candidates` | W6 corridor candidates with W5 scores and geometries |
+| `features.route_audit` | W7 SITEUR route scorecard with flags and modification proposals |
 
-```bash
-python src/run_phase1.py
+### Spatial Conventions
 
-# Individual components:
-python src/phase1_osm_extraction.py        # OSM street network & POIs
-python src/phase1_denue_acquisition.py     # DENUE economic establishments
-python src/phase1_census_indicators.py     # INEGI Census (population, marginalization)
-python src/phase1_viirs_acquisition.py     # NASA VIIRS night-time light raster
-python src/phase1_ridership_acquisition.py # GTFS ridership data
-python src/phase1_report.py                # Phase 1 summary report
-```
+- **Canonical CRS:** EPSG:6372 (conic equidistant for Mexico) for all calculations and storage
+- **Ingestion CRS:** EPSG:4326 (WGS84) — transformed immediately on load
+- **AGEB filter:** `CVE_ENT='14'`, excludes cells with 'A' suffix in `CVE_AGEB`, 10 ZMG municipalities only
 
-**Outputs:**
-- Raw tables in `raw` schema: OSM streets/POIs, DENUE establishments, Census AGEBs, VIIRS raster, GTFS feeds
-- `outputs/phase1/phase1_report.md`
-
-### Phase 2: Feature Engineering
-
-**Goal:** Normalize and engineer 16 NPP-V features at the AGEB level.
-
-```bash
-python src/run_phase2.py
-
-# Individual components:
-python src/phase2_db_setup.py          # Initialize feature schema
-python src/phase2_feature_engineering.py  # Compute all 16 NPP-V features
-python src/phase2_train_models.py      # Train RF + LightGBM classifiers
-python src/phase2_predict_surface.py   # Score all AGEBs
-python src/phase2_shap_analysis.py     # SHAP global feature importance
-python src/phase2_report.py            # Phase 2 report
-```
-
-**Outputs:**
-- `features.nppv_features`: 16 normalized NPP-V indicators per AGEB
-- `features.ageb_suitability_predictions`: RF and LightGBM scores
-- `features.model_feature_importance`: SHAP feature importance
-- `outputs/phase2/models/*.pkl`, `outputs/phase2/shap/*.png`
-- `outputs/phase2/phase2_report.md`
-
-### Phase 3: Objective Weighting (CRITIC + EWM)
-
-**Goal:** Compute objective indicator weights using an ensemble of CRITIC and Entropy Weight Method (EWM).
-
-```bash
-bash scripts/run_phase3_wsl.sh
-
-# Or directly:
-python src/phase3_weighting.py   # Compute CRITIC & EWM weights
-python src/phase3_report.py      # Phase 3 report
-```
-
-**Outputs:**
-- `features.nppv_weights`: Objective weights for all 16 indicators
-- `outputs/phase3/phase3_report.md`
-
-### Phase 4: Transit Suitability Typologies
-
-**Goal:** Cluster AGEBs into 3 transit suitability typologies (A/B/C) using K-Means++.
-
-```bash
-bash scripts/run_phase4_wsl.sh
-
-python src/phase4_clustering.py   # K-Means++ clustering
-python src/phase4_report.py       # Typology profiling report
-```
-
-**Outputs:**
-- `features.ageb_typologies`: Cluster assignments per AGEB
-- `outputs/phase4/phase4_report.md`
-
-### Phase 5: Predictive Modeling & Interpretability
-
-**Goal:** Train Random Forest and XGBoost multi-class classifiers to predict typology membership; explain predictions with SHAP.
-
-```bash
-bash scripts/run_phase5_wsl.sh
-
-python src/phase5_predictive_modeling.py   # RF + XGBoost, 5-fold Stratified CV
-python src/phase5_report.py                # Metrics and SHAP interpretability report
-```
-
-**Outputs:**
-- Model artifacts: `outputs/phase5/models/*.pkl`
-- CV metrics (primary metric: macro F1 ~1.0)
-- SHAP plots per typology: `outputs/phase5/shap/*.png`
-- `outputs/phase5/phase5_report.md`
-
-**Key findings:** `v_ridership_annual` and `pe_marginacion` are the primary drivers across all typologies.
-
-### Phase 6: Final Synthesis
-
-**Goal:** Compile all phase reports and visualizations into a single master thesis document.
-
-```bash
-bash scripts/run_phase6_wsl.sh
-
-python src/phase6_synthesis.py   # Consolidate all phase reports
-```
-
-**Outputs:**
-- `outputs/phase6/synthesis_report.md`: Master thesis synthesis document
-- `outputs/phase6/images/`: All phase visualizations consolidated
+---
 
 ## Project Structure
 
 ```
 predictive-transit-zmg/
-├── README.md                      # This file
-├── requirements.txt               # Python dependencies
-├── config.py                      # Python configuration (credentials, constants)
-├── config.sh                      # Shell configuration (credentials, constants)
-├── .github/
-│   └── copilot-instructions.md   # AI agent instructions for development
+├── config.py                      # Credentials + constants (single source of truth for Python)
+├── config.sh                      # Credentials + constants (single source of truth for shell)
+├── requirements.txt
 ├── data/
-│   ├── _load_gdl_data.sh          # Data import script
-│   ├── download_dem.sh            # Instructions to obtain DEM raster (gitignored, ~7.2 GB)
-│   ├── encuesta_origen_destino/   # Raw OD survey data (gitignored, large)
-│   ├── *.txt                      # GTFS files
-│   ├── *.csv                      # DENUE economic data
-│   ├── *.gpkg                     # AGEB boundaries
-│   └── *.geojson                  # Line 4 rail geometry
+│   ├── gtfs/                      # ZMG GTFS feed
+│   ├── ageb_zmg_2020_v2.gpkg
+│   ├── INEGI_DENUE_UTF8.csv
+│   ├── linea_4.geojson
+│   ├── osm_zmg_drive.graphml
+│   ├── transporte_publico.gpkg
+│   ├── continuonacional_15m.tif   # gitignored — download separately
+│   ├── encuesta_origen_destino/   # gitignored — EOD 2022 survey
+│   ├── 2020_1_19_A/               # Monterrey AGEB shapefile (W9)
+│   ├── ageb_mza_urbana_19_cpv2020_csv/  # Monterrey census (W9)
+│   ├── denue_19_0420_csv/         # Monterrey DENUE (W9)
+│   ├── osm_mty_drive.graphml      # Monterrey OSM graph (W9)
+│   ├── lineas_transporte_masivo_mty.gpkg  # Monterrey transit (W9)
+│   ├── _load_gdl_data.sh          # Data loader for ZMG
+│   └── download_dem.sh            # Instructions for obtaining DEM
 ├── db_setup/
-│   ├── setup_postgis_gdl.sh       # Database & PostGIS setup script
-│   └── DDL.sql                    # Schema initialization & feature engineering
-├── scripts/
-│   ├── run_phase2_wsl.sh          # WSL runner: feature engineering
-│   ├── run_phase3_wsl.sh          # WSL runner: objective weighting
-│   ├── run_phase4_wsl.sh          # WSL runner: clustering
-│   ├── run_phase5_wsl.sh          # WSL runner: predictive modeling
-│   ├── run_phase6_wsl.sh          # WSL runner: synthesis
-│   └── debug/                     # Development/debug utilities
+│   ├── DDL.sql                    # Full schema definition + raw→base→features materialization
+│   ├── setup_postgis_gdl.sh       # PostgreSQL + PostGIS setup (Ubuntu/WSL)
+│   └── migrations/                # Incremental schema migrations (001–007)
 ├── src/
-│   ├── run_phase1.py              # Phase 1 orchestrator
-│   ├── run_phase2.py              # Phase 2 orchestrator
-│   ├── phase1_*.py                # Phase 1 acquisition modules
-│   ├── phase2_*.py                # Phase 2 feature engineering modules
-│   ├── phase3_*.py                # Phase 3 weighting modules
-│   ├── phase4_*.py                # Phase 4 clustering modules
-│   ├── phase5_*.py                # Phase 5 predictive modeling modules
-│   ├── phase6_synthesis.py        # Phase 6 synthesis
-│   ├── geo_restrictions.py        # OSM extraction for 10 municipalities
-│   └── overture_extraction.py     # POI extraction from Overture S3
+│   ├── run_w1.py … run_w8.py      # Workstream orchestrators
+│   ├── w1_trip_generation.py      # 4-step trip generation (productions + attractions)
+│   ├── w1_gravity_model.py        # Doubly-constrained gravity model (Furness IPF)
+│   ├── w1_demand_surface.py       # Vehicle-ownership transit-propensity weighting
+│   ├── w2_eod_ingest.py           # EOD 2022 shapefile ingestion (/vsizip/ via pyogrio)
+│   ├── w2_gravity_calibration.py  # Beta calibration vs EOD desire lines (scipy)
+│   ├── w3_accessibility.py        # GTFS cumulative-opportunities accessibility (networkx)
+│   ├── w3_coverage_gap.py         # Coverage-gap index (demand / accessibility)
+│   ├── w3_retrain.py              # RF + LightGBM on high-gap binary target + SHAP
+│   ├── w4_prioritization.py       # CRITIC + EWM weights; npp_score + equity composite
+│   ├── w5_types.py                # Data classes: W5Config, RouteCandidate, ObjectiveResult
+│   ├── w5_objective.py            # Multi-objective evaluation (demand gain, cost, equity)
+│   ├── w5_constraints.py          # Feasibility checks (detour ratio, stop spacing, demand)
+│   ├── w5_pareto.py               # Non-dominated Pareto ranking
+│   ├── w6_anchors.py              # Anchor AGEB selection (Jenks + KMeans spatial clustering)
+│   ├── w6_graph.py                # OSM MST Steiner approximation
+│   ├── w6_candidates.py           # Corridor construction + served AGEB spatial join
+│   ├── w6_mode.py                 # BRT vs. local bus mode assignment by demand volume
+│   ├── w7_gtfs_loader.py          # GTFS shapes → one LineString per route
+│   ├── w7_route_scorer.py         # W5 scoring + Low-demand / Indirect / Redundant flags
+│   ├── w7_modifications.py        # Shortcut / merge / retire proposals
+│   ├── w8_backtest.py             # Mask high-ridership routes + W6 re-run + overlap metric
+│   ├── w8_benchmark.py            # Compare W6 corridors to announced ZMG expansions
+│   ├── w8_metrics.py              # Accessibility/equity Gini deltas, before/after
+│   ├── w9_city_config.py          # Monterrey constants (municipalities, census columns, bbox)
+│   ├── w9_osm_download.py         # OSM graph download for new cities
+│   └── w9_run_tier1.py            # Monterrey Tier-1 orchestrator (W1-equivalent)
+├── tests/
+│   ├── test_w1_gravity_model.py   # 5 Furness IPF unit tests
+│   ├── test_w4_prioritization.py
+│   ├── test_w5_*.py               # 39 tests for objective, constraints, Pareto, types
+│   ├── test_w6_*.py               # 21 tests for anchors, graph, candidates, mode
+│   ├── test_w7_*.py               # 33 tests for GTFS loader, scorer, modifications
+│   ├── test_w8_*.py               # Backtest + metrics tests
+│   └── test_w9_city_config.py     # 26 tests
+├── outputs/
+│   ├── w1/ … w9/                  # Generated reports, CSVs, GeoJSONs, charts
+│   └── phase1/ … phase6/          # Legacy outputs (historical reference)
+├── docs/
+│   ├── critical_review_decisions.md
+│   ├── game_plan_demand_driven_restructure.md
+│   ├── w9_city_onboarding.md      # City-onboarding checklist for new cities
+│   └── w9_data_requirements.md    # Tiered data-requirements matrix
 ├── notebooks/
-│   └── to_ageb.ipynb              # AGEB-level aggregation workflow
-└── outputs/
-    ├── phase1/ … phase6/          # Generated reports, models, visualizations
+│   └── to_ageb.ipynb
+└── scripts/
+    └── debug/                     # Database validation utilities
 ```
 
-## Key Concepts
+---
 
-### Database Schema Organization
+## Key Outputs
 
-- **raw**: Original data ingestion (no transformations)
-- **base**: Normalized tables, all geometries projected to EPSG:6372 (conic equidistant), indexed for performance
-- **features**: AGEB-level aggregated metrics for modeling
-- **meta**: Configuration and dataset registry
+| Output | Location | Description |
+|---|---|---|
+| Transit demand surface | `outputs/w1/ageb_demand_surface.csv` | 2,068 AGEBs with modeled transit demand |
+| Coverage-gap index | `outputs/w3/ageb_coverage_gap.csv` | 428 High-gap AGEBs (20.7%) |
+| NPP prioritization | `outputs/w4/nppv_prioritization.geojson` | All AGEBs scored + ranked (QGIS-ready) |
+| New corridors | `outputs/w6/corridor_candidates.geojson` | 2 feasible BRT corridors (W6_G02, W6_G05) |
+| Route audit | `outputs/w7/route_audit.geojson` | 275 SITEUR routes scored with flags |
+| Validation report | `outputs/w8/w8_report.md` | Backtest + benchmark + equity metrics |
 
-### Spatial Reference System (CRS)
+---
 
-All spatial operations use **EPSG:6372** (Conic Equidistant Projection for Mexico). External data is ingested in EPSG:4326 (WGS84) and transformed immediately.
+## Tests
 
-### Geography
-
-The study area covers 10 municipalities in the ZMG:
-1. Guadalajara
-2. Zapopan
-3. San Pedro Tlaquepaque
-4. Tonalá
-5. Tlajomulco de Zúñiga
-6. El Salto
-7. Ixtlahuacán de los Membrillos
-8. Juanacatlán
-9. Zapotlanejo
-10. Acatlán de Juárez
-
-### Feature Engineering
-
-Each AGEB (Área Geoestadística Básica) receives computed features:
-
-| Feature | Source | Calculation |
-|---------|--------|-------------|
-| **Accessibility** | GTFS stops | Count stops within 400m/800m buffers; min distance |
-| **Employment** | DENUE | Establishment counts by SCIAN sector; employment proxy |
-| **Topography** | DEM raster | Mean slope (degrees) |
-| **Route Supply** | Transit routes | Transit kilometers within 800m buffer |
-
-## Troubleshooting
-
-### Projection Mismatch Errors
-If spatial joins fail silently, verify both tables use EPSG:6372:
-```sql
-SELECT ST_SRID(geom) FROM base.ageb LIMIT 1;
-SELECT ST_SRID(geom) FROM base.gtfs_stops LIMIT 1;
+```bash
+pytest tests/ -v
 ```
 
-### Slow Spatial Queries
-Ensure GIST indexes exist on all geometry columns:
-```sql
-CREATE INDEX IF NOT EXISTS idx_ageb_geom ON base.ageb USING GIST (geom);
-ANALYZE base.ageb;
-```
+All 139+ tests use synthetic fixtures; no database or file-system calls required.
 
-### DENUE Duplication Issues
-Verify `denue_id` uniqueness before aggregation:
-```sql
-SELECT denue_id, COUNT(*) FROM raw.denue GROUP BY denue_id HAVING COUNT(*) > 1;
-```
+---
 
-### Raster Null Values
-DEM slope calculations may return NaN for water/no-data areas. Coalesce in queries:
-```sql
-COALESCE(slope_mean, 0) AS slope_safe
-```
+## Known Issues
 
-## Contributing
+- **DEM raster not in git:** `continuonacional_15m.tif` (~7.2 GB) must be downloaded manually from the INEGI CEM 3.0 portal. `COALESCE(slope_mean, 0)` handles missing raster rows.
+- **671 AGEBs with zero accessibility:** AGEBs with no GTFS stops within 400m receive `accessibility_score=0` and land in the highest-gap quintile. Verify these are genuinely unserved, not a GTFS coverage gap.
+- **W9 blocked on Monterrey GTFS:** The Tier-1 demand surface for Monterrey is complete. W3–W7 equivalents require a Metrorrey/Transmetro GTFS feed (check `datos.gob.mx`).
 
-When adding new features:
-1. Create aggregation query in **features** schema (see [db_setup/DDL.sql](db_setup/DDL.sql))
-2. Ensure AGEB-level granularity (`GROUP BY a.cvegeo`)
-3. Add GIST index on `ageb_id`; run `ANALYZE`
-4. Update `features.master_suitability` to include new feature
-5. Document SCIAN filters or distance thresholds used
+---
 
-## Citation
+## Methodology References
 
-Master's thesis, Universidad de Guadalajara. [Add thesis details here]
+- Bertolini (1996/1999): Node-Place Model
+- Liu et al. (2024/2025): NP-RV Model, LightGBM + SHAP
+- Mumford et al. (arXiv:2201.11616): Multi-objective TNDP
+- Park et al. (2022, J. Advanced Transportation): Variable-demand TNDP with equity
+- Takahashi (1980): Steiner Tree heuristic
+
+---
+
+Master's thesis — Universidad de Guadalajara, Maestría en Ciencias Computacionales

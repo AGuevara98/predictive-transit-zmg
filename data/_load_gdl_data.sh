@@ -24,7 +24,7 @@ ogr2ogr -f "PostgreSQL" \
   -nln raw.gtfs_stops \
   -lco FID=gid \
   -overwrite \
-  "CSV:stops.txt"
+  "CSV:gtfs/stops.txt"
 
 echo "[3/9] Importing Linea 4 GeoJSON..."
 ogr2ogr -f "PostgreSQL" \
@@ -37,13 +37,13 @@ ogr2ogr -f "PostgreSQL" \
   -nlt PROMOTE_TO_MULTI
 
 echo "[4/9] Importing GTFS Routes..."
-ogr2ogr -f "PostgreSQL" PG:"$PG_CONN" -nln raw.gtfs_routes -overwrite "CSV:routes.txt"
+ogr2ogr -f "PostgreSQL" PG:"$PG_CONN" -nln raw.gtfs_routes -overwrite "CSV:gtfs/routes.txt"
 
 echo "[5/9] Importing GTFS Trips..."
-ogr2ogr -f "PostgreSQL" PG:"$PG_CONN" -nln raw.gtfs_trips -overwrite "CSV:trips.txt"
+ogr2ogr -f "PostgreSQL" PG:"$PG_CONN" -nln raw.gtfs_trips -overwrite "CSV:gtfs/trips.txt"
 
 echo "[6/9] Importing GTFS Shapes..."
-ogr2ogr -f "PostgreSQL" PG:"$PG_CONN" -nln raw.gtfs_shapes -overwrite "CSV:shapes.txt"
+ogr2ogr -f "PostgreSQL" PG:"$PG_CONN" -nln raw.gtfs_shapes -overwrite "CSV:gtfs/shapes.txt"
 
 echo "[7/9] Importing AGEB GeoPackage..."
 ogr2ogr -f "PostgreSQL" \

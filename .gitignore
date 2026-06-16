@@ -1,7 +1,38 @@
 # Project-specific ignores
+
+# Credentials — never commit
+data/.pgpass.txt
+
+# Large data files — download separately, not for version control
+# DEM raster ~7.2 GB (INEGI CEM 3.0)
+data/continuonacional_15m.tif
+# ZMG OSM drive graph ~100 MB (auto-downloaded by w6_graph.py)
+data/osm_zmg_drive.graphml
+# Monterrey OSM drive graph ~100 MB (auto-downloaded by w9_osm_download.py)
+data/osm_mty_drive.graphml
+# Raw ZMG transit layer
+data/transporte_publico.gpkg
+# Monterrey transit lines (W9)
+data/lineas_transporte_masivo_mty.gpkg
+
+# Monterrey W9 raw data — large archives + extracted directories
+data/2020_1_19_A.zip
+data/2020_1_19_A/
+data/ageb_mza_urbana_19_cpv2020_csv.zip
+data/ageb_mza_urbana_19_cpv2020_csv/
+data/denue_19_0420_csv/
+
+# OD survey — large, gitignored per data agreement
 data/encuesta_origen_destino/
 data/raw/
-data/continuonacional_15m.tif
+
+# ML model artifacts — reproducible from source, not for VCS
+outputs/**/*.pkl
+
+# Claude Code internal planning docs
+docs/superpowers/
+
+# Dev scratch dirs
 scratch/
 .claude/
 cache/

@@ -16,9 +16,9 @@ Master's thesis: a **7-phase geospatial ML pipeline** to predict optimal transit
 - W4 (Reposition NPP-V): ✅ Complete — features.nppv_prioritization in DB; 14 NODE+PLACE+PEOPLE features; final_score=(0.80*npp_score)+(0.20*equity_score); see W4 section below
 - W5 (Multi-objective function): ✅ Complete — code skeleton (types, objective, constraints, Pareto) + spec contract for W6/W7; 39 tests; see W5 section below
 - W6 (New corridor generation): ✅ Complete — 2 feasible BRT corridors (W6_G02, W6_G05), both Pareto rank 1; 21 tests; see W6 section below
-- W7 (Existing route audit): 📋 Planned
+- W7 (Existing route audit): ✅ Code complete — 275 SITEUR routes scored via W5; Low-demand/Indirect/Redundant flags; modification proposals; 33 tests; see W7 section below
 - W8 (Validation): 📋 Planned
-- W9 (Transferability): 📋 Planned
+- W9 (Transferability): 🔄 In progress — Tier-1 pipeline for Monterrey operational; DENUE + AGEB shapefile + OSM graph acquired; GTFS still needed for W3 equivalent; see W9 section below
 
 **Legacy phase status (pre-restructure):**
 - Phase 1 (Data Acquisition): ✅ Complete
@@ -416,7 +416,7 @@ W4 repositions Phase 3's CRITIC/EWM weighting as a place-based prioritization ma
 - Equity term (α=0.20) is transparent and documented; thesis can report sensitivity analysis with α∈{0.10, 0.20, 0.30}
 - W4 scores all AGEBs; W6 applies W3 gap as pre-filter when selecting anchors — clean separation of concerns
 
-**Next: W6 new corridor generation (depends on W3 + W5)**
+**Next: W8 validation (W7 code complete; run `python src/run_w7.py` to produce audit outputs)**
 
 ---
 
@@ -525,24 +525,74 @@ W6 generates demand-driven new transit corridor candidates using anchor AGEBs fr
 - `features.route_candidates`: float scores as FLOAT8, geom as GEOMETRY(LineString, 6372) NOT NULL
 - Indexes: `route_candidates_geom_gix` (GIST), `route_candidates_total_score_idx` (btree DESC)
 
-**Next: W7 existing route audit (depends on W5, uses GTFS from W3)**
+**Next: W8 validation**
 
 ---
 
-## Next Steps (W4 onward)
+## W7 — Existing Route Audit (code complete 2026-06-15)
 
-Per `docs/game_plan_demand_driven_restructure.md`:
+W7 scores every SITEUR GTFS route against the W5 multi-objective function, flags weak routes, and proposes modifications.
 
-**W7 — Existing route audit (depends on W5, uses GTFS from W3)**
-- Load SITEUR GTFS shapes; score each route/segment against W5 terms
-- Flag low-demand, redundant, or highly indirect segments
-- Propose modifications via demand-weighted shortest paths; report before/after objective scores
-- Output: route scorecard + modification proposals GeoJSON
+**Key files (all created):**
+- `src/w7_gtfs_loader.py` — loads GTFS shapes → one LineString per route (EPSG:6372); computes route_km, n_stops, straight_line_km, connectivity
+- `src/w7_route_scorer.py` — PostGIS spatial join (served AGEBs within 400m), W5 objective + constraint evaluation, Pareto ranking; flags: **Low demand** (f1<0.2 AND score<0.3), **Indirect** (detour_ratio>1.5), **Redundant** (Jaccard AGEB overlap ≥60% with higher-scoring route)
+- `src/w7_modifications.py` — proposes shortcut / merge / retire per flagged route; estimates shortcut score as 1.1×straight_line_km
+- `src/run_w7.py` — orchestrator: migration → GTFS load → scoring → proposals → DB write → 6 output files
+- `db_setup/migrations/007_w7_tables.sql` — `features.route_audit` table with GIST index
+- `tests/test_w7_gtfs_loader.py` (12 tests), `tests/test_w7_route_scorer.py` (12 tests), `tests/test_w7_modifications.py` (9 tests)
 
-**W8 — Validation**
-- Backtest: mask high-ridership network segments; test whether W6 re-proposes them
-- Benchmark against announced ZMG expansions (Mi Macro Periférico, Línea 4/5)
-- Quantitative: coverage rate, pop-served/route-km, accessibility Gini before/after
+**Outputs (written by `run_w7.py`):**
+- `outputs/w7/route_scorecard.csv` — all 275 SITEUR routes with W5 scores and flags
+- `outputs/w7/route_modifications.csv` — proposed modifications per flagged route
+- `outputs/w7/route_audit.geojson` — QGIS-ready GeoJSON (EPSG:4326) with scores + flags
+- `outputs/w7/pareto_space.png`, `outputs/w7/score_distributions.png` — diagnostic charts
+- `outputs/w7/w7_report.md` — methodology, score distribution, flagged routes table, proposals
+
+**DB schema:**
+- `features.route_audit` — PK: route_id; columns: route_km, n_stops, straight_line_km, detour_ratio, f1_demand_gain, f2_route_km, f3_equity, total_score, pareto_rank, flag, modification_type, overlap_route_id, geom (LineString 6372)
+
+**Run:** `python src/run_w7.py`
+
+---
+
+## W9 — Transferability (in progress 2026-06-15)
+
+W9 applies the pipeline to **Monterrey, Nuevo León** (ZM Monterrey, CVE_ENT=19, 12 municipalities, ~1,958 AGEBs) as the second city for transferability validation.
+
+**Second city: Monterrey, Nuevo León**
+- 12 ZM municipalities (CONAPO 2020): Apodaca, Cadereyta Jiménez, García, San Pedro Garza García, General Escobedo, Guadalupe, Juárez, Monterrey, Salinas Victoria, San Nicolás de los Garza, Santa Catarina, Santiago
+- Config: `src/w9_city_config.py` — all constants, CPV2020 column names, bbox, DB schema prefix `mty`
+
+**Data acquired (all in `data/`):**
+- CPV2020 census NL: `ageb_mza_urbana_19_cpv2020_csv/ageb_mza_urbana_19_cpv2020/conjunto_de_datos/conjunto_de_datos_ageb_urbana_19_cpv2020.csv` — encoding: utf-8-sig
+- DENUE NL: `denue_19_0420_csv/conjunto_de_datos/denue_inegi_19_.csv` — encoding: latin-1; joined to AGEBs via `cve_ent+cve_mun+cve_loc+ageb` (no spatial join needed)
+- AGEB shapefile: `2020_1_19_A/2020_1_19_A.shp` — INEGI Marco Geoestadístico 2020; reprojected to EPSG:6372; joined on CVEGEO (13-char)
+- OSM drive graph: `data/osm_mty_drive.graphml` — 132,701 nodes, 336,923 edges; downloaded via place-name queries per municipality
+
+**Tier-1 pipeline status:**
+- `src/w9_run_tier1.py` — W1-equivalent orchestrator for MTY: census → DENUE attractions → shapefile centroids → Furness gravity model → transit demand surface
+- `src/w9_osm_download.py` — OSM download (place-name fallback; bbox API changed in newer osmnx)
+- `src/w9_city_config.py` — all MTY constants; `CENSUS_DIR_NAME` and `CENSUS_CSV_NAME` reflect actual extracted path
+- `docs/w9_data_requirements.md` — tiered data matrix (7 layers), ZMG/MTY status, download URLs
+- `docs/w9_city_onboarding.md` — 6-section checklist for applying pipeline to any new Mexican city
+- `outputs/w9/w9_transferability_report.md` — study design, data availability matrix, transfer error sources (placeholders for results)
+- `tests/test_w9_city_config.py` (26 tests)
+
+**Key transfer finding so far:**
+- Mean vehicle rate: MTY 0.634 vs ZMG 0.577 (+0.057) → Monterrey has structurally lower transit propensity due to higher car ownership
+- 1,958 AGEBs across 12 municipalities
+
+**Remaining for W9:**
+1. GTFS feed for Metrorrey/Transmetro — needed for W3 accessibility equivalent; check `datos.gob.mx` or `transmetro.monterrey.gob.mx`
+2. OSM street features per AGEB (node indicators) — needed for W4 NPP equivalent
+3. EOD survey (optional, Tier-2) — for W2 beta calibration; use β=2.0 prior if unavailable
+4. Run W3→W4→W5→W6 equivalent for MTY after GTFS acquired
+5. Transfer error report comparing MTY vs ZMG pipeline outputs
+
+**Next steps (W8 onward):**
+- W8 requires W7 run output; backtest sub-task (mask high-ridership segments, test W6 re-proposes them) can start now
+- W9 full pipeline blocked on GTFS; Tier-1 demand surface is complete
+- W8 and W9 full run can proceed in parallel once GTFS is acquired
 
 ## Methodological References
 

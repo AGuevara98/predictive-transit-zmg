@@ -11,9 +11,6 @@ CREATE TABLE features.ageb_trip_ends (
     transit_propensity  NUMERIC,
     transit_demand      NUMERIC
 );
-COMMENT ON TABLE features.ageb_trip_ends IS
-    'W1 trip-generation output: productions, attractions, and transit-propensity-weighted demand per AGEB';
-
 -- OD matrix: sparse, one row per non-trivial AGEB pair (flow >= 0.5)
 -- No FK constraints so DELETE/re-run in trip_ends does not cascade issues.
 DROP TABLE IF EXISTS features.ageb_od_matrix CASCADE;
@@ -24,8 +21,6 @@ CREATE TABLE features.ageb_od_matrix (
     modeled_flow     NUMERIC,
     PRIMARY KEY (origin_cve_ageb, dest_cve_ageb)
 );
-COMMENT ON TABLE features.ageb_od_matrix IS
-    'W1 doubly-constrained gravity model OD flows; sparse (flow >= 0.5 threshold)';
 
 CREATE INDEX ageb_od_dest_idx   ON features.ageb_od_matrix (dest_cve_ageb);
 

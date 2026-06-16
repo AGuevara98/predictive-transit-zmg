@@ -15,7 +15,7 @@ import os
 # Database Configuration (PostgreSQL + PostGIS)
 # =============================================================================
 PG_USER = os.getenv("PG_USER", "aguevara")
-PG_PASS = os.getenv("PG_PASS", "")
+PG_PASS = os.getenv("PG_PASS", "550800")
 PG_HOST = os.getenv("PG_HOST", "localhost")
 PG_PORT = os.getenv("PG_PORT", "5432")
 PG_DB = os.getenv("PG_DB", "gdl_metro")

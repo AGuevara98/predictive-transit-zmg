@@ -233,7 +233,7 @@ SELECT
         WHEN d.estrato_personal = '31 a 50 personas' THEN 40
         WHEN d.estrato_personal = '51 a 100 personas' THEN 75
         WHEN d.estrato_personal = '101 a 250 personas' THEN 175
-        WHEN d.estrato_personal = '251 y más personas' THEN 300
+        WHEN d.estrato_personal = '251 y más personas' THEN 500
         ELSE 0 END) AS employment_proxy
 FROM base.ageb a
 LEFT JOIN raw.denue d ON ST_Intersects(a.geom, ST_Transform(d.geom, 6372))
