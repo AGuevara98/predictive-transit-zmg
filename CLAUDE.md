@@ -15,7 +15,7 @@ Master's thesis: a **7-phase geospatial ML pipeline** to predict optimal transit
 - W3 (Supply & Coverage-Gap Layer): ✅ Complete — accessibility surface + coverage-gap index in DB; model retrained on external target; see W3 section below
 - W4 (Reposition NPP-V): ✅ Complete — features.nppv_prioritization in DB; 14 NODE+PLACE+PEOPLE features; final_score=(0.80*npp_score)+(0.20*equity_score); see W4 section below
 - W5 (Multi-objective function): ✅ Complete — code skeleton (types, objective, constraints, Pareto) + spec contract for W6/W7; 39 tests; see W5 section below
-- W6 (New corridor generation): 📋 Planned
+- W6 (New corridor generation): ✅ Complete — 2 feasible BRT corridors (W6_G02, W6_G05), both Pareto rank 1; 21 tests; see W6 section below
 - W7 (Existing route audit): 📋 Planned
 - W8 (Validation): 📋 Planned
 - W9 (Transferability): 📋 Planned
@@ -361,16 +361,6 @@ W3 builds an independent transit supply measure, defines the coverage gap (the n
 
 ---
 
-## Next Steps (W4 onward)
-
-Per `docs/game_plan_demand_driven_restructure.md`:
-
-**W4 — Reposition NPP-V as prioritization/equity layer (next)**
-- Reframe NPP-V scores + CRITIC/EWM weights as a multi-criteria prioritization diagnostic, not a demand estimator
-- Fold equity indicators (`pe_marginacion`, `pe_rezago`) as explicit equity weights on prioritization
-- Apply SHAP from W3.3 to explain which NPP-V factors drive the W3 coverage-gap — this connects the two layers
-- No new DB tables needed; primarily a methods reframing + updated outputs from existing `features.nppv_weights`
-
 **W4 design decisions (locked 2026-06-15):**
 - **W4 output scope: report + charts + GeoJSON + cluster profile update.** Outputs: (1) `features.nppv_prioritization` DB table; (2) markdown report with weight table and ranked AGEB list; (3) bar chart of NPP weights and npp_score vs final_score scatter; (4) QGIS-ready GeoJSON of all 2,068 AGEBs with `npp_score`, `equity_score`, `final_score`; (5) updated Phase 4 cluster profiles showing mean scores per cluster (A/B/C) to connect descriptive segmentation to prioritization.
 - **W4 scores all 2,068 AGEBs** (not only High-gap ones). W4 is a full-coverage NPP + equity prioritization map; W6 applies the W3 gap as a pre-filter when selecting corridor anchors. This keeps W4 independent of W3's threshold choices and makes the prioritization map reusable if gap thresholds change.
@@ -488,12 +478,60 @@ W5 defines the formal evaluation framework that W6 (corridor generation) and W7 
 - `unserved_fraction` sourced from `coverage_gap_n` — 1.0 = completely unserved, 0.0 = well-served
 - W6/W7 interface fully documented in `outputs/w5/w5_spec.md`
 
-**W6 — New corridor generation (depends on W3 + W5)**
-- Anchor selection from `features.ageb_coverage_gap` (high-gap AGEBs) using Jenks natural breaks, not arbitrary thresholds
-- Population-weighted centroids snapped to OSM drive graph
-- Steiner/MST as connectivity scaffold; evaluate candidates against W5 objective; optionally run NSGA-II
-- Mode assignment by corridor demand volume vs. BRT/local-bus capacity bands
-- Output: ranked corridor candidates as GeoJSON with objective-function scores
+---
+
+## W6 — New Corridor Generation (completed 2026-06-15)
+
+W6 generates demand-driven new transit corridor candidates using anchor AGEBs from the W3 coverage-gap surface, MST-based OSM routing, and W5 multi-objective evaluation.
+
+**Completed sub-tasks:**
+
+1. **W6.1 — Anchor selection** (`src/w6_anchors.py`)
+   - Jenks natural breaks (k=5) on `coverage_gap_n`; top class only; min 500 trips/day demand
+   - KMeans spatial clustering into N_CORRIDORS=6 corridor groups
+   - Trims to top N_ANCHORS=30 by transit_demand before clustering
+
+2. **W6.2 — OSM graph + path building** (`src/w6_graph.py`)
+   - Drive graph downloaded once, cached to `data/osm_zmg_drive.graphml` (125,410 nodes, 304,579 edges)
+   - MST Steiner approximation (Kou-Markowsky-Berman) per cluster
+   - Centroids snapped to nearest OSM nodes via `ox.distance.nearest_nodes`
+
+3. **W6.3 — Candidate construction** (`src/w6_candidates.py`)
+   - Served AGEBs via `ST_DWithin(ST_Centroid(a.geom), corridor, 400m)`
+   - SITEUR connectivity via `ST_DWithin(gtfs_stop, corridor, 400m)`
+   - n_stops computed to satisfy W5 [300, 1000]m stop-spacing constraints
+
+4. **W6.4 — W5 evaluation + Pareto ranking**
+   - All W5 objective terms and constraints applied via existing W5 functions
+   - 6 corridors generated; 2 feasible (W6_G02 and W6_G05, both Pareto rank 1)
+   - 4 infeasible corridors exceeded route_km > 30km or detour_ratio > 1.8 (geographically dispersed clusters)
+
+5. **W6.5 — Mode assignment** (`src/w6_mode.py`)
+   - Both feasible corridors classified as BRT (total_demand > 15,000 trips/day)
+   - Sensitivity table reported at 10k/15k/20k thresholds in w6_report.md
+
+**Key files (all created):**
+- `src/w6_anchors.py`, `src/w6_graph.py`, `src/w6_candidates.py`, `src/w6_mode.py`, `src/run_w6.py`
+- `db_setup/migrations/006_w6_tables.sql`
+- `tests/test_w6_anchors.py`, `tests/test_w6_graph.py`, `tests/test_w6_candidates.py`, `tests/test_w6_mode.py` (21 tests)
+- `outputs/w6/{corridor_candidates.geojson, corridor_scores.csv, pareto_front.png, w6_report.md}`
+
+**Key results:**
+- **2 feasible BRT-class corridors** — W6_G02 (13.2km, score=0.669) and W6_G05 (16.4km, score=0.638), both Pareto rank 1
+- **4 infeasible corridors** — dispersed cluster geometry exceeds 30km cap; thesis should discuss this as a finding: anchor clusters too spread for single-corridor treatment, suggesting subdivision into shorter segments in W7 or future iterations
+- **OSM graph cached** — subsequent runs load from `data/osm_zmg_drive.graphml` (fast)
+
+**DB schema notes (actual column types):**
+- `features.route_candidates`: float scores as FLOAT8, geom as GEOMETRY(LineString, 6372) NOT NULL
+- Indexes: `route_candidates_geom_gix` (GIST), `route_candidates_total_score_idx` (btree DESC)
+
+**Next: W7 existing route audit (depends on W5, uses GTFS from W3)**
+
+---
+
+## Next Steps (W4 onward)
+
+Per `docs/game_plan_demand_driven_restructure.md`:
 
 **W7 — Existing route audit (depends on W5, uses GTFS from W3)**
 - Load SITEUR GTFS shapes; score each route/segment against W5 terms
