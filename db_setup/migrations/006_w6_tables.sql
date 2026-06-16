@@ -20,13 +20,13 @@ CREATE TABLE features.route_candidates (
     pareto_rank         INTEGER,
     feasible            BOOLEAN,
     mode_assignment     TEXT,
-    geom                GEOMETRY(LineString, 6372)
+    geom                GEOMETRY(LineString, 6372) NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS route_candidates_gix
+CREATE INDEX IF NOT EXISTS route_candidates_geom_gix
     ON features.route_candidates USING GIST (geom);
 
-CREATE INDEX IF NOT EXISTS route_candidates_score_idx
+CREATE INDEX IF NOT EXISTS route_candidates_total_score_idx
     ON features.route_candidates (total_score DESC);
 
 ANALYZE features.route_candidates;
