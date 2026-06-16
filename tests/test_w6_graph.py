@@ -1,4 +1,3 @@
-import math
 import pytest
 import networkx as nx
 from shapely.geometry import LineString
