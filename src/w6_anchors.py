@@ -35,7 +35,6 @@ def load_gap_agebs(engine) -> gpd.GeoDataFrame:
             a.geom
         FROM features.ageb_coverage_gap g
         JOIN base.ageb a ON a.cvegeo = g.cve_ageb
-        JOIN features.ageb_trip_ends t ON t.cve_ageb = g.cve_ageb
         ORDER BY g.coverage_gap_n DESC
     """)
     with engine.connect() as conn:

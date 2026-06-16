@@ -84,6 +84,7 @@ def build_route_candidate(
     geom: LineString,
     engine,
     config: W5Config = None,
+    route_km_override: float = None,
 ) -> Optional[RouteCandidate]:
     """
     Construct RouteCandidate from a corridor LineString.
@@ -93,7 +94,7 @@ def build_route_candidate(
         config = W5Config()
 
     geom_wkt = geom.wkt
-    route_km = geom.length / 1000.0
+    route_km = route_km_override if route_km_override is not None else geom.length / 1000.0
 
     start = geom.coords[0]
     end = geom.coords[-1]

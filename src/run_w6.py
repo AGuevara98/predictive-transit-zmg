@@ -80,10 +80,6 @@ def write_to_db(engine, rows: list) -> None:
             :composite_score, :total_score, :pareto_rank, :feasible,
             :mode_assignment, ST_GeomFromText(:geom_wkt, 6372)
         )
-        ON CONFLICT (candidate_id) DO UPDATE SET
-            total_score = EXCLUDED.total_score,
-            pareto_rank = EXCLUDED.pareto_rank,
-            mode_assignment = EXCLUDED.mode_assignment
     """)
     with engine.begin() as conn:
         for row in rows:
@@ -96,6 +92,7 @@ def write_geojson(rows: list, geoms: list) -> None:
         return
     records = [{k: v for k, v in r.items() if k != "geom_wkt"} for r in rows]
     gdf = gpd.GeoDataFrame(records, geometry=geoms, crs="EPSG:6372")
+    gdf = gdf.to_crs("EPSG:4326")
     out = OUTPUT_DIR / "corridor_candidates.geojson"
     gdf.to_file(out, driver="GeoJSON")
     print(f"  [OK] GeoJSON written: {out}")
@@ -202,143 +199,143 @@ def main() -> None:
     print(f"\n{SEP}\n  W6: NEW CORRIDOR GENERATION\n{SEP}")
     cfg = W5Config()
     engine = create_engine(PG_URI)
+    try:
+        print("\n[Step 1] Applying DB migration...")
+        run_migration(engine)
 
-    print("\n[Step 1] Applying DB migration...")
-    run_migration(engine)
+        print("\n[Step 2] Loading coverage-gap surface from DB...")
+        gap_gdf = load_gap_agebs(engine)
+        print(f"  [OK] {len(gap_gdf)} AGEBs loaded")
 
-    print("\n[Step 2] Loading coverage-gap surface from DB...")
-    gap_gdf = load_gap_agebs(engine)
-    print(f"  [OK] {len(gap_gdf)} AGEBs loaded")
+        print("\n[Step 3] Selecting anchor AGEBs via Jenks natural breaks...")
+        anchors = select_anchors_jenks(gap_gdf, k_classes=5, min_demand=500.0)
+        print(f"  [OK] {len(anchors)} anchor AGEBs in top Jenks class")
+        if len(anchors) == 0:
+            print("  [ERR] No anchors found. Run W3 first.")
+            sys.exit(1)
 
-    print("\n[Step 3] Selecting anchor AGEBs via Jenks natural breaks...")
-    anchors = select_anchors_jenks(gap_gdf, k_classes=5, min_demand=500.0)
-    print(f"  [OK] {len(anchors)} anchor AGEBs in top Jenks class")
-    if len(anchors) == 0:
-        print("  [ERR] No anchors found. Run W3 first.")
+        if len(anchors) > N_ANCHORS:
+            anchors = anchors.nlargest(N_ANCHORS, "transit_demand").reset_index(drop=True)
+            print(f"  [OK] Trimmed to top {N_ANCHORS} by transit_demand")
+
+        print("\n[Step 4] Clustering anchors into corridor groups...")
+        anchors = cluster_anchors(anchors, n_corridors=N_CORRIDORS)
+        n_groups = anchors["corridor_group"].nunique()
+        print(f"  [OK] {n_groups} corridor groups formed")
+
+        print("\n[Step 5] Loading OSM drive graph...")
+        G_raw = load_or_download_osm()
+        G_proj = project_to_6372(G_raw)
+        print(f"  [OK] Graph: {G_proj.number_of_nodes()} nodes, {G_proj.number_of_edges()} edges (EPSG:6372)")
+
+        print("\n[Step 6] Snapping anchor centroids to OSM nodes...")
+        cx_list = anchors["cx"].tolist()
+        cy_list = anchors["cy"].tolist()
+        osm_node_ids = snap_to_osm_nodes(G_proj, cx_list, cy_list)
+        anchors = anchors.copy()
+        anchors["osm_node"] = osm_node_ids
+        print(f"  [OK] {len(osm_node_ids)} centroids snapped")
+
+        print("\n[Step 7] Building corridor paths (one MST per cluster)...")
+        corridor_geoms = []
+        corridor_groups = []
+        corridor_kms = []
+        for group_id in sorted(anchors["corridor_group"].unique()):
+            group_rows = anchors[anchors["corridor_group"] == group_id]
+            terminal_nodes = group_rows["osm_node"].tolist()
+            geom, route_km = build_corridor_path(G_proj, terminal_nodes)
+            if geom is None or route_km <= 0.01:
+                print(f"  [SKIP] Group {group_id}: could not build path")
+                continue
+            corridor_geoms.append(geom)
+            corridor_groups.append(group_id)
+            corridor_kms.append(route_km)
+            print(f"  [OK] Group {group_id}: {route_km:.2f} km, {len(terminal_nodes)} terminals")
+
+        if not corridor_geoms:
+            print("  [ERR] No valid corridor paths built.")
+            sys.exit(1)
+
+        print("\n[Step 8] Building RouteCandidate objects...")
+        candidates = []
+        for geom, gid, road_km in zip(corridor_geoms, corridor_groups, corridor_kms):
+            cid = f"W6_G{gid:02d}"
+            rc = build_route_candidate(cid, geom, engine, config=cfg, route_km_override=road_km)
+            if rc is None:
+                print(f"  [SKIP] {cid}: fewer than 2 served AGEBs")
+                continue
+            candidates.append((rc, geom, gid))
+            print(f"  [OK] {cid}: {len(rc.served_ageb_ids)} served AGEBs, "
+                  f"{rc.route_km:.2f}km, connected={rc.connects_to_existing}")
+
+        if not candidates:
+            print("  [ERR] No valid RouteCandidate objects built.")
+            sys.exit(1)
+
+        print("\n[Step 9] Evaluating W5 objectives and constraints...")
+        all_ids = list({aid for rc, _, _ in candidates for aid in rc.served_ageb_ids})
+        ctx_list = load_ageb_context(all_ids, engine)
+        ctx_map = {c.cvegeo: c for c in ctx_list}
+
+        objectives = []
+        constraint_results = []
+        for rc, geom, gid in candidates:
+            ctxs = [ctx_map[aid] for aid in rc.served_ageb_ids if aid in ctx_map]
+            obj = evaluate_objective(rc, ctxs, cfg)
+            cr = check_constraints(rc, ctxs, cfg)
+            objectives.append(obj)
+            constraint_results.append(cr)
+            print(f"  {rc.candidate_id}: f1={obj.f1_demand_gain:.3f} f2={obj.f2_route_km:.2f}km "
+                  f"f3={obj.f3_equity:.3f} score={obj.total_score:.3f} feasible={cr.feasible}")
+            for v in cr.violations:
+                print(f"    [VIOLATION] {v.message}")
+
+        print("\n[Step 10] Pareto ranking...")
+        ranks = pareto_rank(objectives)
+
+        print("\n[Step 11] Assembling output rows...")
+        rows = []
+        geom_list = []
+        for (rc, geom, gid), obj, cr, rank in zip(candidates, objectives, constraint_results, ranks):
+            ctxs = [ctx_map[aid] for aid in rc.served_ageb_ids if aid in ctx_map]
+            td = sum(c.transit_demand for c in ctxs)
+            mode = assign_mode(td, BRT_THRESHOLD)
+            rows.append({
+                "candidate_id": rc.candidate_id,
+                "corridor_group": int(gid),
+                "route_km": float(obj.f2_route_km),
+                "n_stops": int(rc.n_stops),
+                "straight_line_km": float(rc.straight_line_km),
+                "connects_to_existing": bool(rc.connects_to_existing),
+                "n_served_agebs": len(rc.served_ageb_ids),
+                "total_demand": float(td),
+                "f1_demand_gain": float(obj.f1_demand_gain),
+                "f2_route_km": float(obj.f2_route_km),
+                "f3_equity": float(obj.f3_equity),
+                "composite_score": float(obj.composite_score),
+                "total_score": float(obj.total_score),
+                "pareto_rank": int(rank),
+                "feasible": bool(cr.feasible),
+                "mode_assignment": mode,
+                "geom_wkt": geom.wkt,
+            })
+            geom_list.append(geom)
+
+        print("\n[Step 12] Writing outputs...")
+        write_to_db(engine, rows)
+        write_geojson(rows, geom_list)
+        write_scores_csv(rows)
+        write_pareto_chart(rows)
+        write_report(rows)
+
+        print(f"\n{SEP}\n  [OK] W6 CORRIDOR GENERATION COMPLETE\n{SEP}")
+        print(f"\nOutputs: {OUTPUT_DIR}/")
+        print("  corridor_candidates.geojson  -- QGIS-ready ranked corridors")
+        print("  corridor_scores.csv          -- objective function scores")
+        print("  pareto_front.png             -- Pareto scatter (f1 vs f2)")
+        print("  w6_report.md                 -- methodology + results table")
+    finally:
         engine.dispose()
-        sys.exit(1)
-
-    if len(anchors) > N_ANCHORS:
-        anchors = anchors.nlargest(N_ANCHORS, "transit_demand").reset_index(drop=True)
-        print(f"  [OK] Trimmed to top {N_ANCHORS} by transit_demand")
-
-    print("\n[Step 4] Clustering anchors into corridor groups...")
-    anchors = cluster_anchors(anchors, n_corridors=N_CORRIDORS)
-    n_groups = anchors["corridor_group"].nunique()
-    print(f"  [OK] {n_groups} corridor groups formed")
-
-    print("\n[Step 5] Loading OSM drive graph...")
-    G_raw = load_or_download_osm()
-    G_proj = project_to_6372(G_raw)
-    print(f"  [OK] Graph: {G_proj.number_of_nodes()} nodes, {G_proj.number_of_edges()} edges (EPSG:6372)")
-
-    print("\n[Step 6] Snapping anchor centroids to OSM nodes...")
-    cx_list = anchors["cx"].tolist()
-    cy_list = anchors["cy"].tolist()
-    osm_node_ids = snap_to_osm_nodes(G_proj, cx_list, cy_list)
-    anchors = anchors.copy()
-    anchors["osm_node"] = osm_node_ids
-    print(f"  [OK] {len(osm_node_ids)} centroids snapped")
-
-    print("\n[Step 7] Building corridor paths (one MST per cluster)...")
-    corridor_geoms = []
-    corridor_groups = []
-    for group_id in sorted(anchors["corridor_group"].unique()):
-        group_rows = anchors[anchors["corridor_group"] == group_id]
-        terminal_nodes = group_rows["osm_node"].tolist()
-        geom, route_km = build_corridor_path(G_proj, terminal_nodes)
-        if geom is None or route_km <= 0.01:
-            print(f"  [SKIP] Group {group_id}: could not build path")
-            continue
-        corridor_geoms.append(geom)
-        corridor_groups.append(group_id)
-        print(f"  [OK] Group {group_id}: {route_km:.2f} km, {len(terminal_nodes)} terminals")
-
-    if not corridor_geoms:
-        print("  [ERR] No valid corridor paths built.")
-        engine.dispose()
-        sys.exit(1)
-
-    print("\n[Step 8] Building RouteCandidate objects...")
-    candidates = []
-    for geom, gid in zip(corridor_geoms, corridor_groups):
-        cid = f"W6_G{gid:02d}"
-        rc = build_route_candidate(cid, geom, engine, config=cfg)
-        if rc is None:
-            print(f"  [SKIP] {cid}: fewer than 2 served AGEBs")
-            continue
-        candidates.append((rc, geom, gid))
-        print(f"  [OK] {cid}: {len(rc.served_ageb_ids)} served AGEBs, "
-              f"{rc.route_km:.2f}km, connected={rc.connects_to_existing}")
-
-    if not candidates:
-        print("  [ERR] No valid RouteCandidate objects built.")
-        engine.dispose()
-        sys.exit(1)
-
-    print("\n[Step 9] Evaluating W5 objectives and constraints...")
-    all_ids = list({aid for rc, _, _ in candidates for aid in rc.served_ageb_ids})
-    ctx_list = load_ageb_context(all_ids, engine)
-    ctx_map = {c.cvegeo: c for c in ctx_list}
-
-    objectives = []
-    constraint_results = []
-    for rc, geom, gid in candidates:
-        ctxs = [ctx_map[aid] for aid in rc.served_ageb_ids if aid in ctx_map]
-        obj = evaluate_objective(rc, ctxs, cfg)
-        cr = check_constraints(rc, ctxs, cfg)
-        objectives.append(obj)
-        constraint_results.append(cr)
-        print(f"  {rc.candidate_id}: f1={obj.f1_demand_gain:.3f} f2={obj.f2_route_km:.2f}km "
-              f"f3={obj.f3_equity:.3f} score={obj.total_score:.3f} feasible={cr.feasible}")
-        for v in cr.violations:
-            print(f"    [VIOLATION] {v.message}")
-
-    print("\n[Step 10] Pareto ranking...")
-    ranks = pareto_rank(objectives)
-
-    print("\n[Step 11] Assembling output rows...")
-    rows = []
-    geom_list = []
-    for (rc, geom, gid), obj, cr, rank in zip(candidates, objectives, constraint_results, ranks):
-        ctxs = [ctx_map[aid] for aid in rc.served_ageb_ids if aid in ctx_map]
-        td = sum(c.transit_demand for c in ctxs)
-        mode = assign_mode(td, BRT_THRESHOLD)
-        rows.append({
-            "candidate_id": rc.candidate_id,
-            "corridor_group": int(gid),
-            "route_km": float(obj.f2_route_km),
-            "n_stops": int(rc.n_stops),
-            "straight_line_km": float(rc.straight_line_km),
-            "connects_to_existing": bool(rc.connects_to_existing),
-            "n_served_agebs": len(rc.served_ageb_ids),
-            "total_demand": float(td),
-            "f1_demand_gain": float(obj.f1_demand_gain),
-            "f2_route_km": float(obj.f2_route_km),
-            "f3_equity": float(obj.f3_equity),
-            "composite_score": float(obj.composite_score),
-            "total_score": float(obj.total_score),
-            "pareto_rank": int(rank),
-            "feasible": bool(cr.feasible),
-            "mode_assignment": mode,
-            "geom_wkt": geom.wkt,
-        })
-        geom_list.append(geom)
-
-    print("\n[Step 12] Writing outputs...")
-    write_to_db(engine, rows)
-    write_geojson(rows, geom_list)
-    write_scores_csv(rows)
-    write_pareto_chart(rows)
-    write_report(rows)
-
-    engine.dispose()
-    print(f"\n{SEP}\n  [OK] W6 CORRIDOR GENERATION COMPLETE\n{SEP}")
-    print(f"\nOutputs: {OUTPUT_DIR}/")
-    print("  corridor_candidates.geojson  -- QGIS-ready ranked corridors")
-    print("  corridor_scores.csv          -- objective function scores")
-    print("  pareto_front.png             -- Pareto scatter (f1 vs f2)")
-    print("  w6_report.md                 -- methodology + results table")
 
 
 if __name__ == "__main__":
