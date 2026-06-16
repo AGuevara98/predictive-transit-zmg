@@ -13,7 +13,7 @@ import pandas as pd
 from sqlalchemy import text
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import CRS_CANONICAL, PG_URI
+from config import CRS_CANONICAL
 
 
 def gini_coefficient(values: np.ndarray) -> float:
@@ -101,11 +101,11 @@ def compute_before_after_metrics(engine, corridor_geojson_path: Path,
 
     # Load W6 corridors
     corridor_gdf = gpd.read_file(corridor_geojson_path).to_crs(CRS_CANONICAL)
-    feasible = corridor_gdf[
-        corridor_gdf.get("feasible", pd.Series([True] * len(corridor_gdf))).astype(bool)
-    ].copy()
+    if "feasible" in corridor_gdf.columns:
+        feasible = corridor_gdf[corridor_gdf["feasible"].astype(bool)].copy()
+    else:
+        feasible = corridor_gdf.copy()
     if "route_km" not in feasible.columns:
-        feasible = feasible.copy()
         feasible["route_km"] = feasible.geometry.length / 1000.0
 
     w6_union_geom = feasible.geometry.union_all().buffer(buffer_m) if len(feasible) > 0 else None
@@ -132,11 +132,11 @@ def compute_before_after_metrics(engine, corridor_geojson_path: Path,
 
     pop_km = pop_served_per_km(ageb_gdf, feasible, buffer_m)
 
-    # Count newly-served AGEBs
+    # Count newly-served AGEBs (previously unserved only)
     if w6_union_geom is not None:
-        w6_mask = ageb_gdf.geometry.within(w6_union_geom)
-        n_newly = int(w6_mask.sum())
-        pop_newly = float(ageb_df.loc[w6_mask, "pe_population"].sum())
+        newly_served_mask = (ageb_df["accessibility_score"] == 0) & ageb_gdf.geometry.within(w6_union_geom)
+        n_newly = int(newly_served_mask.sum())
+        pop_newly = float(ageb_df.loc[newly_served_mask, "pe_population"].sum())
     else:
         n_newly = 0
         pop_newly = 0.0
