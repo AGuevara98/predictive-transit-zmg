@@ -24,7 +24,7 @@ from config import (  # noqa: E402
 
 # Committed source inputs (relative to repo root)
 ROOT = Path(__file__).parent.parent
-DENUE_CSV = ROOT / "data" / "INEGI_DENUE_UTF8.csv"
+DENUE_CSV = ROOT / "data" / "raw" / "denue" / "zmg_denue_combined.csv"
 CENSUS_CSV = ROOT / "data" / "raw" / "census" / "ageb_urbana_14_cpv2020_zmg.csv"
 INDICATORS_CSV = ROOT / "data" / "raw" / "census" / "zmg_indicators_combined.csv"
 RIDERSHIP_CSV = ROOT / "data" / "raw" / "ridership" / "jalisco_ridership_etup.csv"
@@ -182,15 +182,32 @@ def compute_node_features(agebs: gpd.GeoDataFrame, engine=None) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 
 def compute_place_features(agebs: gpd.GeoDataFrame, engine=None) -> pd.DataFrame:
-    print("\n[Step 2] Computing PLACE features (DENUE)...")
+    print("\n[Step 2] Computing PLACE features (full ZMG DENUE)...")
 
+    # Encoding check: default (utf-8) read must align with EMPLOYMENT_PROXY_MAP
+    # keys; fall back to latin-1 if Estrato values don't match the map.
     denue = pd.read_csv(DENUE_CSV, dtype=str)
-    denue["emp_proxy"] = denue["estrato_personal"].map(EMPLOYMENT_PROXY_MAP).fillna(0)
-    denue["sector_id"] = denue["scian_codigo"].apply(scian_sector)
+    unmapped = denue["Estrato"].map(EMPLOYMENT_PROXY_MAP).isna().sum()
+    if unmapped > 0:
+        print(f"  [..] {unmapped:,} unmapped Estrato values under default encoding, "
+              f"retrying with latin-1...")
+        denue = pd.read_csv(DENUE_CSV, dtype=str, encoding="latin-1")
+        unmapped = denue["Estrato"].map(EMPLOYMENT_PROXY_MAP).isna().sum()
+    print(f"  [OK] Encoding check: {unmapped:,} unmapped Estrato values "
+          f"of {len(denue):,} rows")
+
+    denue["emp_proxy"] = denue["Estrato"].map(EMPLOYMENT_PROXY_MAP).fillna(0)
+    if denue["emp_proxy"].sum() == 0:
+        print("  [ERR] emp_proxy is all-zero -- Estrato mapping failed!")
+    else:
+        print(f"  [OK] emp_proxy sum={denue['emp_proxy'].sum():,.0f} "
+              f"(non-zero, mapping succeeded)")
+
+    denue["sector_id"] = denue["SECTOR_ACTIVIDAD_ID"]
     denue["sector_label"] = denue["sector_id"].apply(sector_label)
 
-    lon = pd.to_numeric(denue["longitud"], errors="coerce")
-    lat = pd.to_numeric(denue["latitud"], errors="coerce")
+    lon = pd.to_numeric(denue["Longitud"], errors="coerce")
+    lat = pd.to_numeric(denue["Latitud"], errors="coerce")
     gdf = gpd.GeoDataFrame(
         denue, geometry=gpd.points_from_xy(lon, lat), crs="EPSG:4326"
     )

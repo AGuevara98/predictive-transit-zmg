@@ -34,6 +34,9 @@ data/raw/census/*
 data/raw/ridership/*
 !data/raw/ridership/jalisco_ridership_etup.csv
 !data/raw/nppv_features.csv
+!data/raw/denue/
+data/raw/denue/*
+!data/raw/denue/zmg_denue_combined.csv
 
 # ML model artifacts — reproducible from source, not for VCS
 outputs/**/*.pkl
