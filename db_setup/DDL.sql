@@ -324,3 +324,40 @@ LEFT JOIN features.ageb_topography topo ON a.cvegeo = topo.ageb_id
 LEFT JOIN features.ageb_route_supply rs ON a.cvegeo = rs.ageb_id;
 
 ANALYZE features.master_suitability;
+
+-- NPP feature table (post-W0: no v_ntl_median; populated by src/build_nppv_features.py)
+CREATE TABLE IF NOT EXISTS features.nppv_features (
+    cve_ageb                 VARCHAR(15) PRIMARY KEY,
+    n_intersections          NUMERIC,
+    n_intersection_density   NUMERIC,
+    n_street_density         NUMERIC,
+    p_poi_density            NUMERIC,
+    p_employment_proxy       NUMERIC,
+    p_retail_density         NUMERIC,
+    p_service_density        NUMERIC,
+    p_land_use_mix           NUMERIC,
+    pe_population             NUMERIC,
+    pe_pop_density            NUMERIC,
+    pe_dep_ratio              NUMERIC,
+    pe_youth_share            NUMERIC,
+    pe_marginacion            NUMERIC,
+    pe_rezago                 NUMERIC,
+    v_ridership_annual        NUMERIC,
+    n_intersections_n         NUMERIC,
+    n_intersection_density_n  NUMERIC,
+    n_street_density_n        NUMERIC,
+    p_poi_density_n           NUMERIC,
+    p_employment_proxy_n      NUMERIC,
+    p_retail_density_n        NUMERIC,
+    p_service_density_n       NUMERIC,
+    p_land_use_mix_n          NUMERIC,
+    pe_population_n           NUMERIC,
+    pe_pop_density_n           NUMERIC,
+    pe_dep_ratio_n             NUMERIC,
+    pe_youth_share_n           NUMERIC,
+    pe_marginacion_n           NUMERIC,
+    pe_rezago_n                NUMERIC,
+    v_ridership_annual_n      NUMERIC,
+    geom                      geometry(MultiPolygon, 6372)
+);
+CREATE INDEX IF NOT EXISTS idx_nppv_features_geom ON features.nppv_features USING gist(geom);
