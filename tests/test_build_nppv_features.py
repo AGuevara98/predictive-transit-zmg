@@ -32,3 +32,22 @@ def test_feature_partition_is_total_and_disjoint():
 def test_raw_features_excludes_ntl():
     assert "v_ntl_median" not in b.RAW_FEATURES
     assert len(b.RAW_FEATURES) == 15
+
+def test_scian_sector_first_two_digits():
+    assert b.scian_sector("236221") == "23"
+    assert b.scian_sector("") == ""
+    assert b.scian_sector(None) == ""
+
+def test_land_use_entropy_zero_for_single_class():
+    assert b.land_use_entropy(pd.Series(["retail", "retail"])) == 0.0
+
+def test_land_use_entropy_positive_for_mix():
+    assert b.land_use_entropy(pd.Series(["retail", "health", "other"])) > 0.0
+
+def test_dep_ratio_capped_at_five():
+    assert b.dep_ratio(100, 100, 1) == 5.0
+    assert b.dep_ratio(10, 10, 40) == pytest.approx(0.5)
+
+def test_youth_share_safe_when_pop_zero():
+    assert b.youth_share(0, 0) == 0.0
+    assert b.youth_share(25, 100) == pytest.approx(0.25)
