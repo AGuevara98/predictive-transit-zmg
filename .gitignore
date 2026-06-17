@@ -24,7 +24,16 @@ data/denue_19_0420_csv/
 
 # OD survey — large, gitignored per data agreement
 data/encuesta_origen_destino/
-data/raw/
+# data/raw: ignore everything, then un-ignore the committed nppv_features inputs
+data/raw/*
+!data/raw/census/
+data/raw/census/*
+!data/raw/census/zmg_indicators_combined.csv
+!data/raw/census/ageb_urbana_14_cpv2020_zmg.csv
+!data/raw/ridership/
+data/raw/ridership/*
+!data/raw/ridership/jalisco_ridership_etup.csv
+!data/raw/nppv_features.csv
 
 # ML model artifacts — reproducible from source, not for VCS
 outputs/**/*.pkl
