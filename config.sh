@@ -14,11 +14,14 @@
 # =============================================================================
 # Database Configuration (PostgreSQL + PostGIS)
 # =============================================================================
+# No personal credentials are hardcoded. DB_USER defaults to your OS login;
+# DB_PASS defaults to empty so psql/ogr2ogr use ~/.pgpass, PGPASSWORD, or a
+# prompt. Override via environment variables. The role must own DB_NAME.
 export DB_HOST="${DB_HOST:-localhost}"
 export DB_PORT="${DB_PORT:-5432}"
 export DB_NAME="${DB_NAME:-gdl_metro}"
-export DB_USER="${DB_USER:-aguevara}"
-export DB_PASS="${DB_PASS:-550800}"
+export DB_USER="${DB_USER:-$(id -un)}"
+export DB_PASS="${DB_PASS:-}"
 
 # Canonical SRID for spatial operations
 export CANONICAL_SRID="${CANONICAL_SRID:-6372}"

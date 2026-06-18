@@ -51,7 +51,9 @@ pip install -r requirements.txt
 
 ### 2. Configure Credentials
 
-Edit `config.py` (Python scripts) and `config.sh` (shell scripts), or override via environment variables:
+No credentials are hardcoded: `PG_USER` defaults to your OS login and `PG_PASS`
+defaults to empty (libpq then uses `~/.pgpass`, `PGPASSWORD`, or a prompt).
+Override via environment variables:
 
 ```bash
 export PG_USER=your_user
@@ -60,6 +62,12 @@ export PG_HOST=localhost
 export PG_PORT=5432
 export PG_DB=gdl_metro
 ```
+
+**The role you connect as must OWN `gdl_metro` (a superuser role is simplest).**
+If the database was created by another role, you will get `permission denied for
+schema ...` errors. Either build under your owning role (set `PG_USER`), drop and
+recreate the DB under your role, or transfer ownership as a superuser:
+`ALTER DATABASE gdl_metro OWNER TO <your_role>;`
 
 ### 3. Build the Database (from a fresh clone)
 
