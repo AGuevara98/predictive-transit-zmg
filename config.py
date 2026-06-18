@@ -4,18 +4,22 @@ Central configuration file for database credentials and project settings.
 All modules should import from this file to maintain a single source of truth
 for database connection strings and project-wide constants.
 
-Credentials can be set via environment variables or defaults (DEV ONLY).
-For production, use environment variables:
-  - PG_USER, PG_PASS, PG_HOST, PG_PORT, PG_DB
+Database credentials come from environment variables. No personal username or
+password is hardcoded here. Set these before running the pipeline:
+  - PG_USER (defaults to your OS login), PG_PASS (defaults to empty -> libpq
+    uses ~/.pgpass, the PGPASSWORD env var, or an interactive prompt),
+    PG_HOST, PG_PORT, PG_DB
+The role you connect as must own the target database (a superuser is simplest).
 """
 
 import os
+import getpass
 
 # =============================================================================
 # Database Configuration (PostgreSQL + PostGIS)
 # =============================================================================
-PG_USER = os.getenv("PG_USER", "aguevara")
-PG_PASS = os.getenv("PG_PASS", "550800")
+PG_USER = os.getenv("PG_USER") or getpass.getuser()
+PG_PASS = os.getenv("PG_PASS", "")
 PG_HOST = os.getenv("PG_HOST", "localhost")
 PG_PORT = os.getenv("PG_PORT", "5432")
 PG_DB = os.getenv("PG_DB", "gdl_metro")
@@ -24,12 +28,15 @@ PG_DB = os.getenv("PG_DB", "gdl_metro")
 # When running inside WSL, PGHOST env var points to the Unix socket dir.
 import socket as _socket
 _pg_host_override = os.getenv("PGHOST", PG_HOST)
+# Include the password in the URI only when set; otherwise libpq falls back to
+# ~/.pgpass, the PGPASSWORD env var, or an interactive prompt.
+_auth = f"{PG_USER}:{PG_PASS}" if PG_PASS else PG_USER
 # Detect if running in WSL (socket path override)
 if _pg_host_override.startswith("/"):
     # Unix socket: postgresql+psycopg2:///dbname?host=/var/run/postgresql
-    PG_URI = f"postgresql+psycopg2://{PG_USER}:{PG_PASS}@/{PG_DB}?host={_pg_host_override}"
+    PG_URI = f"postgresql+psycopg2://{_auth}@/{PG_DB}?host={_pg_host_override}"
 else:
-    PG_URI = f"postgresql://{PG_USER}:{PG_PASS}@{_pg_host_override}:{PG_PORT}/{PG_DB}"
+    PG_URI = f"postgresql://{_auth}@{_pg_host_override}:{PG_PORT}/{PG_DB}"
 
 # =============================================================================
 # Project Spatial Configuration
