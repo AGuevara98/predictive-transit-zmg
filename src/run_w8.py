@@ -23,6 +23,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 
 from config import PG_URI
+from src.db_preflight import ensure_nppv_features
 from src.w8_backtest import run_backtest
 from src.w8_benchmark import run_benchmark
 from src.w8_metrics import compute_before_after_metrics
@@ -178,6 +179,7 @@ def main() -> None:
     SEP = "=" * 70
     print(f"\n{SEP}\n  W8: VALIDATION\n{SEP}")
     engine = create_engine(PG_URI)
+    ensure_nppv_features(engine)
 
     try:
         print("\n[W8.1] Running backtest (mask premium routes + re-propose corridors)...")
