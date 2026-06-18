@@ -5,7 +5,8 @@ Corrections vs the deleted version:
   - drops v_ntl_median entirely (W0.1)
   - log1p+minmax for count/economic features, plain minmax for ratios (W0.3)
   - reads committed slim ZMG census extract (no ../gdl dependency)
-  - reuses committed INEGI_DENUE_UTF8.csv (derives sector_id from scian_codigo)
+  - reads the full committed ZMG DENUE (data/raw/denue/zmg_denue_combined.csv),
+    using SECTOR_ACTIVIDAD_ID for sector_id and Estrato for employment proxy
 """
 import sys
 from pathlib import Path
