@@ -103,7 +103,7 @@ Three-schema PostgreSQL design:
 
 **Key tables:**
 - `base.ageb` — 2,068 AGEB polygons (filtered: `CVE_ENT='14'`, no 'A' suffix in `CVE_AGEB`, 10 ZMG municipalities)
-- `features.nppv_features` — **15** normalized NPP-V indicators per AGEB (`_n` suffix = normalized; `v_ntl_median` dropped per W0.1)
+- `features.nppv_features` — **15** normalized NPP-V indicators per AGEB (`_n` suffix = normalized; `v_ntl_median` dropped per W0.1); table DDL in `db_setup/DDL.sql`, populated by `src/build_nppv_features.py`
 - `features.nppv_weights` — CRITIC + Entropy Weight Method outputs (15 features)
 - `features.nppv_clusters` — K-Means typology assignments (A/B/C), silhouette 0.58
 - `features.ageb_suitability_predictions` — Phase 2/5 model predictions
@@ -138,7 +138,9 @@ Three-schema PostgreSQL design:
 
 | File | Role |
 |------|------|
-| `src/run_phase1.py`, `src/run_phase2.py` | Legacy phase orchestrators |
+| `scripts/bootstrap.sh` | Single entry point for a from-scratch DB build: createdb -> DDL -> load data -> `build_nppv_features.py` |
+| `src/build_nppv_features.py` | Builds `features.nppv_features` (15 raw + 15 normalized indicators) from committed census/DENUE/indicators/ridership inputs; replaces the deleted `phase2_db_setup.py`/`phase2_feature_engineering.py` |
+| `src/db_preflight.py` | `ensure_nppv_features(engine)` - self-heals a missing/empty `nppv_features` table; wired into run_w1/w3/w4/w8.py |
 | `src/run_w1.py` | W1 orchestrator: trip generation → gravity model → demand surface |
 | `src/run_w2.py` | W2 orchestrator: EOD ingest → gravity calibration |
 | `src/run_w3.py` | W3 orchestrator: GTFS accessibility → coverage gap → model retrain |
@@ -151,8 +153,6 @@ Three-schema PostgreSQL design:
 | `src/w3_coverage_gap.py` | Coverage-gap index (demand / accessibility) |
 | `src/w3_retrain.py` | RF + LightGBM on high-gap binary target, SHAP interpretability |
 | `src/geo_restrictions.py` | OSM extraction for 10 ZMG municipalities via `osmnx` |
-| `src/phase3_weighting.py` | CRITIC + Entropy Weight Method (to be repositioned as W4) |
-| `src/phase4_clustering.py` | K-Means++ typology assignment (descriptive only) |
 | `db_setup/DDL.sql` | Full schema definition + raw→base→features materialization |
 | `config.py` | Single source of truth for all constants and credentials |
 
@@ -217,7 +217,7 @@ print(f"  [ERR] Error message")
 
 Three integrity defects fixed before W1 work begins:
 
-1. **`v_ntl_median` dropped (W0.1):** VIIRS VNP46A3 HDF5 zonal-stats silently failed (try-except swallowed a rasterio error; tile bounds from `WestBoundingCoordinate` attrs may have mismatched). All 2,068 values were zero. Feature removed from `phase2_feature_engineering.py`, `phase3_weighting.py`, `phase2_db_setup.py`, and the live DB via `db_setup/migrations/001_drop_ntl_columns.sql`. Vitality dimension is now single-proxy: `v_ridership_annual`.
+1. **`v_ntl_median` dropped (W0.1):** VIIRS VNP46A3 HDF5 zonal-stats silently failed (try-except swallowed a rasterio error; tile bounds from `WestBoundingCoordinate` attrs may have mismatched). All 2,068 values were zero. Feature removed at the time from `phase2_feature_engineering.py`, `phase3_weighting.py`, `phase2_db_setup.py` (since deleted in the W1-W9 restructure, commit 448f14a), and the live DB via `db_setup/migrations/001_drop_ntl_columns.sql`. The feature is built today by `src/build_nppv_features.py`, which does not include `v_ntl_median`. Vitality dimension is now single-proxy: `v_ridership_annual`.
 
 2. **Phase 5 weight join fixed (W0.2):** `phase5_report.py` was appending `_n` to feature names that already ended in `_n`, producing `n_intersections_n_n` — no matches, all Phase 3 weights showed 0.0000. Fixed by removing the erroneous suffix concatenation. Report also updated with an errata block flagging the 1.0000 cluster-recovery accuracy as a tautology.
 
@@ -231,6 +231,7 @@ Three integrity defects fixed before W1 work begins:
 - **DDL migration semicolon bug:** The `run_sql_file` helper in all run_w*.py scripts splits SQL on `;`. Any `COMMENT ON TABLE ... IS '...'` string that itself contains a semicolon will be split mid-statement and fail. All current migrations have had COMMENT statements removed to avoid this. Do not add `COMMENT ON TABLE` statements to future migrations unless you use a smarter SQL splitter.
 - **Windows CP1252 console encoding:** Non-ASCII characters (e.g. `↔`, `—`) in print statements inside subprocess-launched scripts cause `UnicodeEncodeError` on Windows. Use plain ASCII in all `print()` calls in `src/` files.
 - **671 AGEBs with zero transit accessibility:** These are AGEBs with no GTFS stops within 400m. They receive `accessibility_score=0` and are assigned to the highest-gap quintile by default. Verify before W4 that these are genuinely unserved, not a GTFS coverage gap.
+- **features.nppv_features is built by `src/build_nppv_features.py`** (post-W0; log1p+minmax, no v_ntl_median). It is re-derivable from committed inputs and auto-built by `ensure_nppv_features()` preflight in run_w1/w3/w4/w8. The old phase2 builders were removed in the restructure (448f14a). A from-scratch rebuild reproduces place/people/equity columns at Spearman rho~1.0, but the 3 node/street features drift (rho ~0.67-0.86) because the OSM drive graph is pulled live via `osmnx` on first build; see `tests/test_nppv_oracle.py`.
 
 ## Debugging Utilities
 
@@ -250,7 +251,7 @@ bash scripts/debug/run_db_checks.sh        # Shell-based validation
 - **People (6):** `pe_population`, `pe_pop_density`, `pe_marginacion`, `pe_rezago`, `pe_dep_ratio`, `pe_youth_share`
 - **Vitality (1):** `v_ridership_annual` (municipality-level proxy; to be replaced by W1 AGEB-level demand estimates)
 
-**Normalization:** log1p + min-max for count/economic features; plain min-max for bounded ratios. See `LOG_FEATURES` in `src/phase2_feature_engineering.py`.
+**Normalization:** log1p + min-max for count/economic features; plain min-max for bounded ratios. See `LOG_FEATURES` in `src/build_nppv_features.py`.
 
 Primary Phase 2 model drivers (SHAP, run `no_stop_features_v1`): `route_km_800m`, `employment_proxy`, `slope_mean`. **This model will be re-pointed at the W3 coverage-gap target.**
 

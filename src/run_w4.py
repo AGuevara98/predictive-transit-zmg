@@ -17,6 +17,7 @@ from sqlalchemy import create_engine, text
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import PG_URI
+from src.db_preflight import ensure_nppv_features
 
 
 def run_sql_file(engine, sql_file: Path, description: str) -> bool:
@@ -71,6 +72,7 @@ def main():
 
     print("\nConnecting to PostgreSQL...")
     engine = create_engine(PG_URI)
+    ensure_nppv_features(engine)
 
     steps = [
         (run_sql_file,      engine, mig_dir / "005_w4_tables.sql",      "Step 1: DDL -- W4 output tables"),

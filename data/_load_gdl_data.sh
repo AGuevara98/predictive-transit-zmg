@@ -66,7 +66,11 @@ ogr2ogr -f "PostgreSQL" \
   -overwrite
 
 echo "[9/9] Importing Raster DEM..."
-raster2pgsql -s 6372 -I -C -M -t 100x100 continuonacional_15m.tif raw.dem | psql -d "$DB_NAME" -U "$DB_USER" -h "$DB_HOST"
+if [ -f continuonacional_15m.tif ]; then
+  raster2pgsql -s 6372 -I -C -M -t 100x100 continuonacional_15m.tif raw.dem | psql -d "$DB_NAME" -U "$DB_USER" -h "$DB_HOST"
+else
+  echo "[9/9] DEM raster continuonacional_15m.tif not found - skipping (slope_mean will COALESCE to 0)."
+fi
 
 echo "========================================"
 echo " Data Import Completed Successfully!"

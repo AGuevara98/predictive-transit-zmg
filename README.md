@@ -61,59 +61,44 @@ export PG_PORT=5432
 export PG_DB=gdl_metro
 ```
 
-### 3. Set Up PostgreSQL + PostGIS
+### 3. Build the Database (from a fresh clone)
 
-**Automated (Ubuntu/WSL):**
+Source inputs (slim ZMG census extract, ZMG indicators, full ZMG DENUE, ridership
+lookup) are committed under `data/raw/`, so a fresh clone can build the whole
+database with one command:
+
 ```bash
-sudo bash db_setup/setup_postgis_gdl.sh
+bash scripts/bootstrap.sh   # createdb -> DDL -> load data -> build nppv_features
 ```
 
-**Manual:**
+This runs, in order: `createdb` + `CREATE EXTENSION postgis`/`postgis_raster` ->
+`psql -f db_setup/DDL.sql` -> `bash data/_load_gdl_data.sh` ->
+`python src/build_nppv_features.py`. The last step derives
+`features.nppv_features` (15 raw + 15 normalized `_n` indicators) from the
+committed inputs.
+
+The only manual download is the 7.2 GB DEM (`continuonacional_15m.tif` -
+see `data/download_dem.sh`), and it is **optional**: `_load_gdl_data.sh` skips it
+if absent, and `COALESCE(slope_mean, 0)` handles missing raster rows. The OSM
+drive graph (`data/osm_zmg_drive.graphml`) auto-downloads via `osmnx` on first
+build if not already present.
+
+**Manual / non-bootstrap path**, if you need to run the steps individually or
+on a non-Ubuntu shell:
 ```bash
 createdb -U postgres gdl_metro
-psql -U postgres -d gdl_metro -c "CREATE ROLE <user> WITH LOGIN PASSWORD '<pass>';"
-psql -U postgres -d gdl_metro -c "ALTER DATABASE gdl_metro OWNER TO <user>;"
-psql -U <user> -d gdl_metro -c "CREATE EXTENSION postgis;"
-psql -U <user> -d gdl_metro -c "CREATE EXTENSION postgis_raster;"
-psql -U <user> -d gdl_metro -f db_setup/DDL.sql
+psql -U postgres -d gdl_metro -c "CREATE EXTENSION postgis; CREATE EXTENSION postgis_raster;"
+psql -U postgres -d gdl_metro -f db_setup/DDL.sql
+bash data/_load_gdl_data.sh
+python src/build_nppv_features.py
 ```
 
-### 4. Place Source Data
-
-```
-data/
-├── gtfs/                          # ZMG GTFS feed (SITEUR)
-│   ├── agency.txt
-│   ├── calendar.txt
-│   ├── calendar_dates.txt
-│   ├── fare_attributes.txt
-│   ├── frequencies.txt
-│   ├── routes.txt
-│   ├── shapes.txt
-│   ├── stop_times.txt
-│   ├── stops.txt
-│   └── trips.txt
-├── ageb_zmg_2020_v2.gpkg          # ZMG AGEB boundaries (INEGI 2020)
-├── INEGI_DENUE_UTF8.csv           # DENUE economic establishments (ZMG)
-├── linea_4.geojson                # W8 benchmark: Línea 4 rail geometry
-├── osm_zmg_drive.graphml          # ZMG OSM drive graph (auto-downloaded if missing)
-├── transporte_publico.gpkg        # Public transport layer
-├── continuonacional_15m.tif       # DEM raster — NOT in git (~7.2 GB)
-│                                  # Download: INEGI CEM 3.0 portal → see data/download_dem.sh
-├── encuesta_origen_destino/       # EOD 2022 (W2 calibration) — gitignored
-├── 2020_1_19_A/                   # Monterrey AGEB shapefile (W9)
-├── ageb_mza_urbana_19_cpv2020_csv/ # Monterrey CPV2020 census (W9)
-├── denue_19_0420_csv/             # Monterrey DENUE (W9)
-├── osm_mty_drive.graphml          # Monterrey OSM drive graph (W9)
-└── lineas_transporte_masivo_mty.gpkg  # Monterrey mass transit lines (W9)
-```
-
-Load ZMG source data into PostgreSQL:
-```bash
-cd data
-bash _load_gdl_data.sh
-cd ..
-```
+**Note on reproducibility:** a from-scratch rebuild reproduces the
+thesis-reported `nppv_features` almost exactly, except the 3 node/street
+features, which drift because the OSM network is pulled live via `osmnx`
+(Spearman rho ~0.67-0.86 vs. the committed oracle); all place/people/equity
+columns reproduce at rho~1.0. `tests/test_nppv_oracle.py` enforces this as a
+drift guard.
 
 ---
 
@@ -190,7 +175,7 @@ W8: Backtest (mask high-ridership routes; test W6 re-proposes them) + benchmark 
 | `features.ageb_od_matrix` | W1 doubly-constrained gravity model OD flows |
 | `features.ageb_accessibility` | W3 cumulative-opportunities accessibility (jobs reachable in 45 min) |
 | `features.ageb_coverage_gap` | W3 coverage-gap index, quintile ranks, gap category |
-| `features.nppv_features` | 14 normalized NPP indicators per AGEB |
+| `features.nppv_features` | 15 raw + 15 normalized (`_n`) NPP-V indicators per AGEB |
 | `features.nppv_prioritization` | W4 npp_score, equity_score, final_score for all 2,068 AGEBs |
 | `features.route_candidates` | W6 corridor candidates with W5 scores and geometries |
 | `features.route_audit` | W7 SITEUR route scorecard with flags and modification proposals |
@@ -232,6 +217,8 @@ predictive-transit-zmg/
 │   └── migrations/                # Incremental schema migrations (001–007)
 ├── src/
 │   ├── run_w1.py … run_w8.py      # Workstream orchestrators
+│   ├── build_nppv_features.py     # Builds features.nppv_features from committed inputs
+│   ├── db_preflight.py            # ensure_nppv_features() self-heal, used by run_w1/w3/w4/w8
 │   ├── w1_trip_generation.py      # 4-step trip generation (productions + attractions)
 │   ├── w1_gravity_model.py        # Doubly-constrained gravity model (Furness IPF)
 │   ├── w1_demand_surface.py       # Vehicle-ownership transit-propensity weighting
@@ -277,6 +264,7 @@ predictive-transit-zmg/
 ├── notebooks/
 │   └── to_ageb.ipynb
 └── scripts/
+    ├── bootstrap.sh                # Single entry point: createdb -> DDL -> load data -> nppv_features
     └── debug/                     # Database validation utilities
 ```
 
@@ -307,9 +295,10 @@ All 139+ tests use synthetic fixtures; no database or file-system calls required
 
 ## Known Issues
 
-- **DEM raster not in git:** `continuonacional_15m.tif` (~7.2 GB) must be downloaded manually from the INEGI CEM 3.0 portal. `COALESCE(slope_mean, 0)` handles missing raster rows.
+- **DEM raster not in git:** `continuonacional_15m.tif` (~7.2 GB) is optional and must be downloaded manually from the INEGI CEM 3.0 portal (see `data/download_dem.sh`). `_load_gdl_data.sh` skips loading it if absent, and `COALESCE(slope_mean, 0)` handles missing raster rows.
 - **671 AGEBs with zero accessibility:** AGEBs with no GTFS stops within 400m receive `accessibility_score=0` and land in the highest-gap quintile. Verify these are genuinely unserved, not a GTFS coverage gap.
 - **W9 blocked on Monterrey GTFS:** The Tier-1 demand surface for Monterrey is complete. W3–W7 equivalents require a Metrorrey/Transmetro GTFS feed (check `datos.gob.mx`).
+- **OSM node-feature drift on rebuild:** `features.nppv_features` is auto-built by `src/build_nppv_features.py` (and self-healed via `ensure_nppv_features()` in `src/db_preflight.py`, wired into `run_w1/w3/w4/w8.py`). A from-scratch rebuild reproduces place/people/equity columns at Spearman rho~1.0, but the 3 node/street features drift (rho ~0.67-0.86) because the OSM drive graph is pulled live via `osmnx`. See `tests/test_nppv_oracle.py`.
 
 ---
 
