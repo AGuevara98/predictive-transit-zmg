@@ -9,7 +9,8 @@ SRC = Path("../gdl/ageb_mza_urbana_14_cpv2020_csv/ageb_mza_urbana_14_cpv2020/"
            "conjunto_de_datos/conjunto_de_datos_ageb_urbana_14_cpv2020.csv")
 OUT = Path("data/raw/census/ageb_urbana_14_cpv2020_zmg.csv")
 ZMG_MUNS = ["039", "120", "098", "101", "097", "070", "044", "051", "124", "002"]
-KEEP = ["POBTOT", "POB0_14", "POB15_64", "POB65_MAS", "P_15A17", "P_18A24"]
+KEEP = ["POBTOT", "POB0_14", "POB15_64", "POB65_MAS", "P_15A17", "P_18A24",
+        "VPH_AUTOM", "VIVPAR_HAB"]
 
 def main():
     if not SRC.exists():

@@ -16,26 +16,17 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import PG_URI
 
 ENGINE = create_engine(PG_URI)
-ZMG_MUNS = {"039", "120", "098", "101", "097", "070", "044", "051", "124", "002"}
 
 
 def load_vehicle_ownership(census_path: Path) -> pd.DataFrame:
+    # census_path points at the committed slim ZMG extract (data/raw/census/
+    # ageb_urbana_14_cpv2020_zmg.csv) — already AGEB-level (MZA="000" pre-filtered)
+    # and already restricted to ZMG municipalities, with cve_ageb precomputed.
     # VPH_AUTOM = dwellings with automobile; VIVPAR_HAB = occupied private dwellings
     print("[Step 1] Loading vehicle-ownership data from CPV2020...")
-    census = pd.read_csv(census_path, dtype=str, encoding="latin-1")
-    census = census[census["MZA"] == "000"].copy()
-    census["cve_ageb"] = (
-        census["ENTIDAD"].str.zfill(2)
-        + census["MUN"].str.zfill(3)
-        + census["LOC"].str.zfill(4)
-        + census["AGEB"].str.zfill(4)
-    )
-    census = census[census["MUN"].isin(ZMG_MUNS)].copy()
+    census = pd.read_csv(census_path, dtype=str)
 
     for col in ["VPH_AUTOM", "VIVPAR_HAB"]:
-        if col not in census.columns:
-            print(f"  [WARN] Column {col} not found in CPV2020 CSV; defaulting to 0")
-            census[col] = "0"
         census[col] = pd.to_numeric(census[col], errors="coerce").fillna(0)
 
     out = census[["cve_ageb"]].copy()
@@ -102,11 +93,7 @@ def write_demand_surface(df: pd.DataFrame):
 
 def main():
     project_root = Path(__file__).parent.parent
-    census_path = (
-        project_root.parent / "gdl" / "ageb_mza_urbana_14_cpv2020_csv"
-        / "ageb_mza_urbana_14_cpv2020" / "conjunto_de_datos"
-        / "conjunto_de_datos_ageb_urbana_14_cpv2020.csv"
-    )
+    census_path = project_root / "data" / "raw" / "census" / "ageb_urbana_14_cpv2020_zmg.csv"
 
     print("\n" + "="*70)
     print("W1.3 -- TRANSIT-DEMAND SURFACE")
