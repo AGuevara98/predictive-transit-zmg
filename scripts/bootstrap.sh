@@ -27,21 +27,23 @@ priv_hint() {
   exit 1
 }
 
-echo "[1/4] Creating DB + PostGIS extensions..."
+echo "[1/4] Creating DB + schemas + PostGIS extensions..."
 if createdb -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" 2>/dev/null; then
   echo "  created database '$DB_NAME' (owned by '$DB_USER')."
 else
   echo "  database '$DB_NAME' already exists -- continuing (it must be owned by '$DB_USER')."
 fi
+# Schemas are created here (not just in DDL.sql) because the data-load step
+# below needs raw.* to exist before ogr2ogr -nln raw.<table> can target it.
 "${PSQL[@]}" -d "$DB_NAME" \
-  -c "CREATE EXTENSION IF NOT EXISTS postgis; CREATE EXTENSION IF NOT EXISTS postgis_raster;" \
-  || priv_hint "Extension creation"
+  -c "CREATE SCHEMA IF NOT EXISTS raw; CREATE SCHEMA IF NOT EXISTS base; CREATE SCHEMA IF NOT EXISTS features; CREATE EXTENSION IF NOT EXISTS postgis; CREATE EXTENSION IF NOT EXISTS postgis_raster;" \
+  || priv_hint "Schema/extension creation"
 
-echo "[2/4] Applying schema (DDL.sql)..."
-"${PSQL[@]}" -d "$DB_NAME" -f db_setup/DDL.sql || priv_hint "Schema creation"
-
-echo "[3/4] Loading GTFS / AGEB / DENUE / DEM (if present)..."
+echo "[2/4] Loading GTFS / AGEB / DENUE / DEM (if present)..."
 ( cd data && bash _load_gdl_data.sh )
+
+echo "[3/4] Applying schema (DDL.sql)..."
+"${PSQL[@]}" -d "$DB_NAME" -f db_setup/DDL.sql || priv_hint "Schema creation"
 
 echo "[4/4] Building features.nppv_features (osmnx may download on first run)..."
 python src/build_nppv_features.py
