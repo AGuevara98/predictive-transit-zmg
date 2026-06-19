@@ -114,9 +114,11 @@ def main():
     print("[Step 4] Computing productions & attractions...")
     merged = agebs.merge(pop_df, on="cve_ageb", how="left")
     merged = merged.merge(place_df, on="cve_ageb", how="left").fillna(0)
-    # NOTE: no A-suffix filter here. base.ageb is the authoritative AGEB list and already
-    # contains the correct 2,068 rows (some legitimate INEGI AGEBs have cve_ageb ending in
-    # 'A', e.g. '005A'). Filtering by 'A' would silently drop 187 valid AGEBs.
+    # NOTE: no A-suffix filter here -- base.ageb's own DDL (db_setup/DDL.sql)
+    # already excludes cve_ageb LIKE '%A%' rows, so agebs (sourced from
+    # base.ageb above) is already the authoritative, filtered AGEB list
+    # (1,881 rows: 10 ZMG munis, A-suffix excluded). Re-filtering here would
+    # be redundant.
 
     merged["productions"] = compute_productions(merged)
     merged["attractions"] = compute_attractions(merged)

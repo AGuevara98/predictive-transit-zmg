@@ -46,7 +46,7 @@ from src.w6_graph import (
     snap_to_osm_nodes,
 )
 
-DATA_DIR = Path("data")
+DATA_DIR = Path(__file__).parent.parent / "data" / "gtfs"
 N_SAMPLE_POINTS = 200   # sample count along each route shape for overlap calculation
 
 

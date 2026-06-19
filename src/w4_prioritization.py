@@ -20,7 +20,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import psycopg2.extras
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import PG_URI
@@ -261,6 +261,15 @@ def generate_charts(weights_df: pd.DataFrame, scores_df: pd.DataFrame, out_dir: 
 def generate_cluster_profiles(scores_df: pd.DataFrame, out_dir: Path):
     print("[Step 10] Generating cluster priority profiles...")
     engine = _get_engine()
+    with engine.connect() as conn:
+        has_table = conn.execute(text(
+            "SELECT to_regclass('features.nppv_clusters') IS NOT NULL"
+        )).scalar()
+    if not has_table:
+        print("  [SKIP] features.nppv_clusters not present (legacy Phase 4 "
+              "K-Means output; not built by the from-scratch bootstrap chain). "
+              "Run Phase 4 separately to populate it, then re-run this step.")
+        return
     with engine.raw_connection() as conn:
         clusters_df = pd.read_sql(
             "SELECT cve_ageb, cluster_id AS cluster FROM features.nppv_clusters",
@@ -334,7 +343,7 @@ CRITIC and EWM weights are computed independently and averaged (ensemble).
 
 {weights_md}
 
-## Score Summary (2,068 AGEBs)
+## Score Summary ({len(scores_df):,} AGEBs)
 
 | Metric | npp_score | equity_score | final_score |
 |---|---|---|---|
@@ -450,7 +459,7 @@ def main():
     print("="*70)
     print("DB outputs:")
     print("  features.nppv_w4_weights        -- 14 feature weights")
-    print("  features.nppv_prioritization    -- 2,068 AGEB scores + ranks")
+    print(f"  features.nppv_prioritization    -- {len(scores_df):,} AGEB scores + ranks")
     print("File outputs (outputs/w4/):")
     print("  nppv_w4_weights.csv")
     print("  nppv_prioritization.csv")

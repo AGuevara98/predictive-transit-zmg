@@ -32,7 +32,7 @@ OUTPUT_DIR = Path("outputs/w8")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 W6_GEOJSON = Path("outputs/w6/corridor_candidates.geojson")
-DATA_DIR = Path("data")
+DATA_DIR = Path("data") / "gtfs"
 
 
 def write_coverage_chart(metrics: dict) -> None:
@@ -166,7 +166,7 @@ def write_report(metrics: dict, backtest: dict, benchmark: dict) -> None:
         "",
         "### Before/After Metrics",
         "- **Coverage rate:** fraction of AGEB centroids within 400m of any transit stop/corridor.",
-        "- **Accessibility Gini:** Gini coefficient of accessibility_score across all 2,068 AGEBs.",
+        "- **Accessibility Gini:** Gini coefficient of accessibility_score across all AGEBs.",
         "- **Pop-served/km:** sum of population in AGEBs within 400m of W6 corridors / total W6 km.",
     ]
 
