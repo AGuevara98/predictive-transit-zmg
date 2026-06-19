@@ -13,22 +13,22 @@ CREATE EXTENSION IF NOT EXISTS postgis_raster;
 DROP TABLE IF EXISTS raw.denue;
 
 CREATE TABLE raw.denue AS
-SELECT 
-    "ID"::int AS denue_id,
-    "Clee" AS clee,
-    "Nombre de la Unidad Económica" AS nombre_unidad,
-    "Razón social" AS razon_social,
-    "Código de la clase de actividad SCIAN" AS scian_codigo,
-    "Nombre de clase de la actividad" AS scian_nombre,
-    "Descripcion estrato personal ocupado" AS estrato_personal,
-    "Clave entidad" AS cve_ent,
-    "Clave municipio" AS cve_mun,
-    "Clave localidad" AS cve_loc,
-    "Área geoestadística básica " AS ageb_id,
-    "Manzana" AS manzana_id,
-    "Latitud"::double precision AS latitud,
-    "Longitud"::double precision AS longitud,
-    "Fecha de incorporación al DENUE" AS fecha_alta
+SELECT
+    denue_id::int AS denue_id,
+    clee,
+    nombre_unidad,
+    razon_social,
+    scian_codigo,
+    scian_nombre,
+    estrato_personal,
+    cve_ent,
+    cve_mun,
+    cve_loc,
+    ageb_id,
+    manzana_id,
+    latitud::double precision AS latitud,
+    longitud::double precision AS longitud,
+    fecha_alta
 FROM raw.denue_staging;
 
 ALTER TABLE raw.denue ADD COLUMN geom geometry(Point, 4326);
@@ -51,11 +51,14 @@ DROP TABLE IF EXISTS base.ageb CASCADE;
 CREATE TABLE base.ageb AS
 SELECT
     *,
-    ST_Transform(geom, 6372) AS geom
+    ST_Transform(geom, 6372) AS geom_6372
 FROM raw.ageb
-WHERE "CVE_ENT" = '14'
-  AND "CVE_AGEB" NOT LIKE '%A%'
-  AND "CVE_MUN" IN ('039','044','051','070','097','098','101','120','009','124');
+WHERE cve_ent = '14'
+  AND cve_ageb NOT LIKE '%A%'
+  AND cve_mun IN ('039','044','051','070','097','098','101','120','009','124');
+
+ALTER TABLE base.ageb DROP COLUMN geom;
+ALTER TABLE base.ageb RENAME COLUMN geom_6372 TO geom;
 
 ALTER TABLE base.ageb ADD PRIMARY KEY (cvegeo);
 CREATE INDEX base_ageb_gix ON base.ageb USING GIST (geom);
@@ -259,19 +262,30 @@ CREATE INDEX ageb_accessibility_ageb_id_idx ON features.ageb_accessibility (ageb
 ANALYZE features.ageb_accessibility;
 
 -- Topography
+-- raw.dem is loaded via `raster2pgsql -s 6365` (the DEM's true geographic
+-- CRS per gdalinfo; raster2pgsql tags SRID, it never reprojects). Transform
+-- the AGEB polygon (1,852 rows) into 6365 for the join/clip instead of
+-- transforming the raster (940k+ tiles). The "&&" overlap test is required
+-- alongside ST_Intersects -- raster2pgsql's GIST index is built on
+-- ST_ConvexHull(rast), and the planner only uses it via the && operator;
+-- ST_Intersects alone falls back to a full sequential scan of every tile.
+-- The clipped/unioned result is small, so transforming it to 6372 afterward
+-- for the slope calc is cheap.
 DROP TABLE IF EXISTS features.ageb_topography CASCADE;
 CREATE TABLE features.ageb_topography AS
-SELECT 
+SELECT
     a.cvegeo AS ageb_id,
     (ST_SummaryStats(
         ST_Slope(
-            ST_Union(ST_Clip(ST_Transform(r.rast, 6372), a.geom)),
+            ST_Transform(ST_Union(ST_Clip(r.rast, ST_Transform(a.geom, 6365))), 6372),
             1,
             '32BF'
         )
     )).mean AS slope_mean
 FROM base.ageb a
-JOIN raw.dem r ON ST_Intersects(ST_Transform(r.rast, 6372), a.geom)
+JOIN raw.dem r
+  ON r.rast && ST_Transform(a.geom, 6365)
+ AND ST_Intersects(r.rast, ST_Transform(a.geom, 6365))
 GROUP BY a.cvegeo;
 
 CREATE INDEX idx_ageb_topo_id ON features.ageb_topography (ageb_id);
