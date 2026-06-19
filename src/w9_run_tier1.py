@@ -47,14 +47,18 @@ PROJECT_ROOT = Path(__file__).parent.parent
 OUTPUT_DIR   = PROJECT_ROOT / "outputs" / "w9"
 DATA_DIR     = PROJECT_ROOT / "data"
 
-# Expected census data locations (two common layouts)
+# Committed slim extract (data/raw/census/, survives a fresh clone) checked
+# first; raw INEGI download layouts checked as fallback for full re-extraction.
 CENSUS_PATHS = [
+    PROJECT_ROOT / "data" / "raw" / "census" / "ageb_urbana_19_cpv2020_mty.csv",
     DATA_DIR / CENSUS_DIR_NAME / "conjunto_de_datos" / CENSUS_CSV_NAME,
     DATA_DIR / CENSUS_CSV_NAME,  # flat layout fallback
 ]
 
-# DENUE data location (glob fallback handles other date suffixes)
+# Committed slim extract checked first (glob fallback handles other date
+# suffixes in the raw INEGI download).
 DENUE_PATHS = [
+    PROJECT_ROOT / "data" / "raw" / "denue" / "mty_denue_combined.csv",
     DATA_DIR / "denue_19_0420_csv" / "conjunto_de_datos" / "denue_inegi_19_.csv",
 ]
 
@@ -120,19 +124,21 @@ def load_census(census_path: Path) -> pd.DataFrame:
     print(f"[Step 2] Loading census: {census_path.name}...")
     census = pd.read_csv(census_path, dtype=str, encoding="utf-8-sig")
 
-    # Keep only AGEB-level rows (MZA == "000")
-    census = census[census[COL_MZA] == "000"].copy()
-
-    # Build 15-character cvegeo
-    census["cve_ageb"] = (
-        census[COL_ENTIDAD].str.zfill(2)
-        + census[COL_MUN].str.zfill(3)
-        + census[COL_LOC].str.zfill(4)
-        + census[COL_AGEB].str.zfill(4)
-    )
-
-    # Filter to ZM municipalities
-    census = census[census[COL_MUN].isin(ZM_MUNICIPALITIES)].copy()
+    if "cve_ageb" in census.columns:
+        # Committed slim extract (data/raw/census/ageb_urbana_19_cpv2020_mty.csv):
+        # already AGEB-level (MZA="000" pre-filtered) and already restricted to
+        # ZM municipalities, via scripts/data_prep/make_mty_census_extract.py.
+        pass
+    else:
+        # Raw INEGI download layout -- filter and build cve_ageb ourselves.
+        census = census[census[COL_MZA] == "000"].copy()
+        census["cve_ageb"] = (
+            census[COL_ENTIDAD].str.zfill(2)
+            + census[COL_MUN].str.zfill(3)
+            + census[COL_LOC].str.zfill(4)
+            + census[COL_AGEB].str.zfill(4)
+        )
+        census = census[census[COL_MUN].isin(ZM_MUNICIPALITIES)].copy()
     print(f"  [OK] {len(census):,} AGEB rows in {len(ZM_MUNICIPALITIES)} municipalities")
 
     # Parse numeric columns
