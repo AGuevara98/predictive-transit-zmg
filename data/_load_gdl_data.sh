@@ -89,7 +89,12 @@ if [ -f continuonacional_15m.tif ]; then
   # join against base.ageb (EPSG:6372) silently returns zero matches.
   raster2pgsql -d -s 6365 -I -C -M -t 100x100 continuonacional_15m.tif raw.dem | psql -d "$DB_NAME" -U "$DB_USER" -h "$DB_HOST"
 else
-  echo "[9/9] DEM raster continuonacional_15m.tif not found - skipping (slope_mean will COALESCE to 0)."
+  echo "[9/9] DEM raster continuonacional_15m.tif not found - creating empty raw.dem (slope_mean will COALESCE to 0)."
+  # DDL.sql does an inner JOIN against raw.dem; the table must exist even when
+  # empty, or that JOIN fails with "relation raw.dem does not exist" instead of
+  # just returning zero rows.
+  psql -d "$DB_NAME" -U "$DB_USER" -h "$DB_HOST" -v ON_ERROR_STOP=1 \
+    -c "CREATE TABLE IF NOT EXISTS raw.dem (rid serial PRIMARY KEY, rast raster);"
 fi
 
 echo "========================================"

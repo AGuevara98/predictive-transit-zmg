@@ -14,14 +14,25 @@
 # =============================================================================
 # Database Configuration (PostgreSQL + PostGIS)
 # =============================================================================
-# No personal credentials are hardcoded. DB_USER defaults to your OS login;
-# DB_PASS defaults to empty so psql/ogr2ogr use ~/.pgpass, PGPASSWORD, or a
-# prompt. Override via environment variables. The role must own DB_NAME.
-export DB_HOST="${DB_HOST:-localhost}"
-export DB_PORT="${DB_PORT:-5432}"
-export DB_NAME="${DB_NAME:-gdl_metro}"
-export DB_USER="${DB_USER:-$(id -un)}"
-export DB_PASS="${DB_PASS:-}"
+# Set via PG_HOST/PG_PORT/PG_DB/PG_USER/PG_PASS -- the SAME names config.py
+# reads, so one `export` line configures both the Python and shell sides of
+# the pipeline. No personal credentials are hardcoded. PG_USER defaults to
+# your OS login; PG_PASS defaults to empty so psql/ogr2ogr use ~/.pgpass,
+# PGPASSWORD, or a prompt. The role must own PG_DB.
+export PG_HOST="${PG_HOST:-localhost}"
+export PG_PORT="${PG_PORT:-5432}"
+export PG_DB="${PG_DB:-gdl_metro}"
+export PG_USER="${PG_USER:-$(id -un)}"
+export PG_PASS="${PG_PASS:-}"
+
+# DB_* aliases: every shell script in this repo (bootstrap.sh,
+# data/_load_gdl_data.sh, etc.) was written against DB_HOST/DB_PORT/DB_NAME/
+# DB_USER/DB_PASS. Keep those working without touching each script.
+export DB_HOST="$PG_HOST"
+export DB_PORT="$PG_PORT"
+export DB_NAME="$PG_DB"
+export DB_USER="$PG_USER"
+export DB_PASS="$PG_PASS"
 
 # Canonical SRID for spatial operations
 export CANONICAL_SRID="${CANONICAL_SRID:-6372}"
