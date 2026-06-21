@@ -5,17 +5,17 @@
 | Metric | Value |
 |--------|-------|
 | W1 prior beta | 2.0 |
-| Calibrated beta | 1.1851 |
-| Delta (|cal - prior|) | 0.8149 |
-| Zone-pair calibration pairs | 1987 |
-| Log-space SSE at calibrated beta | 4011.4389 |
-| RMSE (scaled, calibrated) | 4,590.0 trips |
-| RMSE (scaled, W1 beta=2.0) | 5,215.2 trips |
-| R² (calibrated) | 0.2299 |
+| Calibrated beta | 1.2005 |
+| Delta (|cal - prior|) | 0.7995 |
+| Zone-pair calibration pairs | 1993 |
+| Log-space SSE at calibrated beta | 4063.8699 |
+| RMSE (scaled, calibrated) | 4,524.9 trips |
+| RMSE (scaled, W1 beta=2.0) | 5,088.2 trips |
+| R² (calibrated) | 0.2498 |
 
 ## Verdict
 
-The calibrated beta (1.1851) differs from the W1 prior (2.0) by 0.81. This indicates ZMG commuters travel longer distances (weaker distance decay) than the W1 prior assumed. Consider rerunning W1.2 with `BETA = 1.19` in `src/w1_gravity_model.py` for a calibrated demand surface, then rerunning W3 and downstream workstreams. The relative prioritization ordering (W4/W6/W7) is robust to this change since it depends on demand ratios, not absolute values.
+The calibrated beta (1.2005) differs from the W1 prior (2.0) by 0.80. This indicates ZMG commuters travel longer distances (weaker distance decay) than the W1 prior assumed. Consider rerunning W1.2 with `BETA = 1.20` in `src/w1_gravity_model.py` for a calibrated demand surface, then rerunning W3 and downstream workstreams. The relative prioritization ordering (W4/W6/W7) is robust to this change since it depends on demand ratios, not absolute values.
 
 ## Data Sources
 

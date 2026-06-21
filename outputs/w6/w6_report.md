@@ -1,6 +1,6 @@
 # W6 New Corridor Generation -- Report
 
-**Generated corridors:** 6 total (2 feasible, 4 infeasible)
+**Generated corridors:** 6 total (3 feasible, 3 infeasible)
 
 ## Methodology
 
@@ -14,20 +14,20 @@
 
 | ID | Group | km | Stops | Connected | Served AGEBs | Total Demand | f1 | f3 | Score | Rank | Mode | Feasible |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| W6_G00 | 0 | 36.3 | 74 | True | 90 | 519763 | 0.173 | 0.576 | 0.317 | 1 | BRT | False |
-| W6_G02 | 2 | 14.6 | 30 | True | 3 | 40260 | 0.424 | 0.422 | 0.658 | 1 | BRT | True |
-| W6_G03 | 3 | 32.5 | 66 | True | 27 | 188842 | 0.210 | 0.476 | 0.329 | 1 | BRT | False |
-| W6_G04 | 4 | 33.5 | 68 | True | 63 | 305191 | 0.178 | 0.547 | 0.315 | 1 | BRT | False |
-| W6_G05 | 5 | 16.6 | 34 | True | 15 | 47816 | 0.412 | 0.450 | 0.636 | 1 | BRT | True |
-| W6_G01 | 1 | 36.6 | 74 | True | 26 | 110474 | 0.376 | 0.441 | 0.487 | 2 | BRT | False |
+| W6_G00 | 0 | 16.6 | 34 | True | 12 | 47809 | 0.412 | 0.506 | 0.650 | 1 | BRT | True |
+| W6_G02 | 2 | 36.3 | 74 | True | 84 | 486693 | 0.184 | 0.575 | 0.328 | 1 | BRT | False |
+| W6_G03 | 3 | 14.6 | 30 | True | 3 | 40028 | 0.424 | 0.422 | 0.658 | 1 | BRT | True |
+| W6_G05 | 5 | 30.6 | 62 | True | 19 | 101797 | 0.431 | 0.559 | 0.571 | 1 | BRT | False |
+| W6_G01 | 1 | 19.5 | 40 | True | 11 | 130622 | 0.232 | 0.329 | 0.402 | 2 | BRT | True |
+| W6_G04 | 4 | 39.3 | 80 | True | 74 | 387913 | 0.165 | 0.569 | 0.308 | 2 | BRT | False |
 
 ## Mode Assignment Sensitivity
 
 | Threshold (trips/day) | BRT corridors | Local Bus corridors |
 |---|---|---|
-| 10,000 | 2 | 0 |
-| 15,000 | 2 | 0 |
-| 20,000 | 2 | 0 |
+| 10,000 | 3 | 0 |
+| 15,000 | 3 | 0 |
+| 20,000 | 3 | 0 |
 
 ## W5 Config Used
 
