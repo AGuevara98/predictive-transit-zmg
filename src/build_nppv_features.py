@@ -93,11 +93,16 @@ def youth_share(p15_29, pop_total) -> float:
 # ---------------------------------------------------------------------------
 
 def load_agebs(engine) -> gpd.GeoDataFrame:
-    """Load the 2,068 ZMG AGEB polygons from raw.ageb, projected to 6372."""
+    """Load the filtered ZMG AGEB polygons from base.ageb, projected to 6372.
+
+    Must match base.ageb's filter (cve_ent, A-suffix exclusion, ZMG munis) --
+    features.nppv_prioritization has an FK to base.ageb, so any cve_ageb
+    here that isn't in base.ageb breaks W4's write.
+    """
     print("[Step 0] Loading AGEB geometries...")
     with engine.raw_connection() as conn:
         gdf = gpd.read_postgis(
-            "SELECT cvegeo AS cve_ageb, geom AS geometry FROM raw.ageb",
+            "SELECT cvegeo AS cve_ageb, geom AS geometry FROM base.ageb",
             conn, geom_col="geometry",
         )
     gdf = gdf.to_crs(CRS_CANONICAL)

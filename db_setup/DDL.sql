@@ -55,7 +55,7 @@ SELECT
 FROM raw.ageb
 WHERE cve_ent = '14'
   AND cve_ageb NOT LIKE '%A%'
-  AND cve_mun IN ('039','044','051','070','097','098','101','120','009','124');
+  AND cve_mun IN ('039','044','051','070','097','098','101','120','002','124');
 
 ALTER TABLE base.ageb DROP COLUMN geom;
 ALTER TABLE base.ageb RENAME COLUMN geom_6372 TO geom;

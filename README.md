@@ -11,7 +11,7 @@ The pipeline answers two research questions:
 
 The framework is **transferable**: it runs on Tier-1 data (INEGI census, DENUE, OSM, GTFS) available in any Mexican city. OD survey data, when available, calibrates the demand model but is not required.
 
-The unit of analysis is the **AGEB** (Área Geoestadística Básica — census enumeration area). ZMG has 2,068 urban AGEBs across 10 municipalities.
+The unit of analysis is the **AGEB** (Área Geoestadística Básica — census enumeration area). ZMG has 1,881 urban AGEBs across 10 municipalities (alpha-suffix AGEBs excluded; see Known Issues).
 
 ---
 
@@ -32,6 +32,68 @@ The unit of analysis is the **AGEB** (Área Geoestadística Básica — census e
 
 ---
 
+## Windows Setup: Clone Into WSL + Connect VS Code
+
+This project's shell scripts (`bootstrap.sh`, `_load_gdl_data.sh`) and tooling
+(`raster2pgsql`, `ogr2ogr`, PostGIS) assume a Linux environment. On Windows,
+use WSL2 — and clone the repo **inside the WSL filesystem**, not under
+`/mnt/c/...`. Paths under `/mnt/c` are reachable from WSL but go through the
+9p network filesystem, which makes git, Python, and Postgres I/O dramatically
+slower than native WSL ext4. (This matters in practice — the DEM raster alone
+is 7.2 GB and the OSM graph caches are ~100-150 MB each.)
+
+### 1. Install WSL + a distro (skip if already set up)
+
+In PowerShell (as Administrator):
+```powershell
+wsl --install -d Ubuntu
+```
+Reboot if prompted, then launch **Ubuntu** from the Start menu once to finish
+first-run setup (it asks you to create a Linux username/password — this is
+separate from your Windows login).
+
+### 2. Clone the repo from inside WSL
+
+Open the **Ubuntu** app (not PowerShell/cmd) and clone into your Linux home
+directory:
+
+```bash
+cd ~
+mkdir -p projects && cd projects
+git clone https://github.com/AGuevara98/predictive-transit-zmg.git
+cd predictive-transit-zmg
+```
+
+If you already have the repo cloned under `/mnt/c/Users/<you>/...`, re-clone
+it under `~/projects/` instead rather than working from the Windows-side copy.
+
+### 3. Connect VS Code to that WSL distro
+
+1. Install the **WSL** extension (`ms-vscode-remote.remote-wsl`) — from VS
+   Code's Extensions panel, or from PowerShell:
+   ```powershell
+   code --install-extension ms-vscode-remote.remote-wsl
+   ```
+2. From inside the WSL terminal, in the cloned repo directory, just run:
+   ```bash
+   code .
+   ```
+   This launches VS Code already connected to WSL. Confirm by checking the
+   green `><` badge in the bottom-left corner — it should read
+   `WSL: Ubuntu`.
+3. Alternatively, from VS Code on the Windows side: `Ctrl+Shift+P` → **WSL:
+   Connect to WSL** → pick your distro → `File > Open Folder` →
+   `/home/<you>/projects/predictive-transit-zmg`.
+4. Open an integrated terminal (`` Ctrl+` ``) and confirm it's bash inside
+   WSL, not PowerShell: `pwd` should print `/home/...`, and `uname -a` should
+   say `Linux`.
+
+With the WSL extension active, every step below (`venv`, `pip install`,
+PostgreSQL, `bootstrap.sh`) runs natively inside the Linux distro — no
+`/mnt/c` paths, no Windows-side Python, no cross-OS interop overhead.
+
+---
+
 ## Quick Start
 
 ### Prerequisites
@@ -39,7 +101,7 @@ The unit of analysis is the **AGEB** (Área Geoestadística Básica — census e
 - Python 3.9+
 - PostgreSQL 14+ with PostGIS 3.2+ (raster extension required)
 - GDAL tools: `ogr2ogr`, `raster2pgsql`
-- Ubuntu/WSL recommended for shell scripts
+- Ubuntu/WSL recommended for shell scripts (see "Windows Setup" above)
 
 ### 1. Python Environment
 
@@ -118,7 +180,7 @@ Each workstream has an orchestrator in `src/`. Run them in dependency order (W0�
 # W1 — Demand estimation (trip generation → gravity model → demand surface)
 python src/run_w1.py
 
-# W2 — EOD calibration (runs after W1; beta=2.0 prior retained)
+# W2 — EOD calibration (runs after W1; see Known Issues re: beta)
 python src/run_w2.py
 
 # W3 — Accessibility + coverage-gap index + model retrain
@@ -158,7 +220,7 @@ python src/w9_run_tier1.py
 
 ```
 W1: Trip generation (census + DENUE) → OD gravity model → transit-demand surface
-W2: EOD 2022 calibration of gravity model beta (β=2.0 retained as prior)
+W2: EOD 2022 calibration of gravity model beta (β=2.0 used by W1; calibration now favors β=1.2005 -- not yet adopted, see Known Issues)
 W3: GTFS accessibility surface → coverage-gap index (demand/supply gap)
 W4: CRITIC + EWM objective weights on 14 NPP indicators → final_score = 0.80×npp + 0.20×equity
 W5: Multi-objective function (maximize demand gain + equity; minimize route-km)
@@ -184,7 +246,7 @@ W8: Backtest (mask high-ridership routes; test W6 re-proposes them) + benchmark 
 | `features.ageb_accessibility` | W3 cumulative-opportunities accessibility (jobs reachable in 45 min) |
 | `features.ageb_coverage_gap` | W3 coverage-gap index, quintile ranks, gap category |
 | `features.nppv_features` | 15 raw + 15 normalized (`_n`) NPP-V indicators per AGEB |
-| `features.nppv_prioritization` | W4 npp_score, equity_score, final_score for all 2,068 AGEBs |
+| `features.nppv_prioritization` | W4 npp_score, equity_score, final_score for all 1,881 AGEBs |
 | `features.route_candidates` | W6 corridor candidates with W5 scores and geometries |
 | `features.route_audit` | W7 SITEUR route scorecard with flags and modification proposals |
 
@@ -205,18 +267,22 @@ predictive-transit-zmg/
 ├── requirements.txt
 ├── data/
 │   ├── gtfs/                      # ZMG GTFS feed
+│   ├── raw/
+│   │   ├── census/                # Slim CPV2020 extracts (ZMG + Monterrey), committed
+│   │   ├── denue/                 # Slim/combined DENUE extracts (ZMG + Monterrey), committed
+│   │   └── ridership/              # Jalisco ridership lookup, committed
 │   ├── ageb_zmg_2020_v2.gpkg
 │   ├── INEGI_DENUE_UTF8.csv
 │   ├── linea_4.geojson
-│   ├── osm_zmg_drive.graphml
-│   ├── transporte_publico.gpkg
-│   ├── continuonacional_15m.tif   # gitignored — download separately
-│   ├── encuesta_origen_destino/   # gitignored — EOD 2022 survey
-│   ├── 2020_1_19_A/               # Monterrey AGEB shapefile (W9)
-│   ├── ageb_mza_urbana_19_cpv2020_csv/  # Monterrey census (W9)
-│   ├── denue_19_0420_csv/         # Monterrey DENUE (W9)
-│   ├── osm_mty_drive.graphml      # Monterrey OSM graph (W9)
-│   ├── lineas_transporte_masivo_mty.gpkg  # Monterrey transit (W9)
+│   ├── 2020_1_19_A/                # Monterrey AGEB shapefile (W9) -- small, committed
+│   ├── osm_zmg_drive.graphml       # gitignored — auto-downloaded by w6_graph.py (~125MB)
+│   ├── osm_mty_drive.graphml       # gitignored — auto-downloaded by w9_osm_download.py (~150MB)
+│   ├── transporte_publico.gpkg     # gitignored
+│   ├── lineas_transporte_masivo_mty.gpkg  # gitignored
+│   ├── continuonacional_15m.tif    # gitignored — download separately (~7.2GB)
+│   ├── encuesta_origen_destino/    # gitignored — EOD 2022 survey
+│   ├── ageb_mza_urbana_19_cpv2020_csv/  # gitignored — raw Monterrey census (slim extract in data/raw/census/ instead)
+│   ├── denue_19_0420_csv/          # gitignored — raw Monterrey DENUE (slim extract in data/raw/denue/ instead)
 │   ├── _load_gdl_data.sh          # Data loader for ZMG
 │   └── download_dem.sh            # Instructions for obtaining DEM
 ├── db_setup/
@@ -282,11 +348,11 @@ predictive-transit-zmg/
 
 | Output | Location | Description |
 |---|---|---|
-| Transit demand surface | `outputs/w1/ageb_demand_surface.csv` | 2,068 AGEBs with modeled transit demand |
-| Coverage-gap index | `outputs/w3/ageb_coverage_gap.csv` | 428 High-gap AGEBs (20.7%) |
+| Transit demand surface | `outputs/w1/ageb_demand_surface.csv` | 1,881 AGEBs with modeled transit demand |
+| Coverage-gap index | `outputs/w3/ageb_coverage_gap.csv` | 389 High-gap AGEBs (20.7%) |
 | NPP prioritization | `outputs/w4/nppv_prioritization.geojson` | All AGEBs scored + ranked (QGIS-ready) |
-| New corridors | `outputs/w6/corridor_candidates.geojson` | 2 feasible BRT corridors (W6_G02, W6_G05) |
-| Route audit | `outputs/w7/route_audit.geojson` | 275 SITEUR routes scored with flags |
+| New corridors | `outputs/w6/corridor_candidates.geojson` | 3 feasible BRT corridors (W6_G00, W6_G01, W6_G03) |
+| Route audit | `outputs/w7/route_audit.geojson` | 247 SITEUR routes scored with flags |
 | Validation report | `outputs/w8/w8_report.md` | Backtest + benchmark + equity metrics |
 
 ---
@@ -303,10 +369,12 @@ All 139+ tests use synthetic fixtures; no database or file-system calls required
 
 ## Known Issues
 
-- **DEM raster not in git:** `continuonacional_15m.tif` (~7.2 GB) is optional and must be downloaded manually from the INEGI CEM 3.0 portal (see `data/download_dem.sh`). `_load_gdl_data.sh` skips loading it if absent, and `COALESCE(slope_mean, 0)` handles missing raster rows.
-- **671 AGEBs with zero accessibility:** AGEBs with no GTFS stops within 400m receive `accessibility_score=0` and land in the highest-gap quintile. Verify these are genuinely unserved, not a GTFS coverage gap.
+- **DEM raster not in git:** `continuonacional_15m.tif` (~7.2 GB) is optional and must be downloaded manually from the INEGI CEM 3.0 portal (see `data/download_dem.sh`). `_load_gdl_data.sh` skips loading it if absent, and `COALESCE(slope_mean, 0)` handles missing raster rows. **Must be loaded with `raster2pgsql -s 6365 -t 100x100`** (the DEM's true CRS) — loading with the wrong SRID doesn't error, it silently produces geometrically meaningless `slope_mean` values (this happened to the project's own DB for a while; fixed 2026-06-19).
+- **615 AGEBs with zero accessibility** (out of 1,881): AGEBs with no GTFS stops within 400m receive `accessibility_score=0` and land in the highest-gap quintile. Verify these are genuinely unserved, not a GTFS coverage gap.
+- **W2 calibration vs. W1 prior:** as of the 2026-06-19 AGEB-count correction below, W2 calibrates beta=1.2005 with a *better* fit than the beta=2.0 prior W1 still hardcodes. This hasn't been resolved/adopted — decide before citing W2 in the thesis. See `CLAUDE.md`'s W2 section for the numbers.
 - **W9 blocked on Monterrey GTFS:** The Tier-1 demand surface for Monterrey is complete. W3–W7 equivalents require a Metrorrey/Transmetro GTFS feed (check `datos.gob.mx`).
 - **OSM node-feature drift on rebuild:** `features.nppv_features` is auto-built by `src/build_nppv_features.py` (and self-healed via `ensure_nppv_features()` in `src/db_preflight.py`, wired into `run_w1/w3/w4/w8.py`). A from-scratch rebuild reproduces place/people/equity columns at Spearman rho~1.0, but the 3 node/street features drift (rho ~0.67-0.86) because the OSM drive graph is pulled live via `osmnx`. See `tests/test_nppv_oracle.py`.
+- **2026-06-19 AGEB-count correction:** `db_setup/DDL.sql`'s `base.ageb` municipality-code list had a typo (`'009'` instead of `'002'`, Acatlán de Juárez) present since the first commit, silently dropping that municipality on every from-scratch bootstrap. The live DB's `base.ageb` had also never actually been rebuilt by the checked-in `DDL.sql` at all, so every previously-reported number in this repo was computed against a 2,068-row table that the bootstrap script couldn't reproduce. Fixed; the corrected, reproducible AGEB universe is 1,881 rows. Full writeup in `CLAUDE.md`'s errata section.
 
 ---
 

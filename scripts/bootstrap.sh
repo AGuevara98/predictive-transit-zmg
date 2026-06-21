@@ -9,6 +9,16 @@ SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 source "${SCRIPT_DIR}/config.sh"
 cd "${SCRIPT_DIR}"
 
+# Prefer the project venv; fall back to python3/python on PATH. Avoids
+# "python: command not found" on Ubuntu/WSL, which ships python3 only.
+if [ -x "${SCRIPT_DIR}/.venv/bin/python" ]; then
+  PYTHON="${SCRIPT_DIR}/.venv/bin/python"
+elif command -v python3 >/dev/null 2>&1; then
+  PYTHON="python3"
+else
+  PYTHON="python"
+fi
+
 # ON_ERROR_STOP makes psql exit non-zero on the FIRST SQL error (without it,
 # psql returns 0 even after dozens of errors and the build marches on blindly).
 PSQL=(psql -v ON_ERROR_STOP=1 -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER")
@@ -46,6 +56,6 @@ echo "[3/4] Applying schema (DDL.sql)..."
 "${PSQL[@]}" -d "$DB_NAME" -f db_setup/DDL.sql || priv_hint "Schema creation"
 
 echo "[4/4] Building features.nppv_features (osmnx may download on first run)..."
-python src/build_nppv_features.py
+"$PYTHON" src/build_nppv_features.py
 
-echo "[DONE] gdl_metro ready. Run: python src/run_w1.py"
+echo "[DONE] gdl_metro ready. Run: $PYTHON src/run_w1.py"

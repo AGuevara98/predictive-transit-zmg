@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import CRS_CANONICAL
 from src.w8_backtest import compute_shape_overlap, load_premium_route_shapes
 
-DATA_DIR = Path("data")
+DATA_DIR = Path(__file__).parent.parent / "data" / "gtfs"
 BUFFER_M = 400.0
 N_SAMPLES = 200
 

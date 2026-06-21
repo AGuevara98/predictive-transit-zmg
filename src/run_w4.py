@@ -90,7 +90,7 @@ def main():
     print("="*70)
     print("DB outputs:")
     print("  features.nppv_w4_weights     -- 14 feature weights")
-    print("  features.nppv_prioritization -- 2,068 AGEB scores + ranks")
+    print("  features.nppv_prioritization -- AGEB scores + ranks")
     print("File outputs: outputs/w4/")
     engine.dispose()
 

@@ -27,8 +27,6 @@ EMPLOY_WEIGHT        = 1.8
 POI_WEIGHT           = 0.5
 RETAIL_WEIGHT        = 0.8
 
-ZMG_MUNS = {"039", "120", "098", "101", "097", "070", "044", "051", "124", "002"}
-
 
 def load_agebs() -> pd.DataFrame:
     print("[Step 1] Loading AGEB list...")
@@ -43,28 +41,16 @@ def load_agebs() -> pd.DataFrame:
 
 
 def load_census_population(census_path: Path) -> pd.DataFrame:
+    # census_path points at the committed slim ZMG extract (data/raw/census/
+    # ageb_urbana_14_cpv2020_zmg.csv) — already AGEB-level (MZA="000" pre-filtered)
+    # and already restricted to ZMG municipalities, with cve_ageb precomputed.
+    # Same source as build_nppv_features.py's CENSUS_CSV.
     print("[Step 2] Loading census population data...")
-    census = pd.read_csv(census_path, dtype=str, encoding="latin-1")
-    census = census[census["MZA"] == "000"].copy()
-    census["cve_ageb"] = (
-        census["ENTIDAD"].str.zfill(2)
-        + census["MUN"].str.zfill(3)
-        + census["LOC"].str.zfill(4)
-        + census["AGEB"].str.zfill(4)
-    )
-    census = census[census["MUN"].isin(ZMG_MUNS)].copy()
+    census = pd.read_csv(census_path, dtype=str)
 
-    for col in ["POBTOT", "POB0_14", "POB15_64", "POB65_MAS"]:
+    for col in ["POBTOT", "POB0_14", "POB15_64", "POB65_MAS", "P_15A17", "P_18A24"]:
         census[col] = pd.to_numeric(census[col], errors="coerce").fillna(0)
-
-    if "P_15A29" not in census.columns:
-        for c in ["P_15A17", "P_18A24"]:
-            if c not in census.columns:
-                census[c] = 0
-            census[c] = pd.to_numeric(census[c], errors="coerce").fillna(0)
-        census["P_15A29"] = census["P_15A17"] + census["P_18A24"]
-    else:
-        census["P_15A29"] = pd.to_numeric(census["P_15A29"], errors="coerce").fillna(0)
+    census["P_15A29"] = census["P_15A17"] + census["P_18A24"]
 
     out = census[["cve_ageb"]].copy()
     out["pe_population"] = census["POBTOT"]
@@ -115,11 +101,7 @@ def write_trip_ends(df: pd.DataFrame):
 
 def main():
     project_root = Path(__file__).parent.parent
-    census_path = (
-        project_root.parent / "gdl" / "ageb_mza_urbana_14_cpv2020_csv"
-        / "ageb_mza_urbana_14_cpv2020" / "conjunto_de_datos"
-        / "conjunto_de_datos_ageb_urbana_14_cpv2020.csv"
-    )
+    census_path = project_root / "data" / "raw" / "census" / "ageb_urbana_14_cpv2020_zmg.csv"
 
     print("\n" + "="*70)
     print("W1.1 -- TRIP GENERATION")
@@ -132,9 +114,11 @@ def main():
     print("[Step 4] Computing productions & attractions...")
     merged = agebs.merge(pop_df, on="cve_ageb", how="left")
     merged = merged.merge(place_df, on="cve_ageb", how="left").fillna(0)
-    # NOTE: no A-suffix filter here. base.ageb is the authoritative AGEB list and already
-    # contains the correct 2,068 rows (some legitimate INEGI AGEBs have cve_ageb ending in
-    # 'A', e.g. '005A'). Filtering by 'A' would silently drop 187 valid AGEBs.
+    # NOTE: no A-suffix filter here -- base.ageb's own DDL (db_setup/DDL.sql)
+    # already excludes cve_ageb LIKE '%A%' rows, so agebs (sourced from
+    # base.ageb above) is already the authoritative, filtered AGEB list
+    # (1,881 rows: 10 ZMG munis, A-suffix excluded). Re-filtering here would
+    # be redundant.
 
     merged["productions"] = compute_productions(merged)
     merged["attractions"] = compute_attractions(merged)

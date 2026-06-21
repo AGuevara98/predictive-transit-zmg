@@ -15,9 +15,10 @@ data/transporte_publico.gpkg
 # Monterrey transit lines (W9)
 data/lineas_transporte_masivo_mty.gpkg
 
-# Monterrey W9 raw data — large archives + extracted directories
+# Monterrey W9 raw data — large archives ignored; slim extracts committed
+# under data/raw/ (see scripts/data_prep/make_mty_*_extract.py). The AGEB
+# shapefile is small enough (~3MB) to commit directly, unlike census/DENUE.
 data/2020_1_19_A.zip
-data/2020_1_19_A/
 data/ageb_mza_urbana_19_cpv2020_csv.zip
 data/ageb_mza_urbana_19_cpv2020_csv/
 data/denue_19_0420_csv/
@@ -30,6 +31,7 @@ data/raw/*
 data/raw/census/*
 !data/raw/census/zmg_indicators_combined.csv
 !data/raw/census/ageb_urbana_14_cpv2020_zmg.csv
+!data/raw/census/ageb_urbana_19_cpv2020_mty.csv
 !data/raw/ridership/
 data/raw/ridership/*
 !data/raw/ridership/jalisco_ridership_etup.csv
@@ -37,6 +39,7 @@ data/raw/ridership/*
 !data/raw/denue/
 data/raw/denue/*
 !data/raw/denue/zmg_denue_combined.csv
+!data/raw/denue/mty_denue_combined.csv
 
 # ML model artifacts — reproducible from source, not for VCS
 outputs/**/*.pkl
