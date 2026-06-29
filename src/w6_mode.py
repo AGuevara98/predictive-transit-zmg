@@ -1,6 +1,6 @@
 """
-W6 Mode Assignment: classify corridor candidates as BRT or Local Bus
-based on total transit demand in their 400m service buffer.
+W6 Mode Assignment: classify corridor candidates as Light Rail/Metro, BRT,
+or Local Bus based on total transit demand in their 400m service buffer.
 
 Threshold rationale (cite in thesis):
   LatAm BRT corridors typically serve 4,000+ pax/direction/peak-hour.
@@ -9,6 +9,16 @@ Threshold rationale (cite in thesis):
   For a corridor covering ~15-30 AGEBs in ZMG, a conservative proxy
   threshold is 15,000 transit trip-ends/day in the 400m buffer.
   Sensitivity: report results at 10,000 and 20,000 as well.
+
+  Light rail / metro (grade-separated, mid-range capacity) typically serves
+  15,000+ pax/direction/peak-hour (TCQSM mid-range for systems like Tren
+  Ligero's busier segments or Monterrey's Metrorrey). Using the same
+  10% peak-hour-share / 50% directional-split scaling:
+    15,000 / 0.10 / 0.50 = 300,000 daily boardings (system-wide).
+  Applying the same corridor-coverage ratio used for BRT (15,000 / 80,000
+  = 0.1875) gives a proxy threshold of ~56,000, rounded up to a clean
+  75,000 transit trip-ends/day in the 400m buffer.
+  Sensitivity: report results at 50,000 and 100,000 as well.
 """
 import sys
 from pathlib import Path
@@ -18,18 +28,28 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import pandas as pd
 
 BRT_THRESHOLD = 15_000.0
+LRT_THRESHOLD = 75_000.0
 
 
-def assign_mode(total_demand: float, brt_threshold: float = BRT_THRESHOLD) -> str:
-    return "BRT" if total_demand >= brt_threshold else "Local Bus"
+def assign_mode(
+    total_demand: float,
+    brt_threshold: float = BRT_THRESHOLD,
+    lrt_threshold: float = LRT_THRESHOLD,
+) -> str:
+    if total_demand >= lrt_threshold:
+        return "Light Rail/Metro"
+    if total_demand >= brt_threshold:
+        return "BRT"
+    return "Local Bus"
 
 
 def label_mode_column(
     candidates_df: pd.DataFrame,
     brt_threshold: float = BRT_THRESHOLD,
+    lrt_threshold: float = LRT_THRESHOLD,
 ) -> pd.DataFrame:
     df = candidates_df.copy()
     df["mode_assignment"] = df["total_demand"].apply(
-        lambda d: assign_mode(d, brt_threshold)
+        lambda d: assign_mode(d, brt_threshold, lrt_threshold)
     )
     return df

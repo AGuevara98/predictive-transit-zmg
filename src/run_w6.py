@@ -46,7 +46,7 @@ from src.w6_anchors import (
 )
 from src.w6_candidates import build_route_candidate
 from src.w6_graph import build_corridor_path, load_or_download_osm, project_to_6372, snap_to_osm_nodes
-from src.w6_mode import BRT_THRESHOLD, assign_mode
+from src.w6_mode import BRT_THRESHOLD, LRT_THRESHOLD, assign_mode
 
 OUTPUT_DIR = Path("outputs/w6")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -152,7 +152,8 @@ def write_report(rows: list) -> None:
         f"2. **Spatial clustering:** KMeans (k={N_CORRIDORS}) on EPSG:6372 centroids to form corridor groups.",
         "3. **Path generation:** MST-based Steiner approximation on ZMG OSM drive graph (osmnx 2.1.0).",
         "4. **Evaluation:** W5 multi-objective function (f1 demand gain, f2 route cost, f3 equity).",
-        "5. **Mode assignment:** BRT if total served demand >= 15,000 trips/day; Local Bus otherwise.",
+        "5. **Mode assignment:** Light Rail/Metro if total served demand >= 75,000 trips/day; "
+        "BRT if >= 15,000; Local Bus otherwise.",
         "",
         "## Candidate Summary",
         "",
@@ -172,13 +173,28 @@ def write_report(rows: list) -> None:
         "",
         "## Mode Assignment Sensitivity",
         "",
-        "| Threshold (trips/day) | BRT corridors | Local Bus corridors |",
-        "|---|---|---|",
+        "BRT threshold fixed at 15,000 trips/day; varying the Light Rail/Metro threshold:",
+        "",
+        "| LRT Threshold (trips/day) | Light Rail/Metro | BRT | Local Bus |",
+        "|---|---|---|---|",
     ]
-    for t in [10000, 15000, 20000]:
-        n_brt = sum(1 for r in feasible if r["total_demand"] >= t)
-        n_bus = len(feasible) - n_brt
-        lines.append(f"| {t:,} | {n_brt} | {n_bus} |")
+    for lrt_t in [50000, 75000, 100000]:
+        n_lrt = sum(1 for r in feasible if r["total_demand"] >= lrt_t)
+        n_brt = sum(1 for r in feasible if BRT_THRESHOLD <= r["total_demand"] < lrt_t)
+        n_bus = len(feasible) - n_lrt - n_brt
+        lines.append(f"| {lrt_t:,} | {n_lrt} | {n_brt} | {n_bus} |")
+    lines += [
+        "",
+        "Light Rail/Metro threshold fixed at 75,000 trips/day; varying the BRT threshold:",
+        "",
+        "| BRT Threshold (trips/day) | Light Rail/Metro | BRT | Local Bus |",
+        "|---|---|---|---|",
+    ]
+    for brt_t in [10000, 15000, 20000]:
+        n_lrt = sum(1 for r in feasible if r["total_demand"] >= LRT_THRESHOLD)
+        n_brt = sum(1 for r in feasible if brt_t <= r["total_demand"] < LRT_THRESHOLD)
+        n_bus = len(feasible) - n_lrt - n_brt
+        lines.append(f"| {brt_t:,} | {n_lrt} | {n_brt} | {n_bus} |")
     lines += [
         "",
         "## W5 Config Used",
@@ -299,7 +315,7 @@ def main() -> None:
         for (rc, geom, gid), obj, cr, rank in zip(candidates, objectives, constraint_results, ranks):
             ctxs = [ctx_map[aid] for aid in rc.served_ageb_ids if aid in ctx_map]
             td = sum(c.transit_demand for c in ctxs)
-            mode = assign_mode(td, BRT_THRESHOLD)
+            mode = assign_mode(td, BRT_THRESHOLD, LRT_THRESHOLD)
             rows.append({
                 "candidate_id": rc.candidate_id,
                 "corridor_group": int(gid),

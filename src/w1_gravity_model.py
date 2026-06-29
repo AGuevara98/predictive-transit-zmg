@@ -24,7 +24,7 @@ from config import PG_URI, CRS_CANONICAL
 
 ENGINE = create_engine(PG_URI)
 
-BETA           = 2.0
+BETA           = 1.2005  # calibrated against EOD 2022 desire lines, see W2 section in CLAUDE.md (RMSE 4,524.9 vs 5,088.2 for beta=2.0)
 FLOW_THRESHOLD = 0.5
 MAX_ITER       = 300
 TOL            = 1e-5
