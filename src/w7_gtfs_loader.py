@@ -110,13 +110,28 @@ def load_frequencies(data_dir: Path = DATA_DIR) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 
 def _straight_km(line: LineString) -> float:
-    """Euclidean distance in km between first and last coordinate of a LineString."""
-    coords = list(line.coords)
+    """
+    Spatial diameter in km: the maximum distance between any two points on
+    the route's convex hull. Start-to-end endpoint distance collapses to ~0
+    for closed-loop routes (same terminal); the hull diameter stays meaningful
+    for loops while matching the endpoint distance for simple point-to-point
+    shapes (whose extremes are almost always the two endpoints).
+    """
+    hull = line.convex_hull
+    if hull.geom_type == "Polygon":
+        coords = list(hull.exterior.coords)
+    else:  # LineString (collinear points) or Point (degenerate)
+        coords = list(hull.coords)
     if len(coords) < 2:
         return 0.001
-    x0, y0 = coords[0][0], coords[0][1]
-    x1, y1 = coords[-1][0], coords[-1][1]
-    return max(math.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2) / 1000.0, 0.001)
+    max_dist_m = 0.0
+    for i in range(len(coords)):
+        x0, y0 = coords[i]
+        for x1, y1 in coords[i + 1:]:
+            d = math.hypot(x1 - x0, y1 - y0)
+            if d > max_dist_m:
+                max_dist_m = d
+    return max(max_dist_m / 1000.0, 0.001)
 
 
 def _build_shape_geometries(

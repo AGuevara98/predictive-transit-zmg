@@ -194,6 +194,8 @@ These typologies directly translate into targeted urban transit policies. For ex
 ## Phase 5: Predictive Modeling & Interpretability
 # Phase 5: Predictive Modeling & Interpretability Report
 
+**Retired 2026-06-24:** this model predicted its own Phase 4 K-Means cluster labels (hence the 1.0000 RandomForest accuracy below) and is tautological. It has been superseded by W3.3's retrain against the independently-derived coverage-gap target. Model artifacts and SHAP plots were removed from `outputs/phase5/`; kept here for historical record only — do not cite these metrics.
+
 This report summarizes the performance of the predictive models trained to classify the Phase 4 transit suitability typologies.
 
 #### 1. Model Evaluation Metrics
@@ -244,8 +246,7 @@ The primary predictive drivers for **Typology C** are:
 
 #### 4. Visualizations
 
-- [XGBoost SHAP Summary](images/phase5_shap_summary_XGBoost.png)
-- [Random Forest SHAP Summary](images/phase5_shap_summary_RandomForest.png)
+Removed 2026-06-24 along with the rest of the retired Phase 5 artifacts (see note above).
 
 ---
 

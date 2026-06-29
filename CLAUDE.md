@@ -10,22 +10,22 @@ Master's thesis: a **7-phase geospatial ML pipeline** to predict optimal transit
 
 **Workstream status:**
 - W0 (Remediation): ✅ Complete — see errata below
-- W1 (Demand Estimation Layer): ✅ Complete — `ageb_trip_ends` + `ageb_od_matrix` in DB; transit_demand surface written; see W1 section below
-- W2 (Survey Calibration): ✅ Complete — EOD 2022 ingested; **beta=1.2005 now outperforms the beta=2.0 prior** as of the 2026-06-19 base.ageb correction (not yet adopted into `w1_gravity_model.py`); see W2 section below
-- W3 (Supply & Coverage-Gap Layer): ✅ Complete — accessibility surface + coverage-gap index in DB; model retrained on external target; see W3 section below
+- W1 (Demand Estimation Layer): ✅ Complete — `ageb_trip_ends` + `ageb_od_matrix` in DB; transit_demand surface written; gravity model re-run 2026-06-25 on the W2-calibrated beta=1.2005 (was 2.0); see W1 section below
+- W2 (Survey Calibration): ✅ Complete — EOD 2022 ingested; **beta=1.2005 outperforms the beta=2.0 prior** as of the 2026-06-19 base.ageb correction, and was adopted into `w1_gravity_model.py` on 2026-06-25 (W1/W3/W6/W7/W8 re-run); see W2 section below
+- W3 (Supply & Coverage-Gap Layer): ✅ Complete — accessibility surface + coverage-gap index in DB; model retrained on external target; re-run 2026-06-25 on beta=1.2005 demand surface; see W3 section below
 - W4 (Reposition NPP-V): ✅ Complete — features.nppv_prioritization in DB; 14 NODE+PLACE+PEOPLE features; final_score=(0.80*npp_score)+(0.20*equity_score); see W4 section below
 - W5 (Multi-objective function): ✅ Complete — code skeleton (types, objective, constraints, Pareto) + spec contract for W6/W7; 39 tests; see W5 section below
-- W6 (New corridor generation): ✅ Complete — 3 feasible BRT corridors (W6_G00, W6_G01, W6_G03) as of the 2026-06-19 base.ageb correction, all Pareto rank 1; 21 tests; see W6 section below
-- W7 (Existing route audit): ✅ Code complete — 247 SITEUR routes scored via W5 (route count reflects the current GTFS snapshot in `data/gtfs/`, not the base.ageb correction); Low-demand/Indirect/Redundant flags; modification proposals; 33 tests; see W7 section below
+- W6 (New corridor generation): ✅ Complete — 3 feasible corridors as of the 2026-06-25 beta=1.2005 re-run (W6_G00, W6_G03, W6_G05, all BRT, all Pareto rank 1); mode assignment is a 3-tier classification (Light Rail/Metro ≥75k, BRT ≥15k, else Local Bus) as of 2026-06-24, but no feasible corridor currently reaches the LRT tier; 21 tests; see W6 section below
+- W7 (Existing route audit): ✅ Code complete — 247 SITEUR routes scored via W5 (route count reflects the current GTFS snapshot in `data/gtfs/`, not the base.ageb correction); Low-demand/Indirect/Redundant flags; modification proposals; `straight_line_km` fixed 2026-06-24 for closed-loop routes (was collapsing to ~0); re-run 2026-06-25 on beta=1.2005 (flag totals unchanged: 229 flagged); 34 tests; see W7 section below
 - W8 (Validation): ✅ Code complete — backtest + benchmark + before/after metrics run end-to-end via `python src/run_w8.py`; see W8 section below
 - W9 (Transferability): 🔄 In progress — Tier-1 pipeline for Monterrey operational; DENUE + AGEB shapefile + OSM graph acquired; GTFS still needed for W3 equivalent; see W9 section below
 
 **Legacy phase status (pre-restructure):**
 - Phase 1 (Data Acquisition): ✅ Complete
-- Phase 2 (Feature Engineering + Binary ML Suitability): ✅ Complete — leakage resolved, baseline `no_stop_features_v1`; **target will be replaced by W3 coverage-gap index**
+- Phase 2 (Feature Engineering + Binary ML Suitability): 🗑️ Retired 2026-06-24 — code (`phase2_*.py`) already deleted in the W1-W9 restructure (448f14a); baseline `no_stop_features_v1` was a tautological "has-a-stop" target on corrupted DEM-derived `slope_mean`; fully superseded by W3.3's coverage-gap retrain. Outputs removed from `outputs/phase2/`.
 - Phase 3 (CRITIC/EWM Objective Weighting): ✅ Complete — weights in `features.nppv_weights`; **repositioned as W4 prioritization layer**
 - Phase 4 (K-Means Clustering / Transit Suitability Typologies): ✅ Complete — clusters in `features.nppv_clusters`; **kept as descriptive segmentation only**
-- Phase 5 (Predictive Modeling & Interpretability): ✅ Complete — RF + XGBoost; **1.0000 accuracy is tautological (predicts its own K-Means labels); re-pointed at W3 coverage-gap target — see W3 section**
+- Phase 5 (Predictive Modeling & Interpretability): 🗑️ Retired 2026-06-24 — RF + XGBoost on K-Means labels (1.0000 accuracy, tautological); fully superseded by W3.3's coverage-gap retrain. Outputs removed from `outputs/phase5/`.
 - Phase 6 (Synthesis Report): ✅ Complete — `outputs/phase6/master_thesis_synthesis.md`; **will be rewritten after W8**
 - Phase 7 (Steiner Tree Route Synthesis): 📋 Subsumed into W5+W6
 
@@ -51,17 +51,10 @@ psql -h localhost -d gdl_metro -f db_setup/DDL.sql
 psql -h localhost -d gdl_metro -c "SELECT PostGIS_Full_Version();"
 ```
 
-**WSL runners** (phases 2–6 use shell wrappers):
+**Run workstream orchestrators** (legacy `run_phase*.py`/`run_phase*_wsl.sh` scripts were removed in the W1-W9 restructure, commit 448f14a):
 ```bash
-bash scripts/run_phase2_wsl.sh
-bash scripts/run_phase3_wsl.sh
-# etc.
-```
-
-**Run individual phase orchestrators:**
-```bash
-python src/run_phase1.py
-python src/run_phase2.py
+bash scripts/bootstrap.sh   # from-scratch DB build: createdb -> DDL -> load data -> build_nppv_features.py
+python src/run_w1.py        # then run_w2.py ... run_w9.py in sequence
 ```
 
 ## Configuration
@@ -108,7 +101,7 @@ Three-schema PostgreSQL design:
 - `features.nppv_features` — **15** normalized NPP-V indicators per AGEB (`_n` suffix = normalized; `v_ntl_median` dropped per W0.1); table DDL in `db_setup/DDL.sql`, populated by `src/build_nppv_features.py`
 - `features.nppv_weights` — CRITIC + Entropy Weight Method outputs (15 features)
 - `features.nppv_clusters` — K-Means typology assignments (A/B/C), silhouette 0.58
-- `features.ageb_suitability_predictions` — Phase 2/5 model predictions
+- `features.ageb_suitability_predictions` — legacy Phase 2/5 model predictions; retired 2026-06-24, no longer written to by current code
 - `features.model_runs` — Persisted validation metrics
 
 **W2/W3 tables added:**
@@ -200,20 +193,11 @@ print(f"  [ERR] Error message")
 4. Document any SCIAN sector filters or distance thresholds used
 5. Add `_n` normalized version alongside raw
 
-## Phase 2 Model State
+## Phase 2 Model State (retired 2026-06-24)
 
-**Current baseline:** run ID `no_stop_features_v1`
+The legacy Phase 2 model (`no_stop_features_v1` baseline, `src/phase2_train_models.py`) predicted a target derived from Phase 4's K-Means cluster labels — tautological by construction, and its `slope_mean` feature was later found to be computed from a mis-tagged DEM raster (see 2026-06-19 errata). Rather than re-run it on the corrected DEM, the model was retired: it predicted a target with no independent validity, so a clean re-run would still not have been citable. `src/phase2_train_models.py` was already deleted in the W1-W9 restructure (448f14a); its outputs (`outputs/phase2/`) have now been removed too.
 
-**Active feature columns** (in `FEATURE_COLUMNS`, [src/phase2_train_models.py](src/phase2_train_models.py)):
-- `employment_proxy` — job density demand signal (top SHAP feature alongside route coverage)
-- `route_km_800m` — transit route km within 800m buffer
-- `slope_mean` — mean terrain slope from DEM
-
-**Dropped features:** `stops_400m`, `stops_800m`, `min_stop_dist_m` — all removed due to tautology (labels were assigned partly based on stop proximity, so using stop counts as features meant the model learned "transit exists where transit exists" rather than genuine demand patterns).
-
-**Baseline metrics (test split):** RF PR-AUC 0.94, ROC-AUC 0.83 — no leakage flags. Top SHAP driver: `route_km_800m` > `employment_proxy` > `slope_mean`. **Not re-run since the 2026-06-19 DEM SRID fix (see errata below) — `slope_mean` here was computed from a geometrically mis-tagged raster and is unreliable; re-run Phase 2 before citing this ranking.**
-
-**Outputs:** `outputs/phase2/predictions/no_stop_features_v1_ageb_predictions.geojson` (QGIS-ready), SHAP plots in `outputs/phase2/shap/`.
+It is fully superseded by **W3.3** (`src/w3_retrain.py`), which trains on the same 14 NPP-V feature set but against the independently-derived coverage-gap target (`is_high_gap`) instead of the circular cluster-label target — see the W3 section below for current metrics (LightGBM PR-AUC 0.842, ROC-AUC 0.960).
 
 ## W0 Errata (completed 2026-06-14)
 
@@ -241,9 +225,9 @@ A full `bootstrap.sh` → `DDL.sql` → `build_nppv_features.py` → `run_w1.py`
 
 1. **`db_setup/DDL.sql` municipality-code typo (since the initial commit):** the `base.ageb` filter's `cve_mun IN (...)` list had `'009'` instead of `'002'` (Acatlán de Juárez). Silently dropped that whole municipality on every from-scratch bootstrap. Fixed to `'002'`.
 2. **`build_nppv_features.py` read AGEBs from unfiltered `raw.ageb` instead of `base.ageb`:** `features.nppv_features` ended up carrying alpha-suffix AGEBs that don't exist in `base.ageb`, which broke `run_w4.py`'s FK-constrained write the moment `base.ageb` was correctly filtered (it was previously masked because the live DB's `base.ageb` had also never actually been rebuilt by `DDL.sql` — see point 4). Fixed `load_agebs()` to read `base.ageb`.
-3. **DEM raster loaded with the wrong SRID in the live `gdl_metro` DB:** `raw.dem` was tagged SRID 4326 with 512×512 tiles (instead of the DEM's true CRS, 6365, at 100×100 tiles — see the DEM bullet in Known Issues above). This produced geometrically meaningless `slope_mean` values (observed range ~3,931–27,541 in `features.master_suitability`, not the plausible 0–~20 range produced after the fix). `slope_mean` is a documented top-3 SHAP driver for the legacy Phase 2 model (`no_stop_features_v1`) — **that Phase 2 result was computed on corrupted slope data and has not yet been re-run** with the corrected DEM. Fixed by reloading `raw.dem` via `raster2pgsql -d -s 6365 -I -C -M -t 100x100`.
+3. **DEM raster loaded with the wrong SRID in the live `gdl_metro` DB:** `raw.dem` was tagged SRID 4326 with 512×512 tiles (instead of the DEM's true CRS, 6365, at 100×100 tiles — see the DEM bullet in Known Issues above). This produced geometrically meaningless `slope_mean` values (observed range ~3,931–27,541 in `features.master_suitability`, not the plausible 0–~20 range produced after the fix). `slope_mean` was a documented top-3 SHAP driver for the legacy Phase 2 model (`no_stop_features_v1`), which was retired 2026-06-24 rather than re-run on the corrected DEM — see "Phase 2 Model State" above. Fixed by reloading `raw.dem` via `raster2pgsql -d -s 6365 -I -C -M -t 100x100`.
 4. **Root cause tying 1-3 together:** the live `gdl_metro` database's `base.ageb` (2,068 rows, all 10 munis, all 187 alpha-suffix AGEBs included) was never actually rebuilt by the checked-in `DDL.sql` — it predates it. Every Phase 1–8 / W1–W9 number in this document was computed against that never-actually-reproducible 2,068-row table. `gdl_metro`'s `base.ageb`, `raw.dem`, `features.nppv_features`, and `features.ageb_trip_ends` through `features.route_audit`/`features.nppv_prioritization` have now been rebuilt with the fixes above; W1–W8 outputs under `outputs/` reflect the corrected 1,881-AGEB run as of 2026-06-19. **Phase 1-2 (legacy) have not been re-run** — `no_stop_features_v1`'s reported SHAP ranking still reflects the corrupted DEM.
-5. **Substantive finding, not a bug:** W2's gravity-model calibration changes conclusion under the corrected universe — see the W2 section. `w1_gravity_model.py` still hardcodes `BETA=2.0`; this has **not** been updated to the newly-better-fitting beta=1.2005. Decide before citing W2's calibration in the thesis.
+5. **Substantive finding, not a bug:** W2's gravity-model calibration changes conclusion under the corrected universe — see the W2 section. `w1_gravity_model.py` was updated to `BETA=1.2005` on 2026-06-25, and W1/W3/W6/W7/W8 were re-run on it — see those sections for updated results.
 6. Two smaller fresh-clone breaks fixed in the same pass: `w4_prioritization.py` hard-crashed when the legacy Phase 4 `features.nppv_clusters` table doesn't exist (now skips that step with a log line instead of aborting -- the live DB still has this table from a prior Phase 4 run, so it isn't exercised there); `run_w8.py`/`w8_backtest.py`/`w8_benchmark.py` pointed `DATA_DIR` at `data/` instead of `data/gtfs/`.
 7. A `pg_dump` backup of `gdl_metro` was taken immediately before these fixes were applied (`/home/aguevara/db_backups/gdl_metro_pre_ageb_fix_*.dump`) in case any number here needs to be cross-checked against the pre-fix state.
 
@@ -267,7 +251,7 @@ bash scripts/debug/run_db_checks.sh        # Shell-based validation
 
 **Normalization:** log1p + min-max for count/economic features; plain min-max for bounded ratios. See `LOG_FEATURES` in `src/build_nppv_features.py`.
 
-Primary Phase 2 model drivers (SHAP, run `no_stop_features_v1`): `route_km_800m`, `employment_proxy`, `slope_mean`. **This model will be re-pointed at the W3 coverage-gap target.**
+The legacy Phase 2 model (`no_stop_features_v1`) is retired — see "Phase 2 Model State" above. Its successor, W3.3, drives off these same 14 indicators; top SHAP drivers there are `pe_population_n` > `pe_rezago_n` > `p_employment_proxy_n`.
 
 ## W1 — Demand Estimation Layer (completed 2026-06-15)
 
@@ -281,10 +265,11 @@ W1 replaces the circular "has-a-stop" target with an explicit modeled transit-de
    - Output: `features.ageb_trip_ends` — 1,881 rows with `productions`, `attractions`
 
 2. **W1.2 — Doubly-constrained gravity model** (`src/w1_gravity_model.py`)
-   - Power-law impedance `f(d) = d^(-2.0)`; Furness IPF with `tol=1e-5`, `max_iter=300`
+   - Power-law impedance `f(d) = d^(-1.2005)` — calibrated value adopted 2026-06-25 (was the `d^(-2.0)` prior; see W2 below); Furness IPF with `tol=1e-5`, `max_iter=300`
    - Euclidean centroid distances in EPSG:6372 (metres); self-flows zeroed on diagonal
    - Sparse OD matrix: pairs with `modeled_flow >= 0.5` stored
    - Output: `features.ageb_od_matrix`; summary at `outputs/w1/od_matrix_summary.csv`
+   - **Effect of the beta=2.0 → 1.2005 re-run (2026-06-25):** `total_flow` unchanged (11,816,597 — Furness IPF conserves marginals); `n_pairs_stored` 987,491 → 1,446,695 (+46%, slower decay pushes more pairs above the 0.5 flow threshold); `mean_dist_m_filtered` 12,417m → 14,107m (flows now reach farther); `mean_flow_filtered` 11.79 → 8.03 (diluted by the larger pair count)
 
 3. **W1.3 — Transit-demand surface** (`src/w1_demand_surface.py`)
    - `vehicle_rate = VPH_AUTOM / VIVPAR_HAB.clip(1)`, clipped to [0, 1]; VIVPAR_HAB=0 handled via `clip(lower=1)`
@@ -302,7 +287,7 @@ W1 replaces the circular "has-a-stop" target with an explicit modeled transit-de
 - `outputs/w1/ageb_trip_ends.csv`, `outputs/w1/od_matrix_summary.csv`, `outputs/w1/ageb_demand_surface.csv`
 
 **Known W1 limitations (addressed in W2/W3):**
-- Euclidean distance proxy retained — `w1_gravity_model.py` still hardcodes `BETA=2.0`; see the 2026-06-19 errata below, W2's recalibration on the corrected AGEB universe now finds a better-fitting beta=1.2005 that has **not** been adopted into W1 yet
+- Euclidean distance proxy retained — `w1_gravity_model.py` now uses the W2-calibrated `BETA=1.2005` (adopted 2026-06-25; see the W2 section and 2026-06-19 errata below for the calibration history)
 - 187 AGEBs with alpha-suffix `cve_ageb` are correctly excluded from `base.ageb` (per `db_setup/DDL.sql`'s `cve_ageb NOT LIKE '%A%'` filter) — `base.ageb` is 1,881 rows, not 2,068; see errata
 - 171 AGEBs with `vehicle_rate=1.0` have `transit_demand=0`; these show as Low-gap in W3 (low demand → low gap), which is the correct treatment for high car-ownership areas
 
@@ -327,7 +312,7 @@ W2 calibrates the W1 gravity model's distance-decay parameter against EOD 2022 o
 2. **W2.2/W2.3 — Gravity calibration** (`src/w2_gravity_calibration.py`)
    - Spatial join: 1,822 of 1,881 AGEBs matched to 63 of 71 zones (59 AGEBs outside zone boundaries)
    - Calibration: `scipy.optimize.minimize_scalar` on log-space SSE, beta search range 0.5–5.0
-   - **Result (2026-06-19, re-run on corrected `base.ageb`): calibrated beta=1.2005, which now has a *better* fit than the W1 prior** — RMSE=4,524.9 vs 5,088.2 for beta=2.0, R²=0.2498 (n=1,993 zone pairs). This reverses the original finding below, which was computed on the never-actually-applied 2,068-AGEB `base.ageb` (see 2026-06-19 errata). **`w1_gravity_model.py` still hardcodes `BETA=2.0` — this has not been updated to 1.2005. Decide whether to adopt it (and re-run W1/W3+ if so) before citing this calibration in the thesis.**
+   - **Result (2026-06-19, re-run on corrected `base.ageb`): calibrated beta=1.2005, which now has a *better* fit than the W1 prior** — RMSE=4,524.9 vs 5,088.2 for beta=2.0, R²=0.2498 (n=1,993 zone pairs). This reverses the original finding below, which was computed on the never-actually-applied 2,068-AGEB `base.ageb` (see 2026-06-19 errata). **Adopted into `w1_gravity_model.py` on 2026-06-25; W1, W3, W6, W7, and W8 were re-run on the new beta — see those sections for updated results.**
    - Original (now superseded) finding, kept for reference: on the old, incorrectly-filtered base.ageb (2,068 rows), the calibrated optimum hit the search boundary (5.0) with worse RMSE (10,861 vs 5,215 for beta=2.0) and R²=−3.31, so beta=2.0 was retained.
    - Output: `features.w2_calibration`, `outputs/w2/zone_od_comparison.csv`, `outputs/w2/calibration_report.md`
 
@@ -351,21 +336,21 @@ W3 builds an independent transit supply measure, defines the coverage gap (the n
    - Spatial join: 15,491 AGEB-stop pairs within 400m (avg ~8 boarding stops per AGEB)
    - Travel budget: 45 min total = walk time (dist/80 m·min⁻¹) + wait time (headway/2) + in-vehicle time
    - Dijkstra per boarding stop using networkx; employment at catchment AGEBs of reachable stops summed
-   - Result: 1,266 AGEBs with non-zero accessibility, 615 with zero (no stops within 400m) -- out of 1,881 (see 2026-06-19 errata)
+   - Result: 1,266 AGEBs with non-zero accessibility, 615 with zero (no stops within 400m) -- out of 1,881 (see 2026-06-19 errata); **confirmed unchanged by the 2026-06-25 beta=1.2005 re-run — accessibility is demand-independent by construction**
    - Output: `features.ageb_accessibility`; CSV at `outputs/w3/ageb_accessibility.csv`
 
 2. **W3.2 — Coverage-gap index** (`src/w3_coverage_gap.py`)
    - `coverage_gap_raw = transit_demand / (accessibility_score + 1.0)`
    - Normalized with log1p + min-max; quintile ranks for demand and accessibility; categorical labels
-   - Gap categories: **389 High-gap** (20.7%), 1,413 Medium-gap, 79 Low-gap -- out of 1,881
+   - Gap categories (re-run 2026-06-25 on beta=1.2005): **390 High-gap** (20.7%), 1,413 Medium-gap, 78 Low-gap -- out of 1,881 (was 389/1,413/79 under beta=2.0; one AGEB shifted Low→High-gap)
    - High-gap definition: demand quintile ≥ 4 AND access quintile ≤ 2
    - Output: `features.ageb_coverage_gap`; CSV at `outputs/w3/ageb_coverage_gap.csv`
 
 3. **W3.3 — Model retrain on coverage-gap target** (`src/w3_retrain.py`)
    - Binary target: `is_high_gap = 1` if `gap_category == 'High-gap'` else 0
    - Features: 14 normalized NPP-V indicators — all transit-supply variables excluded (`route_km_800m`, `stops_*`) to prevent circularity
-   - **Test metrics:** LightGBM PR-AUC 0.842, ROC-AUC 0.960; RF PR-AUC 0.837, ROC-AUC 0.957 — no leakage flags
-   - **Top SHAP drivers (LightGBM):** `pe_population_n` > `pe_rezago_n` > `p_employment_proxy_n` > `pe_marginacion_n` > `n_intersection_density_n` — high-gap areas are dense, high-need, employment-rich zones not served by current SITEUR network
+   - **Test metrics (re-run 2026-06-25 on beta=1.2005):** RF PR-AUC 0.872, ROC-AUC 0.965; LightGBM PR-AUC 0.835, ROC-AUC 0.961 — no leakage flags (was LightGBM PR-AUC 0.842/ROC-AUC 0.960, RF PR-AUC 0.837/ROC-AUC 0.957 under beta=2.0; RF is now the better model on this metric)
+   - **Top SHAP drivers (LightGBM):** `pe_population_n` > `pe_rezago_n` > `pe_marginacion_n` > `p_employment_proxy_n` > `pe_pop_density_n` — high-gap areas are dense, high-need, employment-rich zones not served by current SITEUR network
    - Output: `outputs/w3/models/`, `outputs/w3/metrics/`, `outputs/w3/shap/`; run ID `w3_coverage_gap_v1`
 
 **Orchestrator:** `src/run_w3.py` (timeout 7,200s for accessibility step)
@@ -518,12 +503,14 @@ W6 generates demand-driven new transit corridor candidates using anchor AGEBs fr
 
 4. **W6.4 — W5 evaluation + Pareto ranking**
    - All W5 objective terms and constraints applied via existing W5 functions
-   - 6 corridors generated; 3 feasible as of the 2026-06-19 base.ageb correction (W6_G00, W6_G01, W6_G03, all Pareto rank 1) -- previously 2 (W6_G02, W6_G05) on the uncorrected 2,068-AGEB base.ageb; see errata
+   - 6 corridors generated; 3 feasible as of the 2026-06-25 beta=1.2005 re-run (W6_G00, W6_G03, W6_G05, all Pareto rank 1) — group composition changed from the prior beta=2.0 run (which had W6_G00, W6_G01, W6_G03 feasible); see "Key results" below
    - 3 infeasible corridors exceeded route_km > 30km or detour_ratio > 1.8 (geographically dispersed clusters)
 
-5. **W6.5 — Mode assignment** (`src/w6_mode.py`)
-   - Both feasible corridors classified as BRT (total_demand > 15,000 trips/day)
-   - Sensitivity table reported at 10k/15k/20k thresholds in w6_report.md
+5. **W6.5 — Mode assignment** (`src/w6_mode.py`, three-tier classification added 2026-06-24)
+   - `total_demand >= LRT_THRESHOLD (75,000 trips/day)` → Light Rail/Metro; `>= BRT_THRESHOLD (15,000)` → BRT; else Local Bus
+   - LRT threshold derived the same way as the original BRT threshold (peak-hour pax/direction capacity scaled by 10% peak-hour share / 50% directional split / corridor-coverage ratio), using mid-range grade-separated light rail capacity (~15,000 pax/direction/peak-hour) rather than BRT's ~4,000 — see derivation comment in `w6_mode.py`
+   - As of the 2026-06-25 beta=1.2005 re-run, all 3 feasible corridors classify as BRT (47,343 / 32,386 / 40,154 trips/day) — no feasible corridor reaches the LRT threshold; the higher-demand groups (W6_G01 130k-equivalent under beta=2.0, W6_G02, W6_G04) are now all infeasible on route length/detour, so the Light Rail/Metro tier currently has no feasible representative. See "Key results" below for the prior (beta=2.0) BRT/LRT split.
+   - Sensitivity tables reported in w6_report.md: BRT fixed at 15k varying LRT threshold (50k/75k/100k), and LRT fixed at 75k varying BRT threshold (10k/15k/20k)
 
 **Key files (all created):**
 - `src/w6_anchors.py`, `src/w6_graph.py`, `src/w6_candidates.py`, `src/w6_mode.py`, `src/run_w6.py`
@@ -531,11 +518,13 @@ W6 generates demand-driven new transit corridor candidates using anchor AGEBs fr
 - `tests/test_w6_anchors.py`, `tests/test_w6_graph.py`, `tests/test_w6_candidates.py`, `tests/test_w6_mode.py` (21 tests)
 - `outputs/w6/{corridor_candidates.geojson, corridor_scores.csv, pareto_front.png, w6_report.md}`
 
-**Key results (2026-06-19 run, corrected 1,881-AGEB base.ageb):**
-- **3 feasible BRT-class corridors** — W6_G00 (16.6km, score=0.650), W6_G01 (19.5km, score=0.402), W6_G03 (14.6km, score=0.658), all Pareto rank 1
-- **3 infeasible corridors** — W6_G02 (36.3km), W6_G04 (39.3km), W6_G05 (30.6km) all exceed the 30km cap; dispersed cluster geometry; thesis should discuss this as a finding: anchor clusters too spread for single-corridor treatment, suggesting subdivision into shorter segments in W7 or future iterations
+**Key results (2026-06-25 re-run, beta=1.2005 adopted into `w1_gravity_model.py`):**
+- **3 feasible corridors, all BRT** — W6_G00 (16.6km, 12 served AGEBs, 47,343 trips/day, score=0.650), W6_G03 (1.4km, 3 served AGEBs, 32,386 trips/day, score=0.739), W6_G05 (14.6km, 3 served AGEBs, 40,154 trips/day, score=0.657), all Pareto rank 1
+- **3 infeasible corridors** — W6_G01 (43.5km, detour ratio 3.25), W6_G02 (36.3km, detour ratio 8.17), W6_G04 (39.0km, detour ratio 2.69), all exceed the 30km cap; these are also the highest-demand groups (123k-486k trips/day) and would have classified Light Rail/Metro had they been feasible
+- **Demand is more geographically dispersed under the slower-decaying beta=1.2005** — anchor selection and MST corridor-building now produce longer, less feasible corridors than under beta=2.0; only the count of feasible corridors (3) coincidentally matches the prior run, not their identity or composition
 - **OSM graph cached** — subsequent runs load from `data/osm_zmg_drive.graphml` (fast)
-- Original (now superseded) result on the uncorrected 2,068-AGEB base.ageb: 2 feasible corridors named W6_G02 (13.2km, score=0.669) and W6_G05 (16.4km, score=0.638) -- group IDs/geometry are not comparable across the two runs since anchor clustering depends on the AGEB universe
+- Superseded (beta=2.0) result, 2026-06-19 run on corrected 1,881-AGEB base.ageb: 3 feasible corridors W6_G00 (16.6km, score=0.650, BRT), W6_G01 (19.5km, score=0.402, Light Rail/Metro, 130,622 trips/day), W6_G03 (14.6km, score=0.658, BRT) — group IDs are not comparable across the beta=2.0 and beta=1.2005 runs since anchor clustering depends on the recomputed demand surface
+- Original (now further superseded) result on the uncorrected 2,068-AGEB base.ageb: 2 feasible corridors named W6_G02 (13.2km, score=0.669) and W6_G05 (16.4km, score=0.638)
 
 **DB schema notes (actual column types):**
 - `features.route_candidates`: float scores as FLOAT8, geom as GEOMETRY(LineString, 6372) NOT NULL
@@ -555,7 +544,9 @@ W7 scores every SITEUR GTFS route against the W5 multi-objective function, flags
 - `src/w7_modifications.py` — proposes shortcut / merge / retire per flagged route; estimates shortcut score as 1.1×straight_line_km
 - `src/run_w7.py` — orchestrator: migration → GTFS load → scoring → proposals → DB write → 6 output files
 - `db_setup/migrations/007_w7_tables.sql` — `features.route_audit` table with GIST index
-- `tests/test_w7_gtfs_loader.py` (12 tests), `tests/test_w7_route_scorer.py` (12 tests), `tests/test_w7_modifications.py` (9 tests)
+- `tests/test_w7_gtfs_loader.py` (13 tests), `tests/test_w7_route_scorer.py` (12 tests), `tests/test_w7_modifications.py` (9 tests)
+
+**Errata (fixed 2026-06-24) — `straight_line_km` collapsed to ~0 for closed-loop routes:** `_straight_km()` in `w7_gtfs_loader.py` originally measured Euclidean distance between a shape's *first and last* coordinate. For the 11 GTFS routes that are genuine closed loops (start == end terminal, e.g. C104, C108, C133-V1, the T09/T18 pairs, MP-A05-1), that distance floored at the 0.001km div-by-zero guard, sending `detour_ratio` (`route_km/straight_line_km`) into the tens of thousands and making every loop route's "Indirect" flag and shortcut proposal (`straight_line_km×1.1`) meaningless (e.g. "shrink this 82.8km loop to 0.0km"). Fixed by redefining `straight_line_km` as the route's **convex-hull diameter** (max distance between any two points on the shape) — equal to the old endpoint distance for simple point-to-point routes (so non-loop routes are unaffected in net counts), but a real value for loops. Verified against the live `gdl_metro` DB: `route_km`, `f1_demand_gain`, and `total_score` are untouched (they don't depend on this metric); `detour_ratio` never increased for any of the 247 routes; only 6/247 routes lost their "Indirect" flag (3 became "Low demand", 3 became unflagged) because their detour ratio dropped below the 1.5 threshold once measured correctly. Flag totals: 229 flagged (was 232) — 109 Indirect (was 115), 80 Low demand (was 77), 40 Redundant (unchanged — Redundant doesn't depend on this metric). `outputs/w7/` regenerated 2026-06-24.
 
 **Outputs (written by `run_w7.py`):**
 - `outputs/w7/route_scorecard.csv` — all 247 SITEUR routes (current GTFS snapshot) with W5 scores and flags
@@ -587,9 +578,10 @@ W8 validates W6's corridor-generation logic two ways: a backtest (mask existing 
 - `outputs/w8/w8_before_after_metrics.png`, `outputs/w8/w8_backtest_overlap.png` — charts
 - `outputs/w8/w8_backtest_per_route.csv`, `outputs/w8/w8_benchmark_detail.csv`
 
-**Key results (2026-06-19 run, corrected 1,881-AGEB base.ageb):**
-- Backtest: 1,344 GTFS stops masked (agencies MT + MM); masked accessibility graph 9,306 nodes / 11,235 edges; 13,874 AGEB-stop pairs within 400m; 6 corridors re-proposed after masking; mean overlap fraction with masked-out premium routes = 0.236
+**Key results (2026-06-25 re-run, beta=1.2005 adopted into `w1_gravity_model.py`):**
+- Backtest: 1,344 GTFS stops masked (agencies MT + MM); masked accessibility graph 9,306 nodes / 11,235 edges; 13,874 AGEB-stop pairs within 400m — all unchanged from the beta=2.0 run (accessibility is demand-independent); 5 corridors re-proposed after masking (was 6); mean overlap fraction with masked-out premium routes = 0.249 (was 0.236)
 - Benchmark: 3 feasible W6 corridors compared against 33 premium route shapes
+- Superseded (beta=2.0) result, 2026-06-19 run: 6 corridors re-proposed after masking, mean overlap fraction = 0.236
 
 **Run:** `python src/run_w8.py` (depends on `outputs/w6/corridor_candidates.geojson` from W6)
 

@@ -224,7 +224,7 @@ W2: EOD 2022 calibration of gravity model beta (β=2.0 used by W1; calibration n
 W3: GTFS accessibility surface → coverage-gap index (demand/supply gap)
 W4: CRITIC + EWM objective weights on 14 NPP indicators → final_score = 0.80×npp + 0.20×equity
 W5: Multi-objective function (maximize demand gain + equity; minimize route-km)
-W6: Anchor selection from W3 gap → MST on OSM graph → W5 evaluation → BRT corridors
+W6: Anchor selection from W3 gap → MST on OSM graph → W5 evaluation → BRT/Light Rail/Metro corridors
 W7: SITEUR routes → W5 scoring → low-demand / indirect / redundant flags + modification proposals
 W8: Backtest (mask high-ridership routes; test W6 re-proposes them) + benchmark vs Línea 4
 ```
@@ -309,7 +309,7 @@ predictive-transit-zmg/
 │   ├── w6_anchors.py              # Anchor AGEB selection (Jenks + KMeans spatial clustering)
 │   ├── w6_graph.py                # OSM MST Steiner approximation
 │   ├── w6_candidates.py           # Corridor construction + served AGEB spatial join
-│   ├── w6_mode.py                 # BRT vs. local bus mode assignment by demand volume
+│   ├── w6_mode.py                 # Light Rail/Metro vs. BRT vs. local bus mode assignment by demand volume
 │   ├── w7_gtfs_loader.py          # GTFS shapes → one LineString per route
 │   ├── w7_route_scorer.py         # W5 scoring + Low-demand / Indirect / Redundant flags
 │   ├── w7_modifications.py        # Shortcut / merge / retire proposals
@@ -351,7 +351,7 @@ predictive-transit-zmg/
 | Transit demand surface | `outputs/w1/ageb_demand_surface.csv` | 1,881 AGEBs with modeled transit demand |
 | Coverage-gap index | `outputs/w3/ageb_coverage_gap.csv` | 389 High-gap AGEBs (20.7%) |
 | NPP prioritization | `outputs/w4/nppv_prioritization.geojson` | All AGEBs scored + ranked (QGIS-ready) |
-| New corridors | `outputs/w6/corridor_candidates.geojson` | 3 feasible BRT corridors (W6_G00, W6_G01, W6_G03) |
+| New corridors | `outputs/w6/corridor_candidates.geojson` | 3 feasible corridors: W6_G00, W6_G03 (BRT), W6_G01 (Light Rail/Metro) |
 | Route audit | `outputs/w7/route_audit.geojson` | 247 SITEUR routes scored with flags |
 | Validation report | `outputs/w8/w8_report.md` | Backtest + benchmark + equity metrics |
 

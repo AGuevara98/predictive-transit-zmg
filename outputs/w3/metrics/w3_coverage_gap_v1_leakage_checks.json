@@ -1,53 +1,53 @@
 {
-  "positive_rate": 0.20680489101541732,
+  "positive_rate": 0.20733652312599682,
   "n_rows": 1881,
   "top_univariate_pr_auc": [
     {
       "feature": "pe_population_n",
       "best_direction": "positive",
-      "best_pr_auc": 0.4325595415824395
+      "best_pr_auc": 0.4333100053531688
     },
     {
       "feature": "pe_rezago_n",
       "best_direction": "positive",
-      "best_pr_auc": 0.3174380436774702
+      "best_pr_auc": 0.316260267062694
     },
     {
       "feature": "n_street_density_n",
       "best_direction": "positive",
-      "best_pr_auc": 0.28018885706120356
+      "best_pr_auc": 0.2791637842845222
     },
     {
       "feature": "pe_youth_share_n",
       "best_direction": "positive",
-      "best_pr_auc": 0.27553103284606684
+      "best_pr_auc": 0.27455929663234613
     },
     {
       "feature": "pe_pop_density_n",
       "best_direction": "positive",
-      "best_pr_auc": 0.25961043197904454
+      "best_pr_auc": 0.25956356464112407
     },
     {
       "feature": "p_retail_density_n",
       "best_direction": "positive",
-      "best_pr_auc": 0.2571464870431107
+      "best_pr_auc": 0.2564377850274708
     }
   ],
   "label_shuffle_sanity": {
     "random_forest": {
-      "mean_pr_auc": 0.19178862344629435,
+      "mean_pr_auc": 0.21756018582670147,
       "folds": [
-        0.17311931878980785,
-        0.18629615288735787,
-        0.21595039866171745
+        0.22059261765232563,
+        0.22073419872321143,
+        0.21135374110456737
       ]
     },
     "lightgbm": {
-      "mean_pr_auc": 0.19406675779030305,
+      "mean_pr_auc": 0.21556688866261475,
       "folds": [
-        0.1846195205161374,
-        0.1973274808287495,
-        0.20025327202602228
+        0.21089411484692955,
+        0.2343898847731531,
+        0.20141666636776168
       ]
     }
   },

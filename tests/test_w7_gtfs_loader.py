@@ -50,10 +50,18 @@ def test_straight_km_minimum_is_positive():
 
 
 def test_straight_km_multi_segment_uses_endpoints():
-    # A zigzag that starts and ends 1000m apart
+    # A zigzag whose most distant pair of points happens to be its endpoints
     line = LineString([(0, 0), (500, 500), (1000, 0)])
     result = _straight_km(line)
     assert abs(result - 1.0) < 1e-6
+
+
+def test_straight_km_loop_uses_hull_diameter():
+    # A closed-loop route (start == end): a 1000x1000m square circuit.
+    # Endpoint distance would be 0; the hull diameter is the diagonal (~1414m).
+    line = LineString([(0, 0), (1000, 0), (1000, 1000), (0, 1000), (0, 0)])
+    result = _straight_km(line)
+    assert abs(result - math.sqrt(2)) < 1e-6
 
 
 # ---------------------------------------------------------------------------
