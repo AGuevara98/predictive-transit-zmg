@@ -91,7 +91,7 @@ def _joined_column(live_df, oracle_df, column):
 
 def test_structure_matches_post_w0():
     live = _live()
-    assert len(live) > 2000
+    assert len(live) == 1881  # 10 ZMG munis, alpha-suffix excluded (2026-06-19 errata)
     assert "v_ntl_median" not in live.columns
 
     n_columns = [c for c in live.columns if c.endswith("_n")]

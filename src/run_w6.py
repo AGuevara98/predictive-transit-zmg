@@ -230,9 +230,16 @@ def main() -> None:
             print("  [ERR] No anchors found. Run W3 first.")
             sys.exit(1)
 
+        # Anchor trim criterion. W6 targets the COVERAGE GAP (the W3 dependent variable),
+        # so rank the trim by coverage_gap_n rather than raw transit_demand. The 2026-07-12
+        # Line 4 backtest showed the old demand-ranked trim dropped 14 of 15 eligible Line 4
+        # anchors (a high-gap but moderate-demand peripheral corridor), so W6 never
+        # reconstructed the actually-built line. Set to "transit_demand" to reproduce the
+        # pre-fix behavior for comparison.
+        ANCHOR_TRIM_COL = "coverage_gap_n"
         if len(anchors) > N_ANCHORS:
-            anchors = anchors.nlargest(N_ANCHORS, "transit_demand").reset_index(drop=True)
-            print(f"  [OK] Trimmed to top {N_ANCHORS} by transit_demand")
+            anchors = anchors.nlargest(N_ANCHORS, ANCHOR_TRIM_COL).reset_index(drop=True)
+            print(f"  [OK] Trimmed to top {N_ANCHORS} by {ANCHOR_TRIM_COL}")
 
         print("\n[Step 4] Clustering anchors into corridor groups...")
         anchors = cluster_anchors(anchors, n_corridors=N_CORRIDORS)

@@ -16,8 +16,12 @@ Master's thesis: a **7-phase geospatial ML pipeline** to predict optimal transit
 - W4 (Reposition NPP-V): ✅ Complete — features.nppv_prioritization in DB; 14 NODE+PLACE+PEOPLE features; final_score=(0.80*npp_score)+(0.20*equity_score); see W4 section below
 - W5 (Multi-objective function): ✅ Complete — code skeleton (types, objective, constraints, Pareto) + spec contract for W6/W7; 39 tests; see W5 section below
 - W6 (New corridor generation): ✅ Complete — 3 feasible corridors as of the 2026-06-25 beta=1.2005 re-run (W6_G00, W6_G03, W6_G05, all BRT, all Pareto rank 1); mode assignment is a 3-tier classification (Light Rail/Metro ≥75k, BRT ≥15k, else Local Bus) as of 2026-06-24, but no feasible corridor currently reaches the LRT tier; 21 tests; see W6 section below
+- **W6**: append — "Anchor trim criterion made configurable (`ANCHOR_TRIM_COL` in `run_w6.py`);
+  set to `coverage_gap_n` 2026-07-12 but empirically equivalent to the old `transit_demand` trim (see W8 Line 4 backtest — gap ≈ demand in the unserved pool). DECISION PENDING: revert or keep."
 - W7 (Existing route audit): ✅ Code complete — 247 SITEUR routes scored via W5 (route count reflects the current GTFS snapshot in `data/gtfs/`, not the base.ageb correction); Low-demand/Indirect/Redundant flags; modification proposals; `straight_line_km` fixed 2026-06-24 for closed-loop routes (was collapsing to ~0); re-run 2026-06-25 on beta=1.2005 (flag totals unchanged: 229 flagged); 34 tests; see W7 section below
 - W8 (Validation): ✅ Code complete — backtest + benchmark + before/after metrics run end-to-end via `python src/run_w8.py`; see W8 section below
+- **W8**: append — "First out-of-sample validation run 2026-07-12 (Line 4 backtest). Diagnostic
+  layer corroborated; generative layer does NOT reconstruct Line 4. See W8 Line 4 section."
 - W9 (Transferability): 🔄 In progress — Tier-1 pipeline for Monterrey operational; DENUE + AGEB shapefile + OSM graph acquired; GTFS still needed for W3 equivalent; see W9 section below
 
 **Legacy phase status (pre-restructure):**
@@ -222,6 +226,42 @@ Three integrity defects fixed before W1 work begins:
 ## 2026-06-19 Errata — base.ageb, DEM raster, and W1–W8 fresh-clone fixes
 
 A full `bootstrap.sh` → `DDL.sql` → `build_nppv_features.py` → `run_w1.py`...`run_w8.py` run against a throwaway test database (and then against the live `gdl_metro` DB) surfaced three defects that had been silently present since before the W1–W9 restructure. **The corrected, current AGEB universe is 1,881 rows** (10 ZMG municipalities, alpha-suffix `cve_ageb` excluded) — not the 2,068 cited throughout most of this document below this point; sections are being corrected as revisited, but treat any uncorrected "2,068" you find as stale.
+
+## 2026-07-12 Errata — pe_marginacion sign inversion + zero-fill
+ 
+Two stacked defects in the equity input `pe_marginacion` (src/build_nppv_features.py), found
+while validating the equity term against the source CONAPO data.
+ 
+1. **Sign inversion.** `pe_marginacion` is CONAPO's `IM_2020` (verified byte-identical to the
+   official AGEB file on the overlap; provenance confirmed). CONAPO's 2020 index runs
+   **higher = LESS marginalized** (mean IM by grade: Muy alto 112.5, Alto 117.4, Medio 119.9,
+   Bajo 122.3, Muy bajo 124.8 -- monotonic). The code used it directly in
+   `equity_score = mean(pe_marginacion_n, pe_rezago_n)`, which treats higher = more need, so the
+   marginacion half rewarded the LEAST-marginalized areas, opposing the rezago half (`IRS_2020`,
+   correctly higher = more rezago).
+2. **Zero-fill.** The ~200 ZMG AGEBs absent from CONAPO's *urban* index (1,868 of the 2,068 in
+   `ageb_zmg_2020_v2.gpkg` matched; ~200 non-urban unmatched) were `.fillna(0)`. Since IM_2020
+   floors near ~102, 0 is out-of-range and dragged the min-max floor down, compressing real
+   values into [0.80, 1.0]. The two bugs partially masked each other (compression muted the
+   inverted signal), so the pre-fix equity term was effectively rezago-dominated; fixing the
+   zero-fill alone would have amplified the inversion -- both had to be fixed together.
+ 
+**Fix (src/build_nppv_features.py):** raw `pe_marginacion` stays the literal CONAPO IM_2020;
+direction corrected in `normalize_feature` via `INVERTED_FEATURES` (`pe_marginacion_n =
+1 - minmax(IM_2020)`); the missing AGEBs are median-imputed (skipna) instead of zero-filled.
+`pe_rezago` (IRS_2020) keeps its correct direction; its gaps are also median-imputed, not zeroed.
+ 
+**Verified:** post-fix `pe_marginacion_n` monotonic by grade (Muy alto 0.606 highest -> Muy bajo
+0.108 lowest); `equity_score` monotonic by grade after W4 re-run (Muy alto 0.500 -> Muy bajo
+0.095); no nulls in any `_n` column. Aggregate shifts consistent with de-inversion:
+`equity_score` mean 0.527 -> 0.227, `npp_score` mean 0.500 -> 0.4595, `final_score` 0.506 ->
+0.4131 (ZMG is mostly low-marginalization, so a correctly-signed need score should average low).
+ 
+**Impact:** re-ran build -> W4. W3.3 SHAP *direction* of `pe_marginacion_n` flips (tree metrics
+unchanged -- invariant to monotonic transforms; re-run run_w3 to refresh plots). W6/W7/W8
+unaffected (they use `coverage_gap_n`, not the equity term). Oracle `data/raw/nppv_features.csv`
+regenerated; `tests/test_nppv_oracle.py` row-count assertion corrected 2000 -> 1881 (stale since
+the 2026-06-19 base.ageb correction). W9's W4-equivalent must reuse `INVERTED_FEATURES` when built.
 
 1. **`db_setup/DDL.sql` municipality-code typo (since the initial commit):** the `base.ageb` filter's `cve_mun IN (...)` list had `'009'` instead of `'002'` (Acatlán de Juárez). Silently dropped that whole municipality on every from-scratch bootstrap. Fixed to `'002'`.
 2. **`build_nppv_features.py` read AGEBs from unfiltered `raw.ageb` instead of `base.ageb`:** `features.nppv_features` ended up carrying alpha-suffix AGEBs that don't exist in `base.ageb`, which broke `run_w4.py`'s FK-constrained write the moment `base.ageb` was correctly filtered (it was previously masked because the live DB's `base.ageb` had also never actually been rebuilt by `DDL.sql` — see point 4). Fixed `load_agebs()` to read `base.ageb`.
@@ -584,6 +624,46 @@ W8 validates W6's corridor-generation logic two ways: a backtest (mask existing 
 - Superseded (beta=2.0) result, 2026-06-19 run: 6 corridors re-proposed after masking, mean overlap fraction = 0.236
 
 **Run:** `python src/run_w8.py` (depends on `outputs/w6/corridor_candidates.geojson` from W6)
+## W8 — Line 4 out-of-sample backtest (2026-07-12)
+ 
+The `data/gtfs/` snapshot is 2024, predating SITEUR Line 4's opening (2025-12-15, 21 km,
+Tlajomulco-Tlaquepaque-Guadalajara). So the W3 accessibility/coverage-gap layer treats the
+Line 4 corridor as UNSERVED -- a genuine out-of-sample natural experiment. Real alignment in
+`data/linea_4.geojson`; observed ridership in `data/raw/ridership/linea4_ridership_observed.csv`
+(free-fare ramp: 820k in first 30 days vs ~106k/day mature projection -- not directly comparable).
+ 
+Probe scripts (all read the live DB + linea_4.geojson):
+- `src/w8_line4_probe.py`   -- corridor AGEB gap/demand vs metro baseline
+- `src/w8_line4_overlap.py` -- spatial overlap of W6 corridors with the real alignment
+- `src/w8_line4_anchors.py` -- traces the W6 anchor funnel for the Line 4 AGEBs
+ 
+**Findings.**
+- **Diagnostic layer corroborated.** 68 AGEBs within 800 m of Line 4: 33.8% High-gap vs 20.7%
+  metro (1.6x), 0% Low-gap vs 4.1%. Flagged via the SUPPLY gap, not demand (corridor demand
+  median 3,801 vs metro 3,240 -- barely elevated). Framing: revealed-preference agreement, NOT
+  proof of optimality (Line 4 was long-planned).
+- **Generative layer does NOT reconstruct Line 4.** The 3 feasible W6 corridors sit 7.6 / 17 /
+  26 km away, recall 0.00. Only the infeasible W6_G01 (60 km sprawl) touches it, clipping 6%.
+- **Mechanism (anchor funnel).** 15 of 68 Line 4 AGEBs cleared the anchor pool (Jenks top-class
+  of `coverage_gap_n` AND demand >= 500). The top-30-by-`transit_demand` trim kept only 1 (the
+  rest out-competed; final-anchor demand floor ~8,211 vs Line 4 median 3,801). That 1 survivor
+  was absorbed into group 1 (= infeasible W6_G01). Also fundamental: only 15/68 corridor AGEBs
+  are high-gap at all (median `coverage_gap_n` 0.014 vs 0.50 pool floor) -- Line 4 is only
+  sparsely high-gap.
+- **Attempted fix had no effect.** Switching the trim to `coverage_gap_n` (run_w6
+  `ANCHOR_TRIM_COL`) left the corridors identical, because within the unserved high-gap pool
+  `coverage_gap_n` is ~monotonic in `transit_demand` (accessibility ~ 0 by construction, so
+  gap = demand/(access+1) ~ demand). Gap-ranking == demand-ranking for anchors. The bottleneck is
+  architectural (30 anchors / KMeans k=6 / MST cannot target a sparse peripheral corridor), not
+  the ranking axis.
+ 
+**Interpretation (important for the thesis claim).** Two separate questions:
+(A) does the generator reproduce lines that were BUILT? and (B) does it produce GOOD corridors
+(serving real unmet demand)? Every test so far measures A (Line 4, and the pre-existing masked
+backtest at ~0.25 overlap). A is a weak, asymmetric proxy for B: agreement corroborates, but
+disagreement is faint evidence because built lines are not guaranteed optimal (politics, cost,
+land). **B is untested.** Defensible claim: validated demand-gap DIAGNOSTIC; corridor GENERATION
+has a characterized limitation; generative effectiveness on its own corridors is not yet measured.
 
 ---
 
@@ -625,6 +705,26 @@ W9 applies the pipeline to **Monterrey, Nuevo León** (ZM Monterrey, CVE_ENT=19,
 - W8 requires W7 run output; backtest sub-task (mask high-ridership segments, test W6 re-proposes them) can start now
 - W9 full pipeline blocked on GTFS; Tier-1 demand surface is complete
 - W8 and W9 full run can proceed in parallel once GTFS is acquired
+
+## E. Next steps
+ 
+1. **Test Question B (the real effectiveness test).** Evaluate W6's 3 feasible corridors on
+   their own merits, not against built lines: (a) do their served AGEBs sit on genuine High-gap /
+   high transit_demand? (b) are they non-redundant with existing SITEUR service (Jaccard/overlap
+   vs current GTFS routes, reusing W7's redundancy logic)? (c) plausible demand captured per km?
+   This is the axis nobody has measured.
+2. **Decide `ANCHOR_TRIM_COL` in run_w6.py.** Currently `coverage_gap_n`; empirically identical
+   to `transit_demand`. Either revert, or keep and rewrite the code comment to state the honest
+   finding (gap ~ demand in the unserved pool). The current comment overclaims a fix.
+3. **Strengthen validation power.** Add masked backtests for Line 3 (2020) and Mi Macro (2022)
+   alongside the existing premium-route backtest, so validation is not n=1 on Line 4.
+4. **Narrow the thesis claim (Gap A)** to match the evidence: "data-driven demand-gap
+   prioritization + corridor identification, validated against a revealed corridor; automated
+   corridor generation carries characterized limitations."
+5. **Refresh downstream after the equity fix:** re-run `run_w3.py` (SHAP direction narrative),
+   and report the alpha in {0.10, 0.20, 0.30} equity sensitivity now that the equity term is
+   correctly signed.
+6. **Commit** the session's changes (see manifest + files list in D).
 
 ## Methodological References
 

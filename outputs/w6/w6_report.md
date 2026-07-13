@@ -14,12 +14,12 @@
 
 | ID | Group | km | Stops | Connected | Served AGEBs | Total Demand | f1 | f3 | Score | Rank | Mode | Feasible |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| W6_G00 | 0 | 16.6 | 34 | True | 12 | 47343 | 0.412 | 0.506 | 0.650 | 1 | BRT | True |
-| W6_G03 | 3 | 1.4 | 4 | True | 3 | 32386 | 0.355 | 0.579 | 0.739 | 1 | BRT | True |
-| W6_G05 | 5 | 14.6 | 30 | True | 3 | 40154 | 0.423 | 0.422 | 0.657 | 1 | BRT | True |
-| W6_G02 | 2 | 36.3 | 74 | True | 84 | 486581 | 0.184 | 0.575 | 0.328 | 2 | Light Rail/Metro | False |
-| W6_G04 | 4 | 39.0 | 79 | True | 25 | 123515 | 0.385 | 0.486 | 0.506 | 2 | Light Rail/Metro | False |
-| W6_G01 | 1 | 43.5 | 88 | True | 77 | 415674 | 0.171 | 0.531 | 0.304 | 3 | Light Rail/Metro | False |
+| W6_G00 | 0 | 16.6 | 34 | True | 12 | 47343 | 0.412 | 0.275 | 0.592 | 1 | BRT | True |
+| W6_G03 | 3 | 1.4 | 4 | True | 3 | 32386 | 0.355 | 0.321 | 0.674 | 1 | BRT | True |
+| W6_G04 | 4 | 39.0 | 79 | True | 25 | 123515 | 0.385 | 0.299 | 0.459 | 1 | Light Rail/Metro | False |
+| W6_G05 | 5 | 14.6 | 30 | True | 3 | 40154 | 0.423 | 0.237 | 0.611 | 1 | BRT | True |
+| W6_G02 | 2 | 36.3 | 74 | True | 84 | 486581 | 0.184 | 0.283 | 0.255 | 2 | Light Rail/Metro | False |
+| W6_G01 | 1 | 43.5 | 88 | True | 77 | 415674 | 0.171 | 0.232 | 0.229 | 3 | Light Rail/Metro | False |
 
 ## Mode Assignment Sensitivity
 
