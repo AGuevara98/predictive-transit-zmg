@@ -262,3 +262,6 @@ __marimo__/
 # Raw external source spreadsheets (large; re-downloadable per docs/external_data_acquisition_manifest.md)
 data/IMU_2020.xls
 data/IMUC_2020.xlsx
+
+# W8 Question B intermediate (regenerable from DB via src/w8_corridor_map_data.py)
+outputs/w8/corridor_map_data.json

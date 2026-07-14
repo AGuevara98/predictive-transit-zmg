@@ -230,12 +230,15 @@ def main() -> None:
             print("  [ERR] No anchors found. Run W3 first.")
             sys.exit(1)
 
-        # Anchor trim criterion. W6 targets the COVERAGE GAP (the W3 dependent variable),
-        # so rank the trim by coverage_gap_n rather than raw transit_demand. The 2026-07-12
-        # Line 4 backtest showed the old demand-ranked trim dropped 14 of 15 eligible Line 4
-        # anchors (a high-gap but moderate-demand peripheral corridor), so W6 never
-        # reconstructed the actually-built line. Set to "transit_demand" to reproduce the
-        # pre-fix behavior for comparison.
+        # Anchor trim criterion. Kept as coverage_gap_n because W6 conceptually targets the
+        # COVERAGE GAP (the W3 dependent variable) rather than raw demand. NOTE (honest finding,
+        # 2026-07-12 Line 4 backtest): this is empirically IDENTICAL to trimming by
+        # "transit_demand". Within the unserved high-gap anchor pool, accessibility ~ 0 by
+        # construction, so coverage_gap_n = demand/(access+1) ~ demand -- gap-ranking IS
+        # demand-ranking here. Switching this axis did NOT change the corridors (it does not
+        # rescue the dropped Line 4 anchors, contrary to an earlier note). The real reason W6
+        # misses sparse peripheral corridors is architectural (30 anchors / KMeans k=6 / MST),
+        # not the trim column. Set to "transit_demand" to confirm the null effect.
         ANCHOR_TRIM_COL = "coverage_gap_n"
         if len(anchors) > N_ANCHORS:
             anchors = anchors.nlargest(N_ANCHORS, ANCHOR_TRIM_COL).reset_index(drop=True)

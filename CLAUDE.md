@@ -665,6 +665,45 @@ disagreement is faint evidence because built lines are not guaranteed optimal (p
 land). **B is untested.** Defensible claim: validated demand-gap DIAGNOSTIC; corridor GENERATION
 has a characterized limitation; generative effectiveness on its own corridors is not yet measured.
 
+## W8 — Question B: do W6's own feasible corridors have merit? (2026-07-13)
+
+The first direct test of Question B (not reconstruction of a built line). Script:
+`src/w8_corridor_merit.py` (DB-backed; re-run before trusting numbers -- values drift with any
+beta/equity re-run). Companion interactive map: `src/w8_corridor_map_data.py` ->
+`src/w8_corridor_map_render.py` -> `outputs/w8/w6_corridor_map.html` (AGEB coverage-gap
+choropleth + the 3 corridors, hover-synced merit stats; also published as a private Claude
+Artifact). Each feasible corridor scored on three axes:
+
+- **(a) genuine need** -- High-gap share of served AGEBs vs the 20.7% metro baseline.
+- **(b) non-redundancy** -- best Jaccard AGEB-overlap vs all 247 existing SITEUR GTFS routes
+  (W7's >=0.60 threshold).
+- **(c) demand/km** -- corridor `total_demand / route_km` vs the same ratio for every existing
+  GTFS route (pass = >= median = 50th pct).
+
+**Results (2026-07-13, beta=1.2005 / post-equity-fix DB).** All 3 are non-redundant (best
+Jaccard <= 0.03). Only **W6_G03 passes all three** (100% High-gap, 94th-pct demand/km) -- but
+only because it is a 1.4km stub of 2 anchors ~1km apart, i.e. short by luck, not a real corridor.
+**W6_G00** serves weak need (41.7% High-gap, barely above baseline; final_score BELOW metro
+median) and is low-efficiency (~1st pct demand/km). **W6_G05** serves real need (100% High-gap)
+but is also ~1st pct demand/km -- a 14.6km anchor-to-anchor connector.
+
+**Mechanism -- feasibility is confounded with anchor-cluster SPARSITY (traced 2026-07-13).**
+Reproduced `w6_anchors.py` -> `build_corridor_path()`: the 3 feasible groups have only 2-3 raw
+anchor AGEBs each (G00 3 anchors ~11km apart; G03 2 anchors ~1km; G05 2 anchors ~10.6km); the 3
+INfeasible groups had 6-9 anchors each. `build_corridor_path()` MSTs only the anchor terminal
+nodes and walks OSM shortest-path between them (never considers intermediate demand or existing
+corridors), so more anchors -> longer/more convoluted MST -> more likely to blow the 30km /
+1.8-detour caps. So the feasibility filter selects for FEW anchors, not for GOOD corridors -- a
+different symptom of the same architecture (30 anchors / KMeans k=6 / MST) already flagged as the
+Line 4 reconstruction-failure mechanism above.
+
+**Verdict on B: essentially negative.** W6's generator, as built, does not reliably produce good
+corridors on its own terms -- the one "passing" corridor is a degenerate short stub, and merit is
+uncorrelated with (indeed slightly opposed to) what its feasibility filter selects. This is a
+generator-architecture limitation, and is now measured (not merely asserted). The demand-gap
+DIAGNOSTIC (W3/W4) remains the defensible contribution; the thesis claim should be narrowed
+accordingly (see Next steps item 4).
+
 ---
 
 ## W9 — Transferability (in progress 2026-06-15)
@@ -708,14 +747,14 @@ W9 applies the pipeline to **Monterrey, Nuevo León** (ZM Monterrey, CVE_ENT=19,
 
 ## E. Next steps
  
-1. **Test Question B (the real effectiveness test).** Evaluate W6's 3 feasible corridors on
-   their own merits, not against built lines: (a) do their served AGEBs sit on genuine High-gap /
-   high transit_demand? (b) are they non-redundant with existing SITEUR service (Jaccard/overlap
-   vs current GTFS routes, reusing W7's redundancy logic)? (c) plausible demand captured per km?
-   This is the axis nobody has measured.
-2. **Decide `ANCHOR_TRIM_COL` in run_w6.py.** Currently `coverage_gap_n`; empirically identical
-   to `transit_demand`. Either revert, or keep and rewrite the code comment to state the honest
-   finding (gap ~ demand in the unserved pool). The current comment overclaims a fix.
+1. ~~**Test Question B (the real effectiveness test).**~~ DONE 2026-07-13 -- see the "W8 --
+   Question B" section above. `src/w8_corridor_merit.py` scores the 3 feasible corridors on
+   need / non-redundancy / demand-per-km; verdict is essentially negative (only the degenerate
+   1.4km G03 stub passes all three; feasibility is confounded with anchor-cluster sparsity).
+2. ~~**Decide `ANCHOR_TRIM_COL` in run_w6.py.**~~ DONE 2026-07-13 -- KEPT as `coverage_gap_n`
+   (conceptually targets the gap surface) and rewrote the code comment to state the honest null
+   finding (gap ~ demand in the unserved pool; switching the axis does not change corridors and
+   the real limitation is architectural, not the trim column).
 3. **Strengthen validation power.** Add masked backtests for Line 3 (2020) and Mi Macro (2022)
    alongside the existing premium-route backtest, so validation is not n=1 on Line 4.
 4. **Narrow the thesis claim (Gap A)** to match the evidence: "data-driven demand-gap
