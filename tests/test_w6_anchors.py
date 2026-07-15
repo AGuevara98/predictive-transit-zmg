@@ -236,6 +236,17 @@ def test_add_network_anchors_falls_back_when_no_connected_in_range():
     assert (out["role"] == "network").sum() == 0
 
 
+def test_add_network_anchors_geom_column_named_geom():
+    # Prod pipeline names the active geometry column "geom" (not "geometry");
+    # regression guard so injection does not crash on Series.geometry attr access.
+    anchors = make_grouped_anchors([("A0", 0, 0.0, 0.0)]).rename_geometry("geom")
+    connected = make_connected_gdf([("C0", 200.0, 0.0)]).rename_geometry("geom")
+    out, fallback = add_network_anchors(anchors, connected, max_tie_in_m=5000.0)
+    assert fallback == set()
+    assert out[out["role"] == "network"]["cve_ageb"].tolist() == ["C0"]
+    assert out.geometry.name == "geom"
+
+
 from src.w6_anchors import select_frontier_anchors
 
 

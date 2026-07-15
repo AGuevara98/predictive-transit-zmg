@@ -193,8 +193,10 @@ def add_network_anchors(anchors_gdf, connected_gdf, max_tie_in_m: float = 5000.0
         return out, set(int(g) for g in out.get("corridor_group", pd.Series([], dtype=int)).unique())
 
     # Use the anchors' active geometry column name (prod: "geom", tests: "geometry")
-    # so the concat below stays single-geometry-column.
+    # so the concat below stays single-geometry-column. connected_gdf may name its
+    # own geometry column differently, so read it by name (conn_row is a plain Series).
     gname = anchors_gdf.geometry.name
+    cgeom = connected_gdf.geometry.name
     tree = cKDTree(connected_gdf[["cx", "cy"]].values)
     new_rows = []
     fallback = set()
@@ -214,7 +216,7 @@ def add_network_anchors(anchors_gdf, connected_gdf, max_tie_in_m: float = 5000.0
             "transit_demand": float(conn_row["transit_demand"]),
             "cx": float(conn_row["cx"]),
             "cy": float(conn_row["cy"]),
-            gname: conn_row.geometry,
+            gname: conn_row[cgeom],
             "role": "network",
         })
 
