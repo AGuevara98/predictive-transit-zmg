@@ -234,3 +234,21 @@ def test_add_network_anchors_falls_back_when_no_connected_in_range():
     out, fallback = add_network_anchors(anchors, connected, max_tie_in_m=5000.0)
     assert fallback == {0}
     assert (out["role"] == "network").sum() == 0
+
+
+from src.w6_anchors import select_frontier_anchors
+
+
+def test_select_frontier_keeps_seam_drops_interior():
+    anchors = make_anchor_gdf([0.9, 0.95, 1.0], [800.0, 800.0, 800.0])
+    # anchors at x=0,1000,2000. Connected AGEB sits at x=1100 (100m from A1).
+    connected = make_connected_gdf([("C", 1100.0, 0.0)])
+    out = select_frontier_anchors(anchors, connected, radius_m=400.0)
+    assert out["cve_ageb"].tolist() == ["A001"]   # only the seam anchor near C
+
+
+def test_select_frontier_empty_when_no_connected():
+    anchors = make_anchor_gdf([0.9, 0.95], [800.0, 800.0])
+    empty = make_connected_gdf([])
+    out = select_frontier_anchors(anchors, empty, radius_m=400.0)
+    assert len(out) == 0

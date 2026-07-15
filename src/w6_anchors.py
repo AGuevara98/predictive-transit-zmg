@@ -225,6 +225,23 @@ def add_network_anchors(anchors_gdf, connected_gdf, max_tie_in_m: float = 5000.0
     return out, fallback
 
 
+def select_frontier_anchors(anchors_gdf, connected_gdf, radius_m: float = 400.0):
+    """frontier (Approach B): keep only anchors on the served/unserved seam.
+
+    An anchor survives iff its centroid is within radius_m of a network-connected
+    AGEB centroid. Deep-interior high-gap anchors (far from any connected AGEB) are
+    dropped -- the mode's defining trade-off. Returns a reset-index GeoDataFrame.
+    """
+    from scipy.spatial import cKDTree
+
+    if len(anchors_gdf) == 0 or len(connected_gdf) == 0:
+        return anchors_gdf.iloc[0:0].copy()
+    tree = cKDTree(connected_gdf[["cx", "cy"]].values)
+    dist, _ = tree.query(anchors_gdf[["cx", "cy"]].values, k=1)
+    keep = dist <= radius_m
+    return anchors_gdf[keep].copy().reset_index(drop=True)
+
+
 def cluster_anchors(
     anchors_gdf: gpd.GeoDataFrame,
     n_corridors: int = N_CORRIDORS,
