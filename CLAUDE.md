@@ -706,6 +706,46 @@ accordingly (see Next steps item 4).
 
 ---
 
+## W6/W8 — anchor-mode network-connection comparison (2026-07-15)
+
+First attempt to force W6 corridors to tie into the existing SITEUR network at the ANCHOR level
+(rather than the routing level, which the 2026-07-14 both-ends hub injection already does). Three
+modes compared 3-way by `src/w6_anchor_experiment.py` (read-only harness; does NOT write
+`features.route_candidates`); outputs in `outputs/w6_experiment/{baseline,two_tier,frontier}/` +
+`comparison.md`. Spec/plan: `docs/superpowers/specs/2026-07-15-w6-anchor-network-connection-design.md`,
+`docs/superpowers/plans/2026-07-15-w6-anchor-network-connection.md`. "Connected" = >=1 GTFS stop
+within 400m of an AGEB centroid (`network_connected_agebs()`; 1,316 of 1,881 AGEBs qualify).
+
+- **baseline** (incumbent both-ends bare-stop hub injection): **0 of 6 feasible.** The 2026-07-14
+  hub work, re-run into the live DB, lengthened every corridor past the 30km / 1.8-detour caps
+  (G00 16.6->24.9km, G05 14.6->21.3km, G01/G02/G04 all >36km). So the current
+  `features.route_candidates` has 0 feasible corridors, superseding the "3 feasible" state
+  documented in the W6 section above — that section predates the hub re-run.
+- **two_tier** (inject the nearest network-connected AGEB per group as a `role="network"` MST
+  terminal; hub fallback only for groups whose nearest connected AGEB is >5km): **3 of 6 feasible**
+  (G00 16.6km, G03 1.4km, G05 15.0km) — RECOVERS the pre-hub feasible set because a single tie-in
+  is a lighter touch than two bare-stop hubs. BUT only **1/3 have connected endpoints**: injecting
+  one terminal tethers the MST tree without controlling which nodes become the corridor's visible
+  leaf ends, so two_tier corridors still dead-end away from the network. Only 1/3 pass merit (G03,
+  the 1.4km stub); mean feasible demand/km = 32nd pct.
+- **frontier** (restrict the Jenks high-gap pool to anchors within 400m of a connected AGEB before
+  clustering; no hubs): **1 of 5 feasible** (G03 2.4km), but that corridor has connected endpoints
+  and passes merit; frontier has the best per-corridor quality (feasible demand/km 66th pct vs
+  two_tier 32nd; 3/5 endpoint-connected overall) at the cost of COVERAGE — seam restriction drops
+  deep-interior high-gap pockets, shrinking served AGEBs/demand.
+
+**Verdict.** Neither anchor-level mode breaks the core Question-B confound: the merit-passing
+FEASIBLE corridor in both modes is still G03, the ~1.4-2.4km short stub, while the genuinely
+high-merit corridors (G02-family: ~36km, ~486k demand, 57-85th-pct demand/km) remain INfeasible on
+the length cap in every mode. Feasibility still selects for short/sparse; merit still lives in the
+long/dense corridors that blow the caps. **frontier is the better REALISM lever** (endpoint
+connectivity + higher demand/km, all feasible corridors connected) and is the recommended direction
+if one must be chosen, but its coverage cost and the unbroken feasibility-vs-merit confound mean the
+narrowed thesis claim (Next steps item 4) still stands. Decision on which mode (if any) to promote
+into `run_w6.py` is left open pending review of `comparison.md`.
+
+---
+
 ## W9 — Transferability (in progress 2026-06-15)
 
 W9 applies the pipeline to **Monterrey, Nuevo León** (ZM Monterrey, CVE_ENT=19, 12 municipalities, ~1,958 AGEBs) as the second city for transferability validation.
