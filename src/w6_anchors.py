@@ -66,6 +66,88 @@ def select_anchors_jenks(
     return gdf[mask].copy().reset_index(drop=True)
 
 
+def load_gtfs_stops(engine) -> pd.DataFrame:
+    """Load all existing SITEUR GTFS stops with projected centroid coords.
+
+    Returns a plain DataFrame (stop_id, cx, cy) in EPSG:6372 metres -- used as
+    candidate network entry points ("hubs") for corridor generation.
+    """
+    query = text("""
+        SELECT stop_id, ST_X(geom) AS cx, ST_Y(geom) AS cy
+        FROM base.gtfs_stops
+    """)
+    with engine.connect() as conn:
+        df = pd.read_sql(query, conn)
+    df["cx"] = df["cx"].astype(float)
+    df["cy"] = df["cy"].astype(float)
+    return df
+
+
+def select_group_hubs(
+    anchors_gdf: gpd.GeoDataFrame,
+    stops_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """Pick two existing SITEUR stops per corridor group to root both ends.
+
+    Each anchor is matched to its nearest stop. The group then gets two hubs,
+    both injected as mandatory MST terminals so the corridor is rooted in the
+    existing network at both ends by construction:
+
+      - near hub: the stop nearest the CLOSEST anchor -- the cheapest natural
+        entry point onto the network (not the group centroid).
+      - far hub: the stop nearest the most REMOTE anchor (the anchor with the
+        largest distance-to-nearest-stop) -- so the would-be dead-end end of
+        the corridor is connected too, rather than trailing off kilometres from
+        any stop. When a group has a single anchor (or its closest and most
+        remote anchors share a nearest stop) the two hubs coincide.
+
+    Returns one row per group: corridor_group, hub_stop_id/hub_cx/hub_cy/
+    hub_dist_m/anchor_cve_ageb (near), and far_hub_stop_id/far_hub_cx/
+    far_hub_cy/far_hub_dist_m/far_anchor_cve_ageb (far).
+    """
+    from scipy.spatial import cKDTree
+
+    empty = pd.DataFrame(
+        columns=["corridor_group", "hub_stop_id", "hub_cx", "hub_cy",
+                 "hub_dist_m", "anchor_cve_ageb",
+                 "far_hub_stop_id", "far_hub_cx", "far_hub_cy",
+                 "far_hub_dist_m", "far_anchor_cve_ageb"]
+    )
+    if len(anchors_gdf) == 0 or len(stops_df) == 0:
+        return empty
+
+    tree = cKDTree(stops_df[["cx", "cy"]].values)
+    dist, idx = tree.query(anchors_gdf[["cx", "cy"]].values, k=1)
+
+    tmp = pd.DataFrame({
+        "corridor_group": anchors_gdf["corridor_group"].astype(int).values,
+        "cve_ageb": anchors_gdf["cve_ageb"].values,
+        "stop_row": idx,
+        "dist_m": dist,
+    })
+
+    rows = []
+    for gid, sub in tmp.groupby("corridor_group"):
+        near = sub.loc[sub["dist_m"].idxmin()]
+        far = sub.loc[sub["dist_m"].idxmax()]
+        near_stop = stops_df.iloc[int(near["stop_row"])]
+        far_stop = stops_df.iloc[int(far["stop_row"])]
+        rows.append({
+            "corridor_group": int(gid),
+            "hub_stop_id": near_stop["stop_id"],
+            "hub_cx": float(near_stop["cx"]),
+            "hub_cy": float(near_stop["cy"]),
+            "hub_dist_m": float(near["dist_m"]),
+            "anchor_cve_ageb": near["cve_ageb"],
+            "far_hub_stop_id": far_stop["stop_id"],
+            "far_hub_cx": float(far_stop["cx"]),
+            "far_hub_cy": float(far_stop["cy"]),
+            "far_hub_dist_m": float(far["dist_m"]),
+            "far_anchor_cve_ageb": far["cve_ageb"],
+        })
+    return pd.DataFrame(rows)
+
+
 def cluster_anchors(
     anchors_gdf: gpd.GeoDataFrame,
     n_corridors: int = N_CORRIDORS,

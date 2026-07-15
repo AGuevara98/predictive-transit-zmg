@@ -42,7 +42,9 @@ from src.w6_anchors import (
     N_CORRIDORS,
     cluster_anchors,
     load_gap_agebs,
+    load_gtfs_stops,
     select_anchors_jenks,
+    select_group_hubs,
 )
 from src.w6_candidates import build_route_candidate
 from src.w6_graph import build_corridor_path, load_or_download_osm, project_to_6372, snap_to_osm_nodes
@@ -249,26 +251,60 @@ def main() -> None:
         n_groups = anchors["corridor_group"].nunique()
         print(f"  [OK] {n_groups} corridor groups formed")
 
+        print("\n[Step 4b] Selecting SITEUR network hubs (near + far end) per corridor group...")
+        stops_df = load_gtfs_stops(engine)
+        hubs = select_group_hubs(anchors, stops_df)
+        hub_by_group = {int(r.corridor_group): r for r in hubs.itertuples(index=False)}
+        for gid in sorted(hub_by_group):
+            h = hub_by_group[gid]
+            print(f"  [OK] Group {gid}: near hub {h.hub_stop_id} ({h.hub_dist_m:.0f}m from "
+                  f"{h.anchor_cve_ageb}); far hub {h.far_hub_stop_id} ({h.far_hub_dist_m:.0f}m "
+                  f"from remote anchor {h.far_anchor_cve_ageb})")
+
         print("\n[Step 5] Loading OSM drive graph...")
         G_raw = load_or_download_osm()
         G_proj = project_to_6372(G_raw)
         print(f"  [OK] Graph: {G_proj.number_of_nodes()} nodes, {G_proj.number_of_edges()} edges (EPSG:6372)")
 
-        print("\n[Step 6] Snapping anchor centroids to OSM nodes...")
+        print("\n[Step 6] Snapping anchor centroids + group hubs to OSM nodes...")
         cx_list = anchors["cx"].tolist()
         cy_list = anchors["cy"].tolist()
         osm_node_ids = snap_to_osm_nodes(G_proj, cx_list, cy_list)
         anchors = anchors.copy()
         anchors["osm_node"] = osm_node_ids
-        print(f"  [OK] {len(osm_node_ids)} centroids snapped")
+        print(f"  [OK] {len(osm_node_ids)} anchor centroids snapped")
 
-        print("\n[Step 7] Building corridor paths (one MST per cluster)...")
+        # Snap each group's near + far hub stops to OSM nodes so they join the
+        # same MST as the anchors (structural connectivity at both ends, not a
+        # bolted-on connector). build_corridor_path dedups terminals, so a group
+        # whose near and far hubs coincide simply contributes one hub node.
+        hub_osm_by_group = {}
+        if hub_by_group:
+            hub_gids = sorted(hub_by_group)
+            near_nodes = snap_to_osm_nodes(
+                G_proj,
+                [hub_by_group[g].hub_cx for g in hub_gids],
+                [hub_by_group[g].hub_cy for g in hub_gids],
+            )
+            far_nodes = snap_to_osm_nodes(
+                G_proj,
+                [hub_by_group[g].far_hub_cx for g in hub_gids],
+                [hub_by_group[g].far_hub_cy for g in hub_gids],
+            )
+            for g, nn, fn in zip(hub_gids, near_nodes, far_nodes):
+                hub_osm_by_group[g] = [nn, fn]
+            print(f"  [OK] {len(hub_osm_by_group)} group hubs snapped (near + far)")
+
+        print("\n[Step 7] Building corridor paths (one MST per cluster, both hubs included)...")
         corridor_geoms = []
         corridor_groups = []
         corridor_kms = []
         for group_id in sorted(anchors["corridor_group"].unique()):
             group_rows = anchors[anchors["corridor_group"] == group_id]
             terminal_nodes = group_rows["osm_node"].tolist()
+            hub_nodes = hub_osm_by_group.get(int(group_id))
+            if hub_nodes:
+                terminal_nodes = terminal_nodes + hub_nodes
             geom, route_km = build_corridor_path(G_proj, terminal_nodes)
             if geom is None or route_km <= 0.01:
                 print(f"  [SKIP] Group {group_id}: could not build path")
