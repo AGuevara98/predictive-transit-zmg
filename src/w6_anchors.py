@@ -148,6 +148,83 @@ def select_group_hubs(
     return pd.DataFrame(rows)
 
 
+def network_connected_agebs(engine, radius_m: float = 400.0) -> gpd.GeoDataFrame:
+    """AGEBs with >=1 GTFS stop within radius_m of their centroid (EPSG:6372).
+
+    Returns cve_ageb, coverage_gap_n, transit_demand, cx, cy, geom -- the pool of
+    "network-connected" AGEBs used by the two_tier and frontier anchor modes.
+    """
+    query = text("""
+        SELECT g.cve_ageb, g.coverage_gap_n, g.transit_demand,
+               ST_X(ST_Centroid(a.geom)) AS cx,
+               ST_Y(ST_Centroid(a.geom)) AS cy,
+               a.geom
+        FROM features.ageb_coverage_gap g
+        JOIN base.ageb a ON a.cvegeo = g.cve_ageb
+        WHERE EXISTS (
+            SELECT 1 FROM base.gtfs_stops s
+            WHERE ST_DWithin(s.geom, ST_Centroid(a.geom), :r)
+        )
+    """)
+    with engine.connect() as conn:
+        gdf = gpd.read_postgis(query, conn, geom_col="geom", params={"r": radius_m},
+                               crs="EPSG:6372")
+    for col in ("coverage_gap_n", "transit_demand", "cx", "cy"):
+        gdf[col] = gdf[col].astype(float)
+    return gdf
+
+
+def add_network_anchors(anchors_gdf, connected_gdf, max_tie_in_m: float = 5000.0):
+    """two_tier (Approach A): inject one network-connected AGEB per corridor group.
+
+    For each group, pick the connected AGEB nearest to ANY anchor in that group
+    (cheapest network entry). Inject it as a role="network" anchor iff that nearest
+    distance <= max_tie_in_m and it is not already an anchor in the group. Groups with
+    no connected AGEB in range are returned in fallback_group_ids (caller applies hub
+    injection). Existing anchors are tagged role="demand".
+
+    Returns (augmented_gdf, fallback_group_ids: set[int]).
+    """
+    from scipy.spatial import cKDTree
+
+    out = anchors_gdf.copy()
+    out["role"] = "demand"
+    if len(anchors_gdf) == 0 or len(connected_gdf) == 0:
+        return out, set(int(g) for g in out.get("corridor_group", pd.Series([], dtype=int)).unique())
+
+    # Use the anchors' active geometry column name (prod: "geom", tests: "geometry")
+    # so the concat below stays single-geometry-column.
+    gname = anchors_gdf.geometry.name
+    tree = cKDTree(connected_gdf[["cx", "cy"]].values)
+    new_rows = []
+    fallback = set()
+    for gid, sub in anchors_gdf.groupby("corridor_group"):
+        dist, idx = tree.query(sub[["cx", "cy"]].values, k=1)
+        best = int(dist.argmin())
+        best_dist = float(dist[best])
+        conn_row = connected_gdf.iloc[int(idx[best])]
+        if best_dist > max_tie_in_m or conn_row["cve_ageb"] in set(sub["cve_ageb"]):
+            if best_dist > max_tie_in_m:
+                fallback.add(int(gid))
+            continue
+        new_rows.append({
+            "cve_ageb": conn_row["cve_ageb"],
+            "corridor_group": int(gid),
+            "coverage_gap_n": float(conn_row["coverage_gap_n"]),
+            "transit_demand": float(conn_row["transit_demand"]),
+            "cx": float(conn_row["cx"]),
+            "cy": float(conn_row["cy"]),
+            gname: conn_row.geometry,
+            "role": "network",
+        })
+
+    if new_rows:
+        add_gdf = gpd.GeoDataFrame(new_rows, geometry=gname, crs=anchors_gdf.crs)
+        out = pd.concat([out, add_gdf], ignore_index=True)
+        out = gpd.GeoDataFrame(out, geometry=gname, crs=anchors_gdf.crs)
+    return out, fallback
+
+
 def cluster_anchors(
     anchors_gdf: gpd.GeoDataFrame,
     n_corridors: int = N_CORRIDORS,

@@ -187,3 +187,50 @@ def test_select_group_hubs_empty_inputs():
     assert len(select_group_hubs(empty_anchors, some_stops)) == 0
     assert len(select_group_hubs(
         make_grouped_anchors([("A0", 0, 0.0, 0.0)]), empty_stops)) == 0
+
+
+from src.w6_anchors import add_network_anchors
+
+
+def make_connected_gdf(rows):
+    """rows: list of (cve_ageb, cx, cy)."""
+    return gpd.GeoDataFrame(
+        {
+            "cve_ageb": [r[0] for r in rows],
+            "coverage_gap_n": [0.2] * len(rows),
+            "transit_demand": [700.0] * len(rows),
+            "cx": [r[1] for r in rows],
+            "cy": [r[2] for r in rows],
+        },
+        geometry=[Point(r[1], r[2]) for r in rows],
+        crs="EPSG:6372",
+    )
+
+
+def test_add_network_anchors_injects_nearest_connected_per_group():
+    anchors = make_grouped_anchors([
+        ("A0", 0, 0.0, 0.0),
+        ("A1", 0, 1000.0, 0.0),
+        ("A2", 1, 10000.0, 0.0),
+    ])
+    connected = make_connected_gdf([
+        ("C_g0", 300.0, 0.0),        # 300m from A0 -> tie-in for group 0
+        ("C_g1", 10200.0, 0.0),      # 200m from A2 -> tie-in for group 1
+        ("C_far", 50000.0, 0.0),
+    ])
+    out, fallback = add_network_anchors(anchors, connected, max_tie_in_m=5000.0)
+    assert fallback == set()
+    net = out[out["role"] == "network"]
+    assert set(net["cve_ageb"]) == {"C_g0", "C_g1"}
+    assert set(net["corridor_group"]) == {0, 1}
+    # original anchors tagged demand, nothing dropped
+    assert (out[out["role"] == "demand"]["cve_ageb"].tolist()
+            == ["A0", "A1", "A2"])
+
+
+def test_add_network_anchors_falls_back_when_no_connected_in_range():
+    anchors = make_grouped_anchors([("A0", 0, 0.0, 0.0)])
+    connected = make_connected_gdf([("C_far", 20000.0, 0.0)])  # 20km > 5km cap
+    out, fallback = add_network_anchors(anchors, connected, max_tie_in_m=5000.0)
+    assert fallback == {0}
+    assert (out["role"] == "network").sum() == 0
