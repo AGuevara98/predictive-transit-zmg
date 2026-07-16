@@ -6,14 +6,14 @@ Generates demand-driven transit corridor candidates for ZMG.
 Pipeline:
   1. Run DB migration 006_w6_tables.sql
   2. Load coverage-gap surface from DB
-  3. Select anchor AGEBs via Jenks natural breaks
+  3. Select FRONTIER anchors (top-Jenks coverage_gap_n on the served/unserved seam)
   4. Cluster anchors into N_CORRIDORS spatial groups
   5. Load / download OSM drive graph (cached to data/osm_zmg_drive.graphml)
-  6. Snap anchor centroids to OSM nodes; build one MST path per cluster
-  7. Construct RouteCandidate for each valid corridor
-  8. Evaluate with W5 objective + constraint checker
-  9. Pareto-rank feasible candidates
- 10. Assign BRT / Local Bus mode by demand volume
+  6. Snap anchor centroids to OSM nodes
+  7. Build one MST-diameter trunk corridor per cluster (single road path)
+  8. Construct RouteCandidate (with anchor_span_km) for each valid corridor
+  9. Evaluate with W5 objective + constraints (feasibility on anchor-directness)
+ 10. Pareto-rank feasible candidates; assign mode by demand volume
  11. Write results to features.route_candidates (DB) and outputs/w6/
 
 Usage:
@@ -42,12 +42,18 @@ from src.w6_anchors import (
     N_CORRIDORS,
     cluster_anchors,
     load_gap_agebs,
-    load_gtfs_stops,
+    network_connected_agebs,
     select_anchors_jenks,
-    select_group_hubs,
+    select_frontier_anchors,
 )
 from src.w6_candidates import build_route_candidate
-from src.w6_graph import build_corridor_path, load_or_download_osm, project_to_6372, snap_to_osm_nodes
+from src.w6_graph import (
+    anchor_span_km,
+    corridor_trunk_diameter,
+    load_or_download_osm,
+    project_to_6372,
+    snap_to_osm_nodes,
+)
 from src.w6_mode import BRT_THRESHOLD, LRT_THRESHOLD, assign_mode
 
 OUTPUT_DIR = Path("outputs/w6")
@@ -150,10 +156,13 @@ def write_report(rows: list) -> None:
         "",
         "## Methodology",
         "",
-        "1. **Anchor selection:** Jenks natural breaks (k=5) on coverage_gap_n; top class only; min 500 trips/day demand.",
+        "1. **Anchor selection (frontier):** Jenks top-class coverage_gap_n anchors (min 500 trips/day) "
+        "restricted to within 400m of a network-connected AGEB (the served/unserved seam).",
         f"2. **Spatial clustering:** KMeans (k={N_CORRIDORS}) on EPSG:6372 centroids to form corridor groups.",
-        "3. **Path generation:** MST-based Steiner approximation on ZMG OSM drive graph (osmnx 2.1.0).",
-        "4. **Evaluation:** W5 multi-objective function (f1 demand gain, f2 route cost, f3 equity).",
+        "3. **Path generation:** MST-diameter trunk (longest leaf-to-leaf path) per cluster on the ZMG OSM "
+        "drive graph -- one road-following alignment, no phantom jumps.",
+        "4. **Evaluation:** W5 multi-objective function (f1 demand gain, f2 route cost, f3 equity); "
+        "feasibility gated on ANCHOR-DIRECTNESS (route_km / straight-line anchor span, cap 1.8).",
         "5. **Mode assignment:** Light Rail/Metro if total served demand >= 75,000 trips/day; "
         "BRT if >= 15,000; Local Bus otherwise.",
         "",
@@ -203,7 +212,7 @@ def write_report(rows: list) -> None:
         "",
         "```",
         "w_demand_gain=0.50, w_efficiency=0.25, w_equity=0.25",
-        "max_detour_ratio=1.8, min_stop_spacing=300m, max_stop_spacing=1000m",
+        "max_detour_ratio=1.8 (anchor-directness), min_stop_spacing=300m, max_stop_spacing=1000m",
         "min_daily_demand=500 trips/day, max_route_km=30km",
         "```",
     ]
@@ -225,11 +234,14 @@ def main() -> None:
         gap_gdf = load_gap_agebs(engine)
         print(f"  [OK] {len(gap_gdf)} AGEBs loaded")
 
-        print("\n[Step 3] Selecting anchor AGEBs via Jenks natural breaks...")
+        print("\n[Step 3] Selecting FRONTIER anchor AGEBs (served/unserved seam)...")
+        connected_gdf = network_connected_agebs(engine, radius_m=400.0)
         anchors = select_anchors_jenks(gap_gdf, k_classes=5, min_demand=500.0)
-        print(f"  [OK] {len(anchors)} anchor AGEBs in top Jenks class")
+        anchors = select_frontier_anchors(anchors, connected_gdf, radius_m=400.0)
+        print(f"  [OK] {len(anchors)} frontier anchors "
+              f"(top-Jenks coverage_gap_n within 400m of a network-connected AGEB)")
         if len(anchors) == 0:
-            print("  [ERR] No anchors found. Run W3 first.")
+            print("  [ERR] No frontier anchors found. Run W3 first.")
             sys.exit(1)
 
         # Anchor trim criterion. Kept as coverage_gap_n because W6 conceptually targets the
@@ -251,68 +263,39 @@ def main() -> None:
         n_groups = anchors["corridor_group"].nunique()
         print(f"  [OK] {n_groups} corridor groups formed")
 
-        print("\n[Step 4b] Selecting SITEUR network hubs (near + far end) per corridor group...")
-        stops_df = load_gtfs_stops(engine)
-        hubs = select_group_hubs(anchors, stops_df)
-        hub_by_group = {int(r.corridor_group): r for r in hubs.itertuples(index=False)}
-        for gid in sorted(hub_by_group):
-            h = hub_by_group[gid]
-            print(f"  [OK] Group {gid}: near hub {h.hub_stop_id} ({h.hub_dist_m:.0f}m from "
-                  f"{h.anchor_cve_ageb}); far hub {h.far_hub_stop_id} ({h.far_hub_dist_m:.0f}m "
-                  f"from remote anchor {h.far_anchor_cve_ageb})")
-
         print("\n[Step 5] Loading OSM drive graph...")
         G_raw = load_or_download_osm()
         G_proj = project_to_6372(G_raw)
         print(f"  [OK] Graph: {G_proj.number_of_nodes()} nodes, {G_proj.number_of_edges()} edges (EPSG:6372)")
 
-        print("\n[Step 6] Snapping anchor centroids + group hubs to OSM nodes...")
-        cx_list = anchors["cx"].tolist()
-        cy_list = anchors["cy"].tolist()
-        osm_node_ids = snap_to_osm_nodes(G_proj, cx_list, cy_list)
+        print("\n[Step 6] Snapping anchor centroids to OSM nodes...")
+        osm_node_ids = snap_to_osm_nodes(G_proj, anchors["cx"].tolist(), anchors["cy"].tolist())
         anchors = anchors.copy()
         anchors["osm_node"] = osm_node_ids
         print(f"  [OK] {len(osm_node_ids)} anchor centroids snapped")
 
-        # Snap each group's near + far hub stops to OSM nodes so they join the
-        # same MST as the anchors (structural connectivity at both ends, not a
-        # bolted-on connector). build_corridor_path dedups terminals, so a group
-        # whose near and far hubs coincide simply contributes one hub node.
-        hub_osm_by_group = {}
-        if hub_by_group:
-            hub_gids = sorted(hub_by_group)
-            near_nodes = snap_to_osm_nodes(
-                G_proj,
-                [hub_by_group[g].hub_cx for g in hub_gids],
-                [hub_by_group[g].hub_cy for g in hub_gids],
-            )
-            far_nodes = snap_to_osm_nodes(
-                G_proj,
-                [hub_by_group[g].far_hub_cx for g in hub_gids],
-                [hub_by_group[g].far_hub_cy for g in hub_gids],
-            )
-            for g, nn, fn in zip(hub_gids, near_nodes, far_nodes):
-                hub_osm_by_group[g] = [nn, fn]
-            print(f"  [OK] {len(hub_osm_by_group)} group hubs snapped (near + far)")
-
-        print("\n[Step 7] Building corridor paths (one MST per cluster, both hubs included)...")
+        print("\n[Step 7] Building corridor paths (MST-diameter trunk per cluster)...")
+        # Diameter trunk = longest leaf-to-leaf path of the anchors' spanning tree,
+        # stitched from real road segments -> a single road-following alignment with no
+        # phantom straight jumps (the branching-MST flatten is retired). anchor_span_km is
+        # the straight-line span of the group's anchors -> W5 gates on anchor-directness.
         corridor_geoms = []
         corridor_groups = []
         corridor_kms = []
+        corridor_spans = []
         for group_id in sorted(anchors["corridor_group"].unique()):
             group_rows = anchors[anchors["corridor_group"] == group_id]
             terminal_nodes = group_rows["osm_node"].tolist()
-            hub_nodes = hub_osm_by_group.get(int(group_id))
-            if hub_nodes:
-                terminal_nodes = terminal_nodes + hub_nodes
-            geom, route_km = build_corridor_path(G_proj, terminal_nodes)
+            geom, route_km = corridor_trunk_diameter(G_proj, terminal_nodes)
             if geom is None or route_km <= 0.01:
                 print(f"  [SKIP] Group {group_id}: could not build path")
                 continue
             corridor_geoms.append(geom)
             corridor_groups.append(group_id)
             corridor_kms.append(route_km)
-            print(f"  [OK] Group {group_id}: {route_km:.2f} km, {len(terminal_nodes)} terminals")
+            corridor_spans.append(anchor_span_km(G_proj, terminal_nodes))
+            print(f"  [OK] Group {group_id}: {route_km:.2f} km trunk, "
+                  f"{len(dict.fromkeys(terminal_nodes))} anchors")
 
         if not corridor_geoms:
             print("  [ERR] No valid corridor paths built.")
@@ -320,15 +303,19 @@ def main() -> None:
 
         print("\n[Step 8] Building RouteCandidate objects...")
         candidates = []
-        for geom, gid, road_km in zip(corridor_geoms, corridor_groups, corridor_kms):
+        for geom, gid, road_km, span_km in zip(
+            corridor_geoms, corridor_groups, corridor_kms, corridor_spans
+        ):
             cid = f"W6_G{gid:02d}"
-            rc = build_route_candidate(cid, geom, engine, config=cfg, route_km_override=road_km)
+            rc = build_route_candidate(cid, geom, engine, config=cfg,
+                                       route_km_override=road_km, anchor_span_km=span_km)
             if rc is None:
                 print(f"  [SKIP] {cid}: fewer than 2 served AGEBs")
                 continue
             candidates.append((rc, geom, gid))
             print(f"  [OK] {cid}: {len(rc.served_ageb_ids)} served AGEBs, "
-                  f"{rc.route_km:.2f}km, connected={rc.connects_to_existing}")
+                  f"{rc.route_km:.2f}km, directness={road_km / span_km if span_km else float('nan'):.2f}, "
+                  f"connected={rc.connects_to_existing}")
 
         if not candidates:
             print("  [ERR] No valid RouteCandidate objects built.")
