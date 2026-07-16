@@ -6,14 +6,14 @@ Generates demand-driven transit corridor candidates for ZMG.
 Pipeline:
   1. Run DB migration 006_w6_tables.sql
   2. Load coverage-gap surface from DB
-  3. Select anchor AGEBs via Jenks natural breaks
+  3. Select FRONTIER anchors (top-Jenks coverage_gap_n on the served/unserved seam)
   4. Cluster anchors into N_CORRIDORS spatial groups
   5. Load / download OSM drive graph (cached to data/osm_zmg_drive.graphml)
-  6. Snap anchor centroids to OSM nodes; build one MST path per cluster
-  7. Construct RouteCandidate for each valid corridor
-  8. Evaluate with W5 objective + constraint checker
-  9. Pareto-rank feasible candidates
- 10. Assign BRT / Local Bus mode by demand volume
+  6. Snap anchor centroids to OSM nodes
+  7. Build one MST-diameter trunk corridor per cluster (single road path)
+  8. Construct RouteCandidate (with anchor_span_km) for each valid corridor
+  9. Evaluate with W5 objective + constraints (feasibility on anchor-directness)
+ 10. Pareto-rank feasible candidates; assign mode by demand volume
  11. Write results to features.route_candidates (DB) and outputs/w6/
 
 Usage:
@@ -42,10 +42,18 @@ from src.w6_anchors import (
     N_CORRIDORS,
     cluster_anchors,
     load_gap_agebs,
+    network_connected_agebs,
     select_anchors_jenks,
+    select_frontier_anchors,
 )
 from src.w6_candidates import build_route_candidate
-from src.w6_graph import build_corridor_path, load_or_download_osm, project_to_6372, snap_to_osm_nodes
+from src.w6_graph import (
+    anchor_span_km,
+    corridor_trunk_diameter,
+    load_or_download_osm,
+    project_to_6372,
+    snap_to_osm_nodes,
+)
 from src.w6_mode import BRT_THRESHOLD, LRT_THRESHOLD, assign_mode
 
 OUTPUT_DIR = Path("outputs/w6")
@@ -148,10 +156,13 @@ def write_report(rows: list) -> None:
         "",
         "## Methodology",
         "",
-        "1. **Anchor selection:** Jenks natural breaks (k=5) on coverage_gap_n; top class only; min 500 trips/day demand.",
+        "1. **Anchor selection (frontier):** Jenks top-class coverage_gap_n anchors (min 500 trips/day) "
+        "restricted to within 400m of a network-connected AGEB (the served/unserved seam).",
         f"2. **Spatial clustering:** KMeans (k={N_CORRIDORS}) on EPSG:6372 centroids to form corridor groups.",
-        "3. **Path generation:** MST-based Steiner approximation on ZMG OSM drive graph (osmnx 2.1.0).",
-        "4. **Evaluation:** W5 multi-objective function (f1 demand gain, f2 route cost, f3 equity).",
+        "3. **Path generation:** MST-diameter trunk (longest leaf-to-leaf path) per cluster on the ZMG OSM "
+        "drive graph -- one road-following alignment, no phantom jumps.",
+        "4. **Evaluation:** W5 multi-objective function (f1 demand gain, f2 route cost, f3 equity); "
+        "feasibility gated on ANCHOR-DIRECTNESS (route_km / straight-line anchor span, cap 1.8).",
         "5. **Mode assignment:** Light Rail/Metro if total served demand >= 75,000 trips/day; "
         "BRT if >= 15,000; Local Bus otherwise.",
         "",
@@ -201,7 +212,7 @@ def write_report(rows: list) -> None:
         "",
         "```",
         "w_demand_gain=0.50, w_efficiency=0.25, w_equity=0.25",
-        "max_detour_ratio=1.8, min_stop_spacing=300m, max_stop_spacing=1000m",
+        "max_detour_ratio=1.8 (anchor-directness), min_stop_spacing=300m, max_stop_spacing=1000m",
         "min_daily_demand=500 trips/day, max_route_km=30km",
         "```",
     ]
@@ -223,16 +234,29 @@ def main() -> None:
         gap_gdf = load_gap_agebs(engine)
         print(f"  [OK] {len(gap_gdf)} AGEBs loaded")
 
-        print("\n[Step 3] Selecting anchor AGEBs via Jenks natural breaks...")
+        print("\n[Step 3] Selecting FRONTIER anchor AGEBs (served/unserved seam)...")
+        connected_gdf = network_connected_agebs(engine, radius_m=400.0)
         anchors = select_anchors_jenks(gap_gdf, k_classes=5, min_demand=500.0)
-        print(f"  [OK] {len(anchors)} anchor AGEBs in top Jenks class")
+        anchors = select_frontier_anchors(anchors, connected_gdf, radius_m=400.0)
+        print(f"  [OK] {len(anchors)} frontier anchors "
+              f"(top-Jenks coverage_gap_n within 400m of a network-connected AGEB)")
         if len(anchors) == 0:
-            print("  [ERR] No anchors found. Run W3 first.")
+            print("  [ERR] No frontier anchors found. Run W3 first.")
             sys.exit(1)
 
+        # Anchor trim criterion. Kept as coverage_gap_n because W6 conceptually targets the
+        # COVERAGE GAP (the W3 dependent variable) rather than raw demand. NOTE (honest finding,
+        # 2026-07-12 Line 4 backtest): this is empirically IDENTICAL to trimming by
+        # "transit_demand". Within the unserved high-gap anchor pool, accessibility ~ 0 by
+        # construction, so coverage_gap_n = demand/(access+1) ~ demand -- gap-ranking IS
+        # demand-ranking here. Switching this axis did NOT change the corridors (it does not
+        # rescue the dropped Line 4 anchors, contrary to an earlier note). The real reason W6
+        # misses sparse peripheral corridors is architectural (30 anchors / KMeans k=6 / MST),
+        # not the trim column. Set to "transit_demand" to confirm the null effect.
+        ANCHOR_TRIM_COL = "coverage_gap_n"
         if len(anchors) > N_ANCHORS:
-            anchors = anchors.nlargest(N_ANCHORS, "transit_demand").reset_index(drop=True)
-            print(f"  [OK] Trimmed to top {N_ANCHORS} by transit_demand")
+            anchors = anchors.nlargest(N_ANCHORS, ANCHOR_TRIM_COL).reset_index(drop=True)
+            print(f"  [OK] Trimmed to top {N_ANCHORS} by {ANCHOR_TRIM_COL}")
 
         print("\n[Step 4] Clustering anchors into corridor groups...")
         anchors = cluster_anchors(anchors, n_corridors=N_CORRIDORS)
@@ -245,28 +269,33 @@ def main() -> None:
         print(f"  [OK] Graph: {G_proj.number_of_nodes()} nodes, {G_proj.number_of_edges()} edges (EPSG:6372)")
 
         print("\n[Step 6] Snapping anchor centroids to OSM nodes...")
-        cx_list = anchors["cx"].tolist()
-        cy_list = anchors["cy"].tolist()
-        osm_node_ids = snap_to_osm_nodes(G_proj, cx_list, cy_list)
+        osm_node_ids = snap_to_osm_nodes(G_proj, anchors["cx"].tolist(), anchors["cy"].tolist())
         anchors = anchors.copy()
         anchors["osm_node"] = osm_node_ids
-        print(f"  [OK] {len(osm_node_ids)} centroids snapped")
+        print(f"  [OK] {len(osm_node_ids)} anchor centroids snapped")
 
-        print("\n[Step 7] Building corridor paths (one MST per cluster)...")
+        print("\n[Step 7] Building corridor paths (MST-diameter trunk per cluster)...")
+        # Diameter trunk = longest leaf-to-leaf path of the anchors' spanning tree,
+        # stitched from real road segments -> a single road-following alignment with no
+        # phantom straight jumps (the branching-MST flatten is retired). anchor_span_km is
+        # the straight-line span of the group's anchors -> W5 gates on anchor-directness.
         corridor_geoms = []
         corridor_groups = []
         corridor_kms = []
+        corridor_spans = []
         for group_id in sorted(anchors["corridor_group"].unique()):
             group_rows = anchors[anchors["corridor_group"] == group_id]
             terminal_nodes = group_rows["osm_node"].tolist()
-            geom, route_km = build_corridor_path(G_proj, terminal_nodes)
+            geom, route_km = corridor_trunk_diameter(G_proj, terminal_nodes)
             if geom is None or route_km <= 0.01:
                 print(f"  [SKIP] Group {group_id}: could not build path")
                 continue
             corridor_geoms.append(geom)
             corridor_groups.append(group_id)
             corridor_kms.append(route_km)
-            print(f"  [OK] Group {group_id}: {route_km:.2f} km, {len(terminal_nodes)} terminals")
+            corridor_spans.append(anchor_span_km(G_proj, terminal_nodes))
+            print(f"  [OK] Group {group_id}: {route_km:.2f} km trunk, "
+                  f"{len(dict.fromkeys(terminal_nodes))} anchors")
 
         if not corridor_geoms:
             print("  [ERR] No valid corridor paths built.")
@@ -274,15 +303,19 @@ def main() -> None:
 
         print("\n[Step 8] Building RouteCandidate objects...")
         candidates = []
-        for geom, gid, road_km in zip(corridor_geoms, corridor_groups, corridor_kms):
+        for geom, gid, road_km, span_km in zip(
+            corridor_geoms, corridor_groups, corridor_kms, corridor_spans
+        ):
             cid = f"W6_G{gid:02d}"
-            rc = build_route_candidate(cid, geom, engine, config=cfg, route_km_override=road_km)
+            rc = build_route_candidate(cid, geom, engine, config=cfg,
+                                       route_km_override=road_km, anchor_span_km=span_km)
             if rc is None:
                 print(f"  [SKIP] {cid}: fewer than 2 served AGEBs")
                 continue
             candidates.append((rc, geom, gid))
             print(f"  [OK] {cid}: {len(rc.served_ageb_ids)} served AGEBs, "
-                  f"{rc.route_km:.2f}km, connected={rc.connects_to_existing}")
+                  f"{rc.route_km:.2f}km, directness={road_km / span_km if span_km else float('nan'):.2f}, "
+                  f"connected={rc.connects_to_existing}")
 
         if not candidates:
             print("  [ERR] No valid RouteCandidate objects built.")

@@ -15,9 +15,12 @@ Master's thesis: a **7-phase geospatial ML pipeline** to predict optimal transit
 - W3 (Supply & Coverage-Gap Layer): ✅ Complete — accessibility surface + coverage-gap index in DB; model retrained on external target; re-run 2026-06-25 on beta=1.2005 demand surface; see W3 section below
 - W4 (Reposition NPP-V): ✅ Complete — features.nppv_prioritization in DB; 14 NODE+PLACE+PEOPLE features; final_score=(0.80*npp_score)+(0.20*equity_score); see W4 section below
 - W5 (Multi-objective function): ✅ Complete — code skeleton (types, objective, constraints, Pareto) + spec contract for W6/W7; 39 tests; see W5 section below
-- W6 (New corridor generation): ✅ Complete — 3 feasible corridors as of the 2026-06-25 beta=1.2005 re-run (W6_G00, W6_G03, W6_G05, all BRT, all Pareto rank 1); mode assignment is a 3-tier classification (Light Rail/Metro ≥75k, BRT ≥15k, else Local Bus) as of 2026-06-24, but no feasible corridor currently reaches the LRT tier; 21 tests; see W6 section below
+- W6 (New corridor generation): ✅ Complete — **re-architected 2026-07-15** into frontier anchors + MST-diameter-trunk shaper + anchor-directness feasibility gate (see the "W6 re-architecture" entry below). 4 feasible corridors (W6_G00/G01/G02/G03; G05 rejected on directness 1.93); **W6_G02 is the first substantive corridor to pass W8 Question B** (56% High-gap, unique, 73rd-pct demand/km — a real 12.1km/25-AGEB line, not a stub). Prior state (superseded): 3 BRT corridors via baseline anchors + MST-flatten + hub injection. See W6 section below.
+- **W6**: superseded — the `ANCHOR_TRIM_COL` / hub-injection notes below predate the 2026-07-15 re-architecture; hub injection and the MST-flatten shaper are retired.
 - W7 (Existing route audit): ✅ Code complete — 247 SITEUR routes scored via W5 (route count reflects the current GTFS snapshot in `data/gtfs/`, not the base.ageb correction); Low-demand/Indirect/Redundant flags; modification proposals; `straight_line_km` fixed 2026-06-24 for closed-loop routes (was collapsing to ~0); re-run 2026-06-25 on beta=1.2005 (flag totals unchanged: 229 flagged); 34 tests; see W7 section below
 - W8 (Validation): ✅ Code complete — backtest + benchmark + before/after metrics run end-to-end via `python src/run_w8.py`; see W8 section below
+- **W8**: append — "First out-of-sample validation run 2026-07-12 (Line 4 backtest). Diagnostic
+  layer corroborated; generative layer does NOT reconstruct Line 4. See W8 Line 4 section."
 - W9 (Transferability): 🔄 In progress — Tier-1 pipeline for Monterrey operational; DENUE + AGEB shapefile + OSM graph acquired; GTFS still needed for W3 equivalent; see W9 section below
 
 **Legacy phase status (pre-restructure):**
@@ -222,6 +225,42 @@ Three integrity defects fixed before W1 work begins:
 ## 2026-06-19 Errata — base.ageb, DEM raster, and W1–W8 fresh-clone fixes
 
 A full `bootstrap.sh` → `DDL.sql` → `build_nppv_features.py` → `run_w1.py`...`run_w8.py` run against a throwaway test database (and then against the live `gdl_metro` DB) surfaced three defects that had been silently present since before the W1–W9 restructure. **The corrected, current AGEB universe is 1,881 rows** (10 ZMG municipalities, alpha-suffix `cve_ageb` excluded) — not the 2,068 cited throughout most of this document below this point; sections are being corrected as revisited, but treat any uncorrected "2,068" you find as stale.
+
+## 2026-07-12 Errata — pe_marginacion sign inversion + zero-fill
+ 
+Two stacked defects in the equity input `pe_marginacion` (src/build_nppv_features.py), found
+while validating the equity term against the source CONAPO data.
+ 
+1. **Sign inversion.** `pe_marginacion` is CONAPO's `IM_2020` (verified byte-identical to the
+   official AGEB file on the overlap; provenance confirmed). CONAPO's 2020 index runs
+   **higher = LESS marginalized** (mean IM by grade: Muy alto 112.5, Alto 117.4, Medio 119.9,
+   Bajo 122.3, Muy bajo 124.8 -- monotonic). The code used it directly in
+   `equity_score = mean(pe_marginacion_n, pe_rezago_n)`, which treats higher = more need, so the
+   marginacion half rewarded the LEAST-marginalized areas, opposing the rezago half (`IRS_2020`,
+   correctly higher = more rezago).
+2. **Zero-fill.** The ~200 ZMG AGEBs absent from CONAPO's *urban* index (1,868 of the 2,068 in
+   `ageb_zmg_2020_v2.gpkg` matched; ~200 non-urban unmatched) were `.fillna(0)`. Since IM_2020
+   floors near ~102, 0 is out-of-range and dragged the min-max floor down, compressing real
+   values into [0.80, 1.0]. The two bugs partially masked each other (compression muted the
+   inverted signal), so the pre-fix equity term was effectively rezago-dominated; fixing the
+   zero-fill alone would have amplified the inversion -- both had to be fixed together.
+ 
+**Fix (src/build_nppv_features.py):** raw `pe_marginacion` stays the literal CONAPO IM_2020;
+direction corrected in `normalize_feature` via `INVERTED_FEATURES` (`pe_marginacion_n =
+1 - minmax(IM_2020)`); the missing AGEBs are median-imputed (skipna) instead of zero-filled.
+`pe_rezago` (IRS_2020) keeps its correct direction; its gaps are also median-imputed, not zeroed.
+ 
+**Verified:** post-fix `pe_marginacion_n` monotonic by grade (Muy alto 0.606 highest -> Muy bajo
+0.108 lowest); `equity_score` monotonic by grade after W4 re-run (Muy alto 0.500 -> Muy bajo
+0.095); no nulls in any `_n` column. Aggregate shifts consistent with de-inversion:
+`equity_score` mean 0.527 -> 0.227, `npp_score` mean 0.500 -> 0.4595, `final_score` 0.506 ->
+0.4131 (ZMG is mostly low-marginalization, so a correctly-signed need score should average low).
+ 
+**Impact:** re-ran build -> W4. W3.3 SHAP *direction* of `pe_marginacion_n` flips (tree metrics
+unchanged -- invariant to monotonic transforms; re-run run_w3 to refresh plots). W6/W7/W8
+unaffected (they use `coverage_gap_n`, not the equity term). Oracle `data/raw/nppv_features.csv`
+regenerated; `tests/test_nppv_oracle.py` row-count assertion corrected 2000 -> 1881 (stale since
+the 2026-06-19 base.ageb correction). W9's W4-equivalent must reuse `INVERTED_FEATURES` when built.
 
 1. **`db_setup/DDL.sql` municipality-code typo (since the initial commit):** the `base.ageb` filter's `cve_mun IN (...)` list had `'009'` instead of `'002'` (Acatlán de Juárez). Silently dropped that whole municipality on every from-scratch bootstrap. Fixed to `'002'`.
 2. **`build_nppv_features.py` read AGEBs from unfiltered `raw.ageb` instead of `base.ageb`:** `features.nppv_features` ended up carrying alpha-suffix AGEBs that don't exist in `base.ageb`, which broke `run_w4.py`'s FK-constrained write the moment `base.ageb` was correctly filtered (it was previously masked because the live DB's `base.ageb` had also never actually been rebuilt by `DDL.sql` — see point 4). Fixed `load_agebs()` to read `base.ageb`.
@@ -584,6 +623,198 @@ W8 validates W6's corridor-generation logic two ways: a backtest (mask existing 
 - Superseded (beta=2.0) result, 2026-06-19 run: 6 corridors re-proposed after masking, mean overlap fraction = 0.236
 
 **Run:** `python src/run_w8.py` (depends on `outputs/w6/corridor_candidates.geojson` from W6)
+## W8 — Line 4 out-of-sample backtest (2026-07-12)
+ 
+The `data/gtfs/` snapshot is 2024, predating SITEUR Line 4's opening (2025-12-15, 21 km,
+Tlajomulco-Tlaquepaque-Guadalajara). So the W3 accessibility/coverage-gap layer treats the
+Line 4 corridor as UNSERVED -- a genuine out-of-sample natural experiment. Real alignment in
+`data/linea_4.geojson`; observed ridership in `data/raw/ridership/linea4_ridership_observed.csv`
+(free-fare ramp: 820k in first 30 days vs ~106k/day mature projection -- not directly comparable).
+ 
+Probe scripts (all read the live DB + linea_4.geojson):
+- `src/w8_line4_probe.py`   -- corridor AGEB gap/demand vs metro baseline
+- `src/w8_line4_overlap.py` -- spatial overlap of W6 corridors with the real alignment
+- `src/w8_line4_anchors.py` -- traces the W6 anchor funnel for the Line 4 AGEBs
+ 
+**Findings.**
+- **Diagnostic layer corroborated.** 68 AGEBs within 800 m of Line 4: 33.8% High-gap vs 20.7%
+  metro (1.6x), 0% Low-gap vs 4.1%. Flagged via the SUPPLY gap, not demand (corridor demand
+  median 3,801 vs metro 3,240 -- barely elevated). Framing: revealed-preference agreement, NOT
+  proof of optimality (Line 4 was long-planned).
+- **Generative layer does NOT reconstruct Line 4.** The 3 feasible W6 corridors sit 7.6 / 17 /
+  26 km away, recall 0.00. Only the infeasible W6_G01 (60 km sprawl) touches it, clipping 6%.
+- **Mechanism (anchor funnel).** 15 of 68 Line 4 AGEBs cleared the anchor pool (Jenks top-class
+  of `coverage_gap_n` AND demand >= 500). The top-30-by-`transit_demand` trim kept only 1 (the
+  rest out-competed; final-anchor demand floor ~8,211 vs Line 4 median 3,801). That 1 survivor
+  was absorbed into group 1 (= infeasible W6_G01). Also fundamental: only 15/68 corridor AGEBs
+  are high-gap at all (median `coverage_gap_n` 0.014 vs 0.50 pool floor) -- Line 4 is only
+  sparsely high-gap.
+- **Attempted fix had no effect.** Switching the trim to `coverage_gap_n` (run_w6
+  `ANCHOR_TRIM_COL`) left the corridors identical, because within the unserved high-gap pool
+  `coverage_gap_n` is ~monotonic in `transit_demand` (accessibility ~ 0 by construction, so
+  gap = demand/(access+1) ~ demand). Gap-ranking == demand-ranking for anchors. The bottleneck is
+  architectural (30 anchors / KMeans k=6 / MST cannot target a sparse peripheral corridor), not
+  the ranking axis.
+ 
+**Interpretation (important for the thesis claim).** Two separate questions:
+(A) does the generator reproduce lines that were BUILT? and (B) does it produce GOOD corridors
+(serving real unmet demand)? Every test so far measures A (Line 4, and the pre-existing masked
+backtest at ~0.25 overlap). A is a weak, asymmetric proxy for B: agreement corroborates, but
+disagreement is faint evidence because built lines are not guaranteed optimal (politics, cost,
+land). **B is untested.** Defensible claim: validated demand-gap DIAGNOSTIC; corridor GENERATION
+has a characterized limitation; generative effectiveness on its own corridors is not yet measured.
+
+## W8 — Question B: do W6's own feasible corridors have merit? (2026-07-13)
+
+The first direct test of Question B (not reconstruction of a built line). Script:
+`src/w8_corridor_merit.py` (DB-backed; re-run before trusting numbers -- values drift with any
+beta/equity re-run). Companion interactive map: `src/w8_corridor_map_data.py` ->
+`src/w8_corridor_map_render.py` -> `outputs/w8/w6_corridor_map.html` (AGEB coverage-gap
+choropleth + the 3 corridors, hover-synced merit stats; also published as a private Claude
+Artifact). Each feasible corridor scored on three axes:
+
+- **(a) genuine need** -- High-gap share of served AGEBs vs the 20.7% metro baseline.
+- **(b) non-redundancy** -- best Jaccard AGEB-overlap vs all 247 existing SITEUR GTFS routes
+  (W7's >=0.60 threshold).
+- **(c) demand/km** -- corridor `total_demand / route_km` vs the same ratio for every existing
+  GTFS route (pass = >= median = 50th pct).
+
+**Results (2026-07-13, beta=1.2005 / post-equity-fix DB).** All 3 are non-redundant (best
+Jaccard <= 0.03). Only **W6_G03 passes all three** (100% High-gap, 94th-pct demand/km) -- but
+only because it is a 1.4km stub of 2 anchors ~1km apart, i.e. short by luck, not a real corridor.
+**W6_G00** serves weak need (41.7% High-gap, barely above baseline; final_score BELOW metro
+median) and is low-efficiency (~1st pct demand/km). **W6_G05** serves real need (100% High-gap)
+but is also ~1st pct demand/km -- a 14.6km anchor-to-anchor connector.
+
+**Mechanism -- feasibility is confounded with anchor-cluster SPARSITY (traced 2026-07-13).**
+Reproduced `w6_anchors.py` -> `build_corridor_path()`: the 3 feasible groups have only 2-3 raw
+anchor AGEBs each (G00 3 anchors ~11km apart; G03 2 anchors ~1km; G05 2 anchors ~10.6km); the 3
+INfeasible groups had 6-9 anchors each. `build_corridor_path()` MSTs only the anchor terminal
+nodes and walks OSM shortest-path between them (never considers intermediate demand or existing
+corridors), so more anchors -> longer/more convoluted MST -> more likely to blow the 30km /
+1.8-detour caps. So the feasibility filter selects for FEW anchors, not for GOOD corridors -- a
+different symptom of the same architecture (30 anchors / KMeans k=6 / MST) already flagged as the
+Line 4 reconstruction-failure mechanism above.
+
+**Verdict on B: essentially negative.** W6's generator, as built, does not reliably produce good
+corridors on its own terms -- the one "passing" corridor is a degenerate short stub, and merit is
+uncorrelated with (indeed slightly opposed to) what its feasibility filter selects. This is a
+generator-architecture limitation, and is now measured (not merely asserted). The demand-gap
+DIAGNOSTIC (W3/W4) remains the defensible contribution; the thesis claim should be narrowed
+accordingly (see Next steps item 4).
+
+---
+
+## W6/W8 — anchor-mode network-connection comparison (2026-07-15)
+
+First attempt to force W6 corridors to tie into the existing SITEUR network at the ANCHOR level
+(rather than the routing level, which the 2026-07-14 both-ends hub injection already does). Three
+modes compared 3-way by `src/w6_anchor_experiment.py` (read-only harness; does NOT write
+`features.route_candidates`); outputs in `outputs/w6_experiment/{baseline,two_tier,frontier}/` +
+`comparison.md`. Spec/plan: `docs/superpowers/specs/2026-07-15-w6-anchor-network-connection-design.md`,
+`docs/superpowers/plans/2026-07-15-w6-anchor-network-connection.md`. "Connected" = >=1 GTFS stop
+within 400m of an AGEB centroid (`network_connected_agebs()`; 1,316 of 1,881 AGEBs qualify).
+
+- **baseline** (incumbent both-ends bare-stop hub injection): **0 of 6 feasible.** The 2026-07-14
+  hub work, re-run into the live DB, lengthened every corridor past the 30km / 1.8-detour caps
+  (G00 16.6->24.9km, G05 14.6->21.3km, G01/G02/G04 all >36km). So the current
+  `features.route_candidates` has 0 feasible corridors, superseding the "3 feasible" state
+  documented in the W6 section above — that section predates the hub re-run.
+- **two_tier** (inject the nearest network-connected AGEB per group as a `role="network"` MST
+  terminal; hub fallback only for groups whose nearest connected AGEB is >5km): **3 of 6 feasible**
+  (G00 16.6km, G03 1.4km, G05 15.0km) — RECOVERS the pre-hub feasible set because a single tie-in
+  is a lighter touch than two bare-stop hubs. BUT only **1/3 have connected endpoints**: injecting
+  one terminal tethers the MST tree without controlling which nodes become the corridor's visible
+  leaf ends, so two_tier corridors still dead-end away from the network. Only 1/3 pass merit (G03,
+  the 1.4km stub); mean feasible demand/km = 32nd pct.
+- **frontier** (restrict the Jenks high-gap pool to anchors within 400m of a connected AGEB before
+  clustering; no hubs): **1 of 5 feasible** (G03 2.4km), but that corridor has connected endpoints
+  and passes merit; frontier has the best per-corridor quality (feasible demand/km 66th pct vs
+  two_tier 32nd; 3/5 endpoint-connected overall) at the cost of COVERAGE — seam restriction drops
+  deep-interior high-gap pockets, shrinking served AGEBs/demand.
+
+**Verdict.** Neither anchor-level mode breaks the core Question-B confound: the merit-passing
+FEASIBLE corridor in both modes is still G03, the ~1.4-2.4km short stub, while the genuinely
+high-merit corridors (G02-family: ~36km, ~486k demand, 57-85th-pct demand/km) remain INfeasible on
+the length cap in every mode. Feasibility still selects for short/sparse; merit still lives in the
+long/dense corridors that blow the caps. **frontier is the better REALISM lever** (endpoint
+connectivity + higher demand/km, all feasible corridors connected) and is the recommended direction
+if one must be chosen, but its coverage cost and the unbroken feasibility-vs-merit confound mean the
+narrowed thesis claim (Next steps item 4) still stands.
+
+**Mechanism -- the binding constraint is detour_ratio, not length (traced 2026-07-15).** All 13
+infeasible corridors across the three modes fail `detour_ratio = route_km /
+dist(endpoint0,endpoint1) <= 1.8`; the 30km length cap is NEVER a sole binding constraint (every
+length violation co-occurs with an already-fatal detour violation, so raising the length cap alone
+rescues zero corridors). Stop-spacing and min-demand never bind. The endpoint detour metric is
+structurally mismatched to `build_corridor_path`'s MST/Steiner output: an MST walked into a
+LineString sums every anchor edge into `route_km`, but its two endpoints are just two leaves, which
+sit close together in a compact cluster -- so any corridor with >=3 non-collinear anchors has
+`route_km` >> endpoint distance and blows the 1.8 cap REGARDLESS of absolute length (frontier_G02:
+12.6km road, 1.9km endpoint span, detour 6.75). Only near-collinear 2-anchor point-to-point
+corridors pass (G03 in every mode; two_tier G00/G05 where the network tie-in happens to line up).
+So the feasibility filter is really a "near-linear, few-anchor" filter -- which is WHY it selects
+sparse anchor clusters independent of corridor merit. The confound is the `detour_ratio` x MST-
+topology interaction, not the anchor logic and not the length cap.
+
+Decision on which mode (if any) to promote into `run_w6.py` is left open pending review of
+`comparison.md`; the detour-metric finding above suggests the higher-leverage change may be to the
+W5 `detour_ratio` definition rather than to the anchor mode (prototyped separately 2026-07-15 --
+an MST-aware directness metric roughly triples frontier's feasible set; see session notes).
+**RESOLVED 2026-07-15: frontier mode was promoted into the canonical `run_w6.py` -- see the
+"W6 re-architecture" entry below.**
+
+---
+
+## W6 re-architecture -- frontier + diameter trunk + anchor-directness (2026-07-15)
+
+The canonical `run_w6.py` was rebuilt around three changes traced this session; the earlier W6
+result (3 BRT corridors via baseline Jenks anchors + branching-MST-flatten + near/far hub
+injection) is fully superseded.
+
+1. **Frontier anchors** (`select_frontier_anchors` + `network_connected_agebs`): the top-Jenks
+   `coverage_gap_n` pool is restricted to anchors within 400m of a network-connected AGEB (>=1
+   GTFS stop within 400m) -- the served/unserved seam. Hub injection is removed (connection is
+   intrinsic).
+2. **MST-diameter-trunk shaper** (`corridor_trunk_diameter` in `w6_graph.py`): each corridor is
+   the longest leaf-to-leaf path of the anchors' spanning tree, stitched from real road segments.
+   This retires `build_corridor_path`'s branching-MST flatten, which drew a single LineString by
+   concatenating tree edges in arbitrary order and so inserted straight PHANTOM JUMPS between
+   non-adjacent branches (observed: an 11.5km line across a river with no road) plus self-loops.
+   `corridor_path_tsp` (visits all anchors) is also available; diameter was chosen (straighter).
+3. **Anchor-directness feasibility gate** (`w5_constraints.py` + `RouteCandidate.anchor_span_km`
+   + `w6_graph.anchor_span_km`): W5 now gates on `route_km / straight-line-span-of-the-anchors`
+   ("does the route waste distance connecting its demand?") instead of endpoint detour
+   (`route_km / endpoint-distance`). Endpoint detour assumes a straight trunk and over-penalizes a
+   demand-COVERAGE corridor that legitimately curves (the G02 case: endpoint detour 2.09 FAIL vs
+   anchor-directness 1.54 PASS). W7 routes and the W5 demo carry no anchors and fall back to
+   endpoint detour unchanged (`anchor_span_km=None`).
+
+**Why endpoint-detour was wrong here (traced via G02):** G02's 6 anchors sit in a bent
+arrangement (straight-line spanning tree ~7.9km) whose two extreme ends are only ~5.8km apart, so
+any corridor serving them must exceed the endpoint distance -- baked into the anchor geometry, not
+routing waste. The road route (12.1km) is only 1.54x the ideal anchor span (efficient) but 2.09x
+the endpoint distance (looks "circuitous"). Anchor-directness measures the right thing.
+
+**Results (2026-07-15, live DB, `features.route_candidates` rewritten):** 5 corridors, **4
+feasible** -- W6_G00 (7.3km, 18 AGEBs, dir 1.44, BRT), W6_G01 (23.0km, 27 AGEBs, dir 1.16,
+Light Rail/Metro), W6_G02 (12.1km, 25 AGEBs, 192k demand, dir 1.54, Light Rail/Metro), W6_G03
+(2.4km, 5 AGEBs, dir 1.25, BRT); W6_G05 rejected (directness 1.93 > 1.8). Group 4 failed to build.
+
+**Question B (merit on own terms) -- partially POSITIVE now, overturning the 2026-07-13 verdict.**
+`src/w8_corridor_merit.py` on the new feasible set: **W6_G02 PASSES all three axes** (High-gap
+56% vs 20.7% baseline; unique, best Jaccard 0.18; demand/km 73rd pct) and is a substantive
+12.1km/25-AGEB corridor -- NOT the degenerate stub. W6_G03 also PASSES but is the 2.4km stub.
+W6_G00/G01 are need+ and unique but low-efficiency (demand/km 30th/5th pct) -> MIXED. So the
+generator now produces at least one real, meritorious, feasible corridor on its own terms -- the
+earlier "only the degenerate stub passes" verdict no longer holds.
+
+**Scope / still open:** `outputs/w6/` regenerated. The published corridor map
+(`outputs/w6_experiment/frontier_corridor_map.html`, Claude Artifact) reflects this pipeline. NOT
+yet re-run: `run_w8.py` backtest/benchmark (depends on `outputs/w6/corridor_candidates.geojson`
+-- the overlap numbers in the W8 section are stale) and `run_w7.py` (unaffected -- W7 uses its own
+endpoint detour). W6 test count references elsewhere in this doc predate the new
+`test_w6_graph.py` shaper/anchor-span tests.
 
 ---
 
@@ -625,6 +856,26 @@ W9 applies the pipeline to **Monterrey, Nuevo León** (ZM Monterrey, CVE_ENT=19,
 - W8 requires W7 run output; backtest sub-task (mask high-ridership segments, test W6 re-proposes them) can start now
 - W9 full pipeline blocked on GTFS; Tier-1 demand surface is complete
 - W8 and W9 full run can proceed in parallel once GTFS is acquired
+
+## E. Next steps
+ 
+1. ~~**Test Question B (the real effectiveness test).**~~ DONE 2026-07-13 -- see the "W8 --
+   Question B" section above. `src/w8_corridor_merit.py` scores the 3 feasible corridors on
+   need / non-redundancy / demand-per-km; verdict is essentially negative (only the degenerate
+   1.4km G03 stub passes all three; feasibility is confounded with anchor-cluster sparsity).
+2. ~~**Decide `ANCHOR_TRIM_COL` in run_w6.py.**~~ DONE 2026-07-13 -- KEPT as `coverage_gap_n`
+   (conceptually targets the gap surface) and rewrote the code comment to state the honest null
+   finding (gap ~ demand in the unserved pool; switching the axis does not change corridors and
+   the real limitation is architectural, not the trim column).
+3. **Strengthen validation power.** Add masked backtests for Line 3 (2020) and Mi Macro (2022)
+   alongside the existing premium-route backtest, so validation is not n=1 on Line 4.
+4. **Narrow the thesis claim (Gap A)** to match the evidence: "data-driven demand-gap
+   prioritization + corridor identification, validated against a revealed corridor; automated
+   corridor generation carries characterized limitations."
+5. **Refresh downstream after the equity fix:** re-run `run_w3.py` (SHAP direction narrative),
+   and report the alpha in {0.10, 0.20, 0.30} equity sensitivity now that the equity term is
+   correctly signed.
+6. **Commit** the session's changes (see manifest + files list in D).
 
 ## Methodological References
 

@@ -1,6 +1,6 @@
 # src/w5_types.py
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 
 
 @dataclass
@@ -26,6 +26,11 @@ class RouteCandidate:
     n_stops: int
     straight_line_km: float
     connects_to_existing: bool = False
+    # Straight-line spanning length of the corridor's demand anchors (km). When set,
+    # the feasibility gate uses anchor-directness (route_km / anchor_span_km) instead of
+    # endpoint detour -- the right measure for a demand-coverage corridor that curves.
+    # None for routes with no anchor concept (W7 existing routes, W5 demo) -> endpoint.
+    anchor_span_km: Optional[float] = None
 
 
 @dataclass

@@ -85,10 +85,15 @@ def build_route_candidate(
     engine,
     config: W5Config = None,
     route_km_override: float = None,
+    anchor_span_km: float = None,
 ) -> Optional[RouteCandidate]:
     """
     Construct RouteCandidate from a corridor LineString.
     Returns None if fewer than 2 AGEBs are served (degenerate corridor).
+
+    anchor_span_km: straight-line spanning length of the corridor's demand anchors
+    (km). When provided, W5 gates feasibility on anchor-directness rather than endpoint
+    detour -- pass it for demand-coverage corridors (see w6_graph.anchor_span_km).
     """
     if config is None:
         config = W5Config()
@@ -121,4 +126,5 @@ def build_route_candidate(
         n_stops=n_stops,
         straight_line_km=straight_km,
         connects_to_existing=connects,
+        anchor_span_km=anchor_span_km,
     )

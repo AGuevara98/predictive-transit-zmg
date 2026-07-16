@@ -121,3 +121,155 @@ def build_corridor_path(
         return None, 0.0
 
     return LineString(all_coords), total_length_m / 1000.0
+
+
+# --- Path-shaped corridor generation (replaces the MST-tree flatten) ------------
+# build_corridor_path above flattens a branching MST into ONE LineString by
+# concatenating tree edges in arbitrary order, which inserts straight phantom jumps
+# between non-adjacent branches (observed: an 11.5km line across a river with no road)
+# and self-intersecting loops. The two shapers below produce a single OPEN PATH whose
+# consecutive road-segments always share an endpoint, so no phantom jump is possible.
+
+def _terminal_sp_matrices(G_proj, terminal_nodes):
+    """Pairwise shortest road paths between unique terminals.
+
+    Returns (unique_terminals, dist_matrix, path_matrix) where dist/path are keyed by
+    the (u, v) pair as first encountered (look up via _seq_between / _dist).
+    """
+    uniq = list(dict.fromkeys(terminal_nodes))
+    dist, path = {}, {}
+    for i, u in enumerate(uniq):
+        for v in uniq[i + 1:]:
+            try:
+                path[(u, v)] = nx.shortest_path(G_proj, u, v, weight="length")
+                dist[(u, v)] = nx.shortest_path_length(G_proj, u, v, weight="length")
+            except (nx.NetworkXNoPath, nx.NodeNotFound):
+                pass
+    return uniq, dist, path
+
+
+def _dist(dist, a, b):
+    if a == b:
+        return 0.0
+    return dist.get((a, b), dist.get((b, a), float("inf")))
+
+
+def _seq_between(path, a, b):
+    if (a, b) in path:
+        return path[(a, b)]
+    if (b, a) in path:
+        return path[(b, a)][::-1]
+    return None
+
+
+def _stitch(G_proj, order, path, dist):
+    """Concatenate the road paths between consecutive terminals in `order`.
+
+    Consecutive segments share the joining terminal, so coords are appended with the
+    shared node dropped -- a continuous single polyline with no straight jumps. Length
+    sums the precomputed shortest-path distances between consecutive terminals (not
+    per-edge adjacency: a reversed segment has no directed edge on a one-way graph).
+    """
+    full_nodes = []
+    length_m = 0.0
+    for a, b in zip(order[:-1], order[1:]):
+        seq = _seq_between(path, a, b)
+        if seq is None:
+            return None, 0.0
+        full_nodes.extend(seq if not full_nodes else seq[1:])
+        length_m += _dist(dist, a, b)
+    if len(full_nodes) < 2:
+        return None, 0.0
+    coords = [(G_proj.nodes[n]["x"], G_proj.nodes[n]["y"]) for n in full_nodes]
+    return LineString(coords), length_m / 1000.0
+
+
+def _open_tsp_order(uniq, dist):
+    """Order terminals as an open path: nearest-neighbour seed + 2-opt on road dist."""
+    if len(uniq) <= 2:
+        return list(uniq)
+
+    def tour_len(order):
+        return sum(_dist(dist, a, b) for a, b in zip(order[:-1], order[1:]))
+
+    best, best_len = None, float("inf")
+    for start in uniq:                       # NN from every start, keep the best seed
+        unvis = set(uniq); unvis.discard(start); order = [start]; cur = start
+        while unvis:
+            nxt = min(unvis, key=lambda n: _dist(dist, cur, n))
+            order.append(nxt); unvis.discard(nxt); cur = nxt
+        L = tour_len(order)
+        if L < best_len:
+            best, best_len = order, L
+    improved = True
+    while improved:                          # 2-opt on the open path
+        improved = False
+        for i in range(len(best) - 1):
+            for j in range(i + 1, len(best)):
+                cand = best[:i] + best[i:j + 1][::-1] + best[j + 1:]
+                cl = tour_len(cand)
+                if cl < best_len - 1e-6:
+                    best, best_len, improved = cand, cl, True
+    return best
+
+
+def corridor_path_tsp(G_proj, terminal_nodes):
+    """Shaper A: open path visiting ALL anchors (nearest-neighbour + 2-opt).
+
+    Returns (LineString_EPSG6372, route_km) -- one ridable end-to-end alignment, every
+    anchor on the line, no phantom jumps. Can zigzag if anchors are scattered.
+    """
+    uniq, dist, path = _terminal_sp_matrices(G_proj, terminal_nodes)
+    if len(uniq) < 2 or not dist:
+        return None, 0.0
+    return _stitch(G_proj, _open_tsp_order(uniq, dist), path, dist)
+
+
+def anchor_span_km(G_proj, terminal_nodes):
+    """Straight-line (Euclidean) minimum spanning length of the terminals, in km.
+
+    The theoretical floor to connect a corridor's demand anchors. Used as the
+    denominator for ANCHOR-DIRECTNESS (route_km / anchor_span_km) -- "does the route
+    waste distance connecting its demand?" -- which is the right feasibility gate for a
+    demand-coverage corridor that legitimately curves, unlike endpoint detour (which
+    assumes a straight trunk). Computed over the terminal set the corridor is built to
+    connect (0.0 for <2 reachable terminals).
+    """
+    import numpy as np
+    from scipy.sparse.csgraph import minimum_spanning_tree
+    from scipy.spatial.distance import pdist, squareform
+
+    uniq = list(dict.fromkeys(terminal_nodes))
+    coords = np.array(
+        [(G_proj.nodes[n]["x"], G_proj.nodes[n]["y"]) for n in uniq if n in G_proj.nodes],
+        dtype=float,
+    )
+    if len(coords) < 2:
+        return 0.0
+    return float(minimum_spanning_tree(squareform(pdist(coords))).sum()) / 1000.0
+
+
+def corridor_trunk_diameter(G_proj, terminal_nodes):
+    """Shaper B: the MST's longest leaf-to-leaf path (tree diameter) as a single trunk.
+
+    Returns (LineString_EPSG6372, route_km). Clean spine; drops off-trunk anchors.
+    """
+    uniq, dist, path = _terminal_sp_matrices(G_proj, terminal_nodes)
+    if len(uniq) < 2 or not dist:
+        return None, 0.0
+    H = nx.Graph()
+    for (u, v), d in dist.items():
+        H.add_edge(u, v, weight=d)
+    if H.number_of_edges() == 0:
+        return None, 0.0
+    mst = nx.minimum_spanning_tree(H, weight="weight")
+
+    def farthest(src):
+        lengths = nx.shortest_path_length(mst, src, weight="weight")
+        end = max(lengths, key=lengths.get)
+        return end, lengths[end]
+
+    a, _ = farthest(next(iter(mst.nodes)))
+    b, _ = farthest(a)                        # double sweep -> diameter endpoints
+    trunk = nx.shortest_path(mst, a, b, weight="weight")   # terminal-node sequence
+    return _stitch(G_proj, trunk, path, dist)

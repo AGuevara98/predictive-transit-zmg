@@ -43,6 +43,14 @@ RAW_FEATURES = [
 BOUNDED_FEATURES = ["pe_marginacion", "pe_rezago", "pe_dep_ratio",
                     "pe_youth_share", "p_land_use_mix"]
 LOG_FEATURES = [f for f in RAW_FEATURES if f not in BOUNDED_FEATURES]
+# Features whose official index runs OPPOSITE to "more need". CONAPO's IM_2020
+# (marginacion) is higher = LESS marginalized (Muy alto need ~112, Muy bajo need ~125),
+# so we reflect its normalized value: pe_marginacion_n = 1 - minmax(IM_2020). This makes
+# higher pe_marginacion_n = MORE marginalized, matching pe_rezago_n (CONEVAL IRS_2020,
+# higher = more rezago) and the intent of equity_score. NOTE: the RAW pe_marginacion
+# column stays the literal CONAPO IM_2020 (higher = less marginalized); only the _n
+# feature is reflected. Keep that raw-vs-_n asymmetry in mind.
+INVERTED_FEATURES = ["pe_marginacion"]
 
 
 def minmax(s: pd.Series) -> pd.Series:
@@ -54,8 +62,12 @@ def minmax(s: pd.Series) -> pd.Series:
 
 def normalize_feature(s: pd.Series, name: str) -> pd.Series:
     if name in LOG_FEATURES:
-        return minmax(np.log1p(s.clip(lower=0)))
-    return minmax(s)
+        out = minmax(np.log1p(s.clip(lower=0)))
+    else:
+        out = minmax(s)
+    if name in INVERTED_FEATURES:
+        out = 1.0 - out
+    return out
 
 
 def scian_sector(scian_codigo) -> str:
@@ -261,8 +273,11 @@ def compute_people_features(agebs: gpd.GeoDataFrame) -> pd.DataFrame:
 
     ind = pd.read_csv(INDICATORS_CSV, dtype=str)
     ind["cve_ageb"] = ind["cve_ageb"].astype(str).str.zfill(13)
-    ind["IM_2020"] = pd.to_numeric(ind["IM_2020"], errors="coerce").fillna(0)
-    ind["IRS_2020"] = pd.to_numeric(ind["IRS_2020"], errors="coerce").fillna(0)
+    # Keep NaN for missing marginacion/rezago (the 200 non-urban ZMG AGEBs are absent
+    # from CONAPO's URBAN index). Do NOT fillna(0): 0 sits ~100 pts below IM_2020's real
+    # floor (~102) and reads as an extreme, not "average". Median-imputed further below.
+    ind["IM_2020"] = pd.to_numeric(ind["IM_2020"], errors="coerce")
+    ind["IRS_2020"] = pd.to_numeric(ind["IRS_2020"], errors="coerce")
 
     pf = agebs[["cve_ageb", "area_km2"]].merge(
         census[["cve_ageb", "POBTOT", "POB0_14", "POB15_64",
@@ -270,7 +285,11 @@ def compute_people_features(agebs: gpd.GeoDataFrame) -> pd.DataFrame:
         on="cve_ageb", how="left",
     )
     pf = pf.merge(ind[["cve_ageb", "IM_2020", "IRS_2020"]],
-                  on="cve_ageb", how="left").fillna(0)
+                  on="cve_ageb", how="left")
+    # Census-derived counts: missing -> 0 (unchanged behavior). IM_2020/IRS_2020 stay
+    # NaN here and are median-imputed below, so do NOT blanket-fillna(0) the frame.
+    for _c in ["POBTOT", "POB0_14", "POB15_64", "POB65_MAS", "pop_15_29"]:
+        pf[_c] = pf[_c].fillna(0)
 
     area_clip = pf["area_km2"].clip(lower=0.01)
     pf["pe_population"] = pf["POBTOT"]
@@ -281,8 +300,12 @@ def compute_people_features(agebs: gpd.GeoDataFrame) -> pd.DataFrame:
     pf["pe_youth_share"] = pf.apply(
         lambda r: youth_share(r["pop_15_29"], r["POBTOT"]), axis=1
     )
-    pf["pe_marginacion"] = pf["IM_2020"]
-    pf["pe_rezago"] = pf["IRS_2020"]
+    # Raw columns stay the official CONAPO/CONEVAL indices (byte-identical to source,
+    # higher IM_2020 = LESS marginalized). The 200 AGEBs missing from CONAPO's urban
+    # index are imputed to the within-ZMG median (skipna) instead of 0. Direction is
+    # corrected in normalize_feature via INVERTED_FEATURES (pe_marginacion_n flipped).
+    pf["pe_marginacion"] = pf["IM_2020"].fillna(pf["IM_2020"].median())
+    pf["pe_rezago"] = pf["IRS_2020"].fillna(pf["IRS_2020"].median())
 
     print(f"  [OK] People features computed for {len(pf):,} AGEBs.")
     return pf[["cve_ageb", "pe_population", "pe_pop_density", "pe_dep_ratio",
