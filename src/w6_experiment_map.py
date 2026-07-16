@@ -1,56 +1,76 @@
 """
-Render an interactive SVG map of the W6 *frontier* anchor-mode corridors over the
-AGEB coverage-gap choropleth, styled by feasibility under the prototype MST-aware
-directness metric (see scratchpad w6_mst_directness.py / directness.json).
+Render an interactive SVG map of the W6 *frontier* anchor-mode corridors, shaped by
+the MST-diameter trunk shaper (corridor_trunk_diameter) so the geometry is a real
+single road path -- no phantom straight jumps, no branch loops -- over the AGEB
+coverage-gap choropleth.
 
-Self-contained HTML (inline SVG + CSS + JS, no external hosts) so it can be
-published as a Claude Artifact. Reuses the projection approach from
-w8_corridor_map_data.py.
+Corridors are judged by the STANDARD W5 endpoint detour_ratio (cap 1.80), which is
+trustworthy again now that endpoints are the true ends of a path (the earlier
+MST-directness workaround is retired). Amber = feasible; dashed grey = infeasible
+(too circuitous).
+
+Self-contained HTML (inline SVG + CSS + JS, no external hosts) for publishing as a
+Claude Artifact.
 
 Run (venv active): python src/w6_experiment_map.py
 Output: outputs/w6_experiment/frontier_corridor_map.html
 """
-import json
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import geopandas as gpd
-import pandas as pd
+import json
+from shapely.geometry import LineString
 from sqlalchemy import create_engine
 
 from config import PG_URI
+from src.w5_constraints import check_constraints
+from src.w5_types import W5Config
+from src.w5_objective import load_ageb_context
+from src.w6_anchors import load_gap_agebs, load_gtfs_stops, network_connected_agebs
+from src.w6_candidates import build_route_candidate
+from src.w6_graph import corridor_trunk_diameter, load_or_download_osm, project_to_6372
+from src.w6_anchor_experiment import build_anchor_terminals, CONNECT_M
+from src.w8_corridor_merit import build_merit_baselines, score_corridor
 
-EXP = Path(__file__).resolve().parent.parent / "outputs" / "w6_experiment" / "frontier"
 OUT = Path(__file__).resolve().parent.parent / "outputs" / "w6_experiment" / "frontier_corridor_map.html"
-METRO_HI = 20.7  # metro-wide High-gap share (%), the need baseline
-BUFFER_M = 400.0
+METRO_HI = 20.7
+DETOUR_CAP = 1.8
 
 
 def main():
     eng = create_engine(PG_URI)
-    ageb = gpd.read_postgis(
-        """
-        SELECT a.cvegeo AS cve_ageb, a.geom, cg.gap_category
-        FROM base.ageb a
-        LEFT JOIN features.ageb_coverage_gap cg ON cg.cve_ageb = a.cvegeo
-        """,
-        eng, geom_col="geom",
-    )
+    cfg = W5Config()
+    baselines = build_merit_baselines(eng)
+    ageb = baselines.ageb  # geom, gap_category, coverage_gap_n, transit_demand, final_score
+
+    gap = load_gap_agebs(eng)
+    conn = network_connected_agebs(eng, radius_m=CONNECT_M)
+    stops = load_gtfs_stops(eng)
+    G = project_to_6372(load_or_download_osm())
+    terminals, _ = build_anchor_terminals("frontier", gap, conn, stops, G)
+
+    corridors = []  # (cid, geom_6372, stats dict, served_ids)
+    for gid in sorted(terminals):
+        geom, km = corridor_trunk_diameter(G, terminals[gid])
+        if geom is None or km <= 0.01:
+            continue
+        cid = f"G{gid:02d}"
+        rc = build_route_candidate(cid, geom, eng, config=cfg, route_km_override=km)
+        if rc is None:
+            continue
+        ctxs = load_ageb_context(rc.served_ageb_ids, eng)
+        cr = check_constraints(rc, ctxs, cfg)
+        td = float(ageb.loc[ageb["cve_ageb"].isin(rc.served_ageb_ids), "transit_demand"].sum())
+        merit = score_corridor(geom, km, td, baselines)
+        detour = rc.route_km / rc.straight_line_km if rc.straight_line_km else float("inf")
+        corridors.append((cid, geom, dict(
+            route_km=km, n_served=len(rc.served_ageb_ids), total_demand=td,
+            hi_share=merit["hi_share"], dpk_pct=merit["dpk_pct"], detour=detour,
+            feasible=bool(cr.feasible)), sorted(rc.served_ageb_ids)))
     eng.dispose()
-
-    corridors = gpd.read_file(EXP / "corridor_candidates.geojson").to_crs(ageb.crs)
-    scores = pd.read_csv(EXP / "corridor_scores.csv").set_index("candidate_id")
-    directness = json.loads((EXP / "directness.json").read_text())
-
-    # --- served-AGEB sets per corridor (for hover highlight) ---
-    centroids = ageb.geometry.centroid
-    served = {}
-    for _, c in corridors.iterrows():
-        buf = c.geometry.buffer(BUFFER_M)
-        hit = centroids.within(buf)
-        served[c.candidate_id] = sorted(ageb.loc[hit, "cve_ageb"])
 
     # --- projection: EPSG:6372 metres -> SVG viewBox pixels ---
     minx, miny, maxx, maxy = ageb.total_bounds
@@ -59,87 +79,70 @@ def main():
     scale = W / (maxx - minx)
 
     def to_xy(x, y):
-        return ((x - minx) * scale, (maxy - y) * scale)  # flip y
+        return ((x - minx) * scale, (maxy - y) * scale)
 
     def ring(coords):
-        pts = [to_xy(x, y) for x, y in coords]
-        return "M" + " L".join(f"{px:.1f},{py:.1f}" for px, py in pts) + " Z"
+        return "M" + " L".join(f"{to_xy(x, y)[0]:.1f},{to_xy(x, y)[1]:.1f}" for x, y in coords) + " Z"
 
     def poly_path(geom):
         parts = []
-        polys = geom.geoms if geom.geom_type == "MultiPolygon" else [geom]
-        for p in polys:
+        for p in (geom.geoms if geom.geom_type == "MultiPolygon" else [geom]):
             parts.append(ring(p.exterior.coords))
             for it in p.interiors:
                 parts.append(ring(it.coords))
         return " ".join(parts)
 
     def line_path(geom):
-        lines = geom.geoms if geom.geom_type == "MultiLineString" else [geom]
-        parts = []
-        for ln in lines:
-            pts = [to_xy(x, y) for x, y in ln.coords]
-            parts.append("M" + " L".join(f"{px:.1f},{py:.1f}" for px, py in pts))
-        return " ".join(parts)
+        pts = [to_xy(x, y) for x, y in geom.coords]
+        return "M" + " L".join(f"{px:.1f},{py:.1f}" for px, py in pts)
 
-    GAP_CLASS = {"High-gap": "gap-hi", "Medium-gap": "gap-med",
-                 "Low-gap": "gap-lo", None: "gap-med"}
-
+    GAP_CLASS = {"High-gap": "gap-hi", "Medium-gap": "gap-med", "Low-gap": "gap-lo", None: "gap-med"}
     ageb_s = ageb.copy()
     ageb_s["geom"] = ageb_s.geometry.simplify(12, preserve_topology=True)
-    ageb_svg = []
-    for _, r in ageb_s.iterrows():
-        cls = GAP_CLASS.get(r.gap_category, "gap-med")
-        ageb_svg.append(f'<path class="ageb {cls}" data-a="{r.cve_ageb}" d="{poly_path(r.geom)}"/>')
+    ageb_svg = [f'<path class="ageb {GAP_CLASS.get(r.gap_category,"gap-med")}" data-a="{r.cve_ageb}" '
+                f'd="{poly_path(r.geom)}"/>' for _, r in ageb_s.iterrows()]
 
-    cor_s = corridors.copy()
-    cor_s["geom"] = cor_s.geometry.simplify(5, preserve_topology=True)
-    cor_svg, cards, label_svg = [], [], []
-    order = sorted(cor_s["candidate_id"])
-    for cid in order:
-        row = cor_s[cor_s["candidate_id"] == cid].iloc[0]
-        d = line_path(row.geom)
-        dj = directness[cid]
-        feas = dj["new_feasible"]
-        fclass = "feas" if feas else "infeas"
+    cor_svg, label_svg, cards = [], [], []
+    served_map = {}
+    n_feas = 0
+    for cid, geom, s, served in corridors:
+        served_map[cid] = served
+        n_feas += s["feasible"]
+        fclass = "feas" if s["feasible"] else "infeas"
+        gsimpl = geom.simplify(5, preserve_topology=True)
+        d = line_path(gsimpl)
         cor_svg.append(
             f'<g class="cor-g {fclass}" data-id="{cid}" tabindex="0" role="button" '
-            f'aria-label="Corridor {cid}">'
-            f'<path class="cor-halo" d="{d}"/><path class="cor {fclass}" d="{d}"/></g>'
-        )
-        # label at corridor midpoint
-        mid = row.geometry.interpolate(0.5, normalized=True)
+            f'aria-label="Corridor {cid}"><path class="cor-halo" d="{d}"/>'
+            f'<path class="cor {fclass}" d="{d}"/></g>')
+        mid = geom.interpolate(0.5, normalized=True)
         lx, ly = to_xy(mid.x, mid.y)
-        short = cid.replace("frontier_", "")
         label_svg.append(
             f'<g class="lbl {fclass}" data-id="{cid}"><circle cx="{lx:.0f}" cy="{ly:.0f}" r="10"/>'
-            f'<text x="{lx:.0f}" y="{ly:.0f}" dy="3.5">{short[1:]}</text></g>'
-        )
-        s = scores.loc[cid]
-        hi = float(s["hi_share"]) * 100
-        badge = ("Feasible" if feas else "Infeasible")
+            f'<text x="{lx:.0f}" y="{ly:.0f}" dy="3.5">{cid[1:]}</text></g>')
+        hi = s["hi_share"] * 100
+        badge = "Feasible" if s["feasible"] else "Too circuitous"
         cards.append(f"""
         <article class="card {fclass}" data-id="{cid}" tabindex="0" role="button" aria-label="Corridor {cid} details">
-          <header><span class="dot"></span><h3>{short}</h3><span class="badge">{badge}</span></header>
+          <header><span class="dot"></span><h3>{cid}</h3><span class="badge">{badge}</span></header>
           <dl>
-            <div><dt>Length</dt><dd>{float(s['route_km']):.1f} km</dd></div>
-            <div><dt>AGEBs served</dt><dd>{int(s['n_served_agebs'])}</dd></div>
-            <div><dt>Total demand</dt><dd>{float(s['total_demand']):,.0f}<span class="u">/day</span></dd></div>
+            <div><dt>Length</dt><dd>{s['route_km']:.1f} km</dd></div>
+            <div><dt>AGEBs served</dt><dd>{s['n_served']}</dd></div>
+            <div><dt>Total demand</dt><dd>{s['total_demand']:,.0f}<span class="u">/day</span></dd></div>
             <div><dt>High-gap share</dt><dd>{hi:.0f}%<span class="u">metro {METRO_HI:.0f}%</span></dd></div>
-            <div><dt>Demand / km</dt><dd>{float(s['dpk_pct']):.0f}th<span class="u">pct vs routes</span></dd></div>
-            <div class="span"><dt>Circuitry</dt><dd class="circ"><span class="old">{dj['old_detour']:.2f}</span><span class="arr">&rarr;</span><span class="new">{dj['new_directness']:.2f}</span><span class="u">endpoint &rarr; MST directness (cap 1.80)</span></dd></div>
+            <div><dt>Demand / km</dt><dd>{s['dpk_pct']:.0f}th<span class="u">pct vs routes</span></dd></div>
+            <div><dt>Detour ratio</dt><dd class="det {fclass}">{s['detour']:.2f}<span class="u">cap {DETOUR_CAP:.2f}</span></dd></div>
           </dl>
         </article>""")
 
-    n_feas = sum(1 for cid in order if directness[cid]["new_feasible"])
-    served_json = json.dumps(served)
     html = _TEMPLATE.format(
         W=W, H=H, ageb="\n".join(ageb_svg), corridors="\n".join(cor_svg),
         labels="\n".join(label_svg), cards="\n".join(cards),
-        served_json=served_json, n_feas=n_feas, n_total=len(order),
+        served_json=json.dumps(served_map), n_feas=n_feas, n_total=len(corridors),
     )
     OUT.write_text(html, encoding="utf-8")
-    print(f"[OK] wrote {OUT}  ({len(html):,} bytes; {n_feas}/{len(order)} feasible under MST directness)")
+    print(f"[OK] wrote {OUT}  ({len(html):,} bytes; {n_feas}/{len(corridors)} feasible "
+          f"under standard endpoint detour, diameter-trunk shaper)")
 
 
 _TEMPLATE = """<div id="app">
@@ -176,7 +179,7 @@ _TEMPLATE = """<div id="app">
   .eyebrow {{ text-transform:uppercase; letter-spacing:.09em; font-size:12px; font-weight:600;
     color:var(--feas-ink); margin:0 0 4px; }}
   h1 {{ margin:0 0 6px; font-size:26px; line-height:1.15; text-wrap:balance; }}
-  .sub {{ margin:0; color:var(--muted); font-size:15px; max-width:70ch; }}
+  .sub {{ margin:0; color:var(--muted); font-size:15px; max-width:72ch; }}
   .grid {{ display:grid; grid-template-columns:minmax(0,1.7fr) minmax(260px,1fr); gap:20px;
     max-width:1180px; margin:0 auto; align-items:start; }}
   @media (max-width:840px) {{ .grid {{ grid-template-columns:1fr; }} }}
@@ -205,7 +208,7 @@ _TEMPLATE = """<div id="app">
   aside {{ display:flex; flex-direction:column; gap:10px; }}
   .tally {{ background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }}
   .tally b {{ font-size:30px; color:var(--feas-ink); }}
-  .tally p {{ margin:2px 0 0; color:var(--muted); font-size:13px; }}
+  .tally p {{ margin:4px 0 0; color:var(--muted); font-size:13px; }}
   .card {{ background:var(--surface); border:1px solid var(--line); border-radius:12px;
     padding:12px 14px; cursor:pointer; transition:border-color .12s, box-shadow .12s; outline:none; }}
   .card:hover, .card.active, .card:focus-visible {{ border-color:var(--feas);
@@ -219,24 +222,22 @@ _TEMPLATE = """<div id="app">
     letter-spacing:.04em; padding:2px 8px; border-radius:20px; background:var(--accent-soft); color:var(--feas-ink); }}
   .card.infeas .badge {{ background:transparent; border:1px solid var(--line); color:var(--muted); }}
   dl {{ margin:0; display:grid; grid-template-columns:1fr 1fr; gap:7px 14px; }}
-  dl .span {{ grid-column:1 / -1; }}
   dt {{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }}
   dd {{ margin:1px 0 0; font-size:15px; font-weight:600; }}
   dd .u {{ display:block; font-size:10.5px; font-weight:400; color:var(--muted); letter-spacing:.02em; }}
-  .circ {{ display:flex; align-items:baseline; gap:7px; flex-wrap:wrap; }}
-  .circ .old {{ color:var(--muted); text-decoration:line-through; }}
-  .circ .arr {{ color:var(--muted); }} .circ .new {{ color:var(--feas-ink); }}
-  .circ .u {{ flex-basis:100%; }}
+  dd.det.infeas {{ color:var(--infeas); }} dd.det.feas {{ color:var(--feas-ink); }}
   .foot {{ max-width:1180px; margin:16px auto 0; color:var(--muted); font-size:12px; }}
   @media (prefers-reduced-motion:reduce) {{ * {{ transition:none !important; }} }}
 </style>
 
 <div class="head">
-  <p class="eyebrow">W6 corridor generation &middot; frontier anchor mode</p>
-  <h1>Frontier corridors on the coverage-gap surface</h1>
-  <p class="sub">Anchors restricted to the served/unserved seam, then re-judged with an
-  MST-aware directness metric instead of endpoint detour. Amber corridors clear the 1.80
-  circuitry cap; dashed grey does not. Hover a corridor to light up the AGEBs it serves.</p>
+  <p class="eyebrow">W6 corridor generation &middot; frontier anchors &middot; diameter-trunk shaper</p>
+  <h1>Frontier corridors, honestly shaped</h1>
+  <p class="sub">Each corridor is the longest leaf-to-leaf path of its anchors' spanning tree,
+  stitched from real road segments &mdash; no phantom straight jumps, no branch loops. Judged by
+  the standard end-to-end detour ratio (route length &divide; straight-line distance between the
+  two ends, cap 1.80). Amber clears the cap; dashed grey is too circuitous. Hover a corridor to
+  light up the AGEBs it serves.</p>
 </div>
 
 <div class="grid">
@@ -252,20 +253,20 @@ _TEMPLATE = """<div id="app">
       <span><i class="sw" style="background:var(--gap-hi)"></i>High gap</span>
       <span><i class="sw" style="background:var(--gap-med)"></i>Medium</span>
       <span><i class="sw" style="background:var(--gap-lo)"></i>Low gap</span>
-      <span><i class="ln"></i>Feasible (MST directness)</span>
-      <span><i class="ln d"></i>Still infeasible</span>
+      <span><i class="ln"></i>Feasible (detour &le; 1.80)</span>
+      <span><i class="ln d"></i>Too circuitous</span>
     </div>
   </div>
   <aside>
-    <div class="tally"><b>{n_feas} / {n_total}</b><p>feasible under MST-aware directness
-    (was 1 / {n_total} under endpoint detour)</p></div>
+    <div class="tally"><b>{n_feas} / {n_total}</b><p>feasible under the standard detour cap.
+    With honest geometry only the short 2-anchor stub qualifies; the rest genuinely wander
+    ~2&ndash;2.8&times; their end-to-end distance.</p></div>
     {cards}
   </aside>
 </div>
 <p class="foot">Choropleth: AGEB coverage-gap category (demand vs GTFS accessibility, W3).
-Corridors: W6 frontier anchor mode. Circuitry = route length &divide; straight-line spanning
-length of the corridor's anchors; the old endpoint-detour metric inflated branching corridors.
-Generated by src/w6_experiment_map.py.</p>
+Corridors: W6 frontier anchors shaped by the MST-diameter trunk (src/w6_graph.corridor_trunk_diameter).
+Detour ratio = road length &divide; straight-line end-to-end distance. Generated by src/w6_experiment_map.py.</p>
 
 <script>
 (function() {{

@@ -32,7 +32,7 @@
   .eyebrow { text-transform:uppercase; letter-spacing:.09em; font-size:12px; font-weight:600;
     color:var(--feas-ink); margin:0 0 4px; }
   h1 { margin:0 0 6px; font-size:26px; line-height:1.15; text-wrap:balance; }
-  .sub { margin:0; color:var(--muted); font-size:15px; max-width:70ch; }
+  .sub { margin:0; color:var(--muted); font-size:15px; max-width:72ch; }
   .grid { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(260px,1fr); gap:20px;
     max-width:1180px; margin:0 auto; align-items:start; }
   @media (max-width:840px) { .grid { grid-template-columns:1fr; } }
@@ -61,7 +61,7 @@
   aside { display:flex; flex-direction:column; gap:10px; }
   .tally { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
   .tally b { font-size:30px; color:var(--feas-ink); }
-  .tally p { margin:2px 0 0; color:var(--muted); font-size:13px; }
+  .tally p { margin:4px 0 0; color:var(--muted); font-size:13px; }
   .card { background:var(--surface); border:1px solid var(--line); border-radius:12px;
     padding:12px 14px; cursor:pointer; transition:border-color .12s, box-shadow .12s; outline:none; }
   .card:hover, .card.active, .card:focus-visible { border-color:var(--feas);
@@ -75,24 +75,22 @@
     letter-spacing:.04em; padding:2px 8px; border-radius:20px; background:var(--accent-soft); color:var(--feas-ink); }
   .card.infeas .badge { background:transparent; border:1px solid var(--line); color:var(--muted); }
   dl { margin:0; display:grid; grid-template-columns:1fr 1fr; gap:7px 14px; }
-  dl .span { grid-column:1 / -1; }
   dt { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }
   dd { margin:1px 0 0; font-size:15px; font-weight:600; }
   dd .u { display:block; font-size:10.5px; font-weight:400; color:var(--muted); letter-spacing:.02em; }
-  .circ { display:flex; align-items:baseline; gap:7px; flex-wrap:wrap; }
-  .circ .old { color:var(--muted); text-decoration:line-through; }
-  .circ .arr { color:var(--muted); } .circ .new { color:var(--feas-ink); }
-  .circ .u { flex-basis:100%; }
+  dd.det.infeas { color:var(--infeas); } dd.det.feas { color:var(--feas-ink); }
   .foot { max-width:1180px; margin:16px auto 0; color:var(--muted); font-size:12px; }
   @media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
 </style>
 
 <div class="head">
-  <p class="eyebrow">W6 corridor generation &middot; frontier anchor mode</p>
-  <h1>Frontier corridors on the coverage-gap surface</h1>
-  <p class="sub">Anchors restricted to the served/unserved seam, then re-judged with an
-  MST-aware directness metric instead of endpoint detour. Amber corridors clear the 1.80
-  circuitry cap; dashed grey does not. Hover a corridor to light up the AGEBs it serves.</p>
+  <p class="eyebrow">W6 corridor generation &middot; frontier anchors &middot; diameter-trunk shaper</p>
+  <h1>Frontier corridors, honestly shaped</h1>
+  <p class="sub">Each corridor is the longest leaf-to-leaf path of its anchors' spanning tree,
+  stitched from real road segments &mdash; no phantom straight jumps, no branch loops. Judged by
+  the standard end-to-end detour ratio (route length &divide; straight-line distance between the
+  two ends, cap 1.80). Amber clears the cap; dashed grey is too circuitous. Hover a corridor to
+  light up the AGEBs it serves.</p>
 </div>
 
 <div class="grid">
@@ -1980,67 +1978,68 @@
 <path class="ageb gap-med" data-a="1412400010156" d="M872.8,383.4 L875.1,386.6 L876.3,387.5 L875.9,390.0 L874.5,390.0 L874.6,391.0 L874.4,391.2 L872.8,391.6 L872.4,391.4 L871.7,385.6 L870.5,386.6 L871.2,388.5 L869.6,387.9 L869.5,391.6 L866.6,391.6 L868.5,392.1 L862.2,392.2 L860.7,393.3 L859.3,394.8 L858.7,394.8 L858.1,394.2 L860.0,388.0 L859.4,385.5 L872.8,383.4 Z"/>
 <path class="ageb gap-med" data-a="1412400940391" d="M787.1,445.8 L788.6,446.8 L788.4,447.1 L788.6,447.1 L788.7,448.6 L787.5,448.5 L787.6,449.3 L784.5,449.4 L781.5,454.0 L782.2,454.4 L782.2,456.1 L780.3,456.0 L780.7,453.8 L778.8,453.5 L777.9,453.1 L776.0,450.6 L775.4,451.7 L774.8,452.1 L774.0,451.6 L773.8,451.2 L774.0,448.0 L773.7,446.9 L772.6,444.9 L772.8,443.7 L776.1,441.5 L778.5,439.5 L779.7,441.1 L780.2,440.7 L785.4,445.4 L785.9,444.2 L786.6,444.8 L787.1,445.8 Z"/>
 <path class="ageb gap-med" data-a="1412400010372" d="M866.0,364.4 L866.4,365.4 L866.1,365.6 L864.7,365.1 L864.3,365.5 L864.2,366.1 L859.1,367.7 L858.6,365.7 L862.4,361.3 L866.0,364.4 Z"/></g>
-        <g id="cors"><g class="cor-g feas" data-id="frontier_G00" tabindex="0" role="button" aria-label="Corridor frontier_G00"><path class="cor-halo" d="M459.7,140.0 L458.5,144.1 L458.4,144.1 L456.9,144.8 L456.1,145.0 L454.8,146.1 L459.0,139.7 L458.4,139.3 L457.5,140.7 L454.7,138.4 L451.5,137.1 L448.7,135.7 L447.6,136.0 L445.7,135.2 L446.1,134.3 L456.1,145.0 L455.3,144.9 L454.7,144.8 L454.4,144.7 L453.5,145.2 L453.3,146.2 L451.9,146.0 L451.6,146.9 L450.5,147.7 L448.8,150.0 L449.1,150.2 L448.6,151.0 L444.9,170.8 L443.4,170.5 L443.2,171.3 L440.1,170.6 L439.0,170.0 L438.7,169.7 L438.3,169.0 L437.6,167.5 L436.5,166.5 L434.9,165.7 L434.1,165.8 L432.7,165.4 L432.5,165.9 L431.8,165.5 L430.3,164.8 L430.5,163.4 L448.1,151.7 L446.9,153.6 L446.4,154.2 L446.1,154.1 L445.5,155.1 L437.1,173.3 L435.8,172.9 L435.7,173.0 L434.7,172.8 L434.8,170.6 L433.9,170.5 L434.0,169.8 L434.1,167.0 L432.3,166.5 L432.5,165.9 L430.3,164.8 L430.5,164.0 L430.5,163.4 L446.1,154.1 L445.4,153.6 L444.9,153.1 L445.3,152.6 L444.7,152.2 L444.1,153.1 L441.0,151.4 L438.1,150.4 L437.6,150.2 L437.5,151.0 L435.9,150.2 L435.2,151.3 L434.6,152.4 L432.5,152.6 L431.7,152.5 L430.8,152.6 L430.0,154.0 L430.1,154.1 L430.1,155.5 L429.6,155.6 L429.5,156.2 L431.3,156.1 L430.8,156.7 L431.3,157.0 L429.9,159.9 L431.2,160.3 L430.5,163.4"/><path class="cor feas" d="M459.7,140.0 L458.5,144.1 L458.4,144.1 L456.9,144.8 L456.1,145.0 L454.8,146.1 L459.0,139.7 L458.4,139.3 L457.5,140.7 L454.7,138.4 L451.5,137.1 L448.7,135.7 L447.6,136.0 L445.7,135.2 L446.1,134.3 L456.1,145.0 L455.3,144.9 L454.7,144.8 L454.4,144.7 L453.5,145.2 L453.3,146.2 L451.9,146.0 L451.6,146.9 L450.5,147.7 L448.8,150.0 L449.1,150.2 L448.6,151.0 L444.9,170.8 L443.4,170.5 L443.2,171.3 L440.1,170.6 L439.0,170.0 L438.7,169.7 L438.3,169.0 L437.6,167.5 L436.5,166.5 L434.9,165.7 L434.1,165.8 L432.7,165.4 L432.5,165.9 L431.8,165.5 L430.3,164.8 L430.5,163.4 L448.1,151.7 L446.9,153.6 L446.4,154.2 L446.1,154.1 L445.5,155.1 L437.1,173.3 L435.8,172.9 L435.7,173.0 L434.7,172.8 L434.8,170.6 L433.9,170.5 L434.0,169.8 L434.1,167.0 L432.3,166.5 L432.5,165.9 L430.3,164.8 L430.5,164.0 L430.5,163.4 L446.1,154.1 L445.4,153.6 L444.9,153.1 L445.3,152.6 L444.7,152.2 L444.1,153.1 L441.0,151.4 L438.1,150.4 L437.6,150.2 L437.5,151.0 L435.9,150.2 L435.2,151.3 L434.6,152.4 L432.5,152.6 L431.7,152.5 L430.8,152.6 L430.0,154.0 L430.1,154.1 L430.1,155.5 L429.6,155.6 L429.5,156.2 L431.3,156.1 L430.8,156.7 L431.3,157.0 L429.9,159.9 L431.2,160.3 L430.5,163.4"/></g>
-<g class="cor-g feas" data-id="frontier_G01" tabindex="0" role="button" aria-label="Corridor frontier_G01"><path class="cor-halo" d="M529.6,498.6 L534.1,499.4 L534.6,497.4 L537.1,498.1 L542.3,499.1 L542.3,499.0 L542.6,497.7 L542.9,496.8 L542.9,496.6 L544.6,496.9 L545.9,497.2 L547.1,497.4 L548.0,497.6 L548.9,497.8 L549.0,497.3 L551.0,497.6 L553.0,497.8 L530.2,496.2 L531.9,488.9 L528.9,488.2 L531.3,477.4 L529.4,477.0 L528.5,475.5 L529.0,474.9 L529.8,473.2 L693.4,472.3 L693.0,475.7 L691.0,475.3 L691.1,475.2 L688.6,474.9 L688.3,474.0 L688.2,473.4 L688.2,472.9 L688.1,472.3 L687.9,470.8 L687.8,470.5 L687.6,470.6 L687.4,470.9 L687.0,470.8 L684.2,470.8 L605.2,565.2 L605.1,565.0 L605.2,563.7 L605.0,563.4 L598.3,565.8 L597.7,562.3 L594.3,562.9 L594.2,562.3 L591.8,563.0 L591.8,563.2 L591.5,563.2 L589.9,563.3 L589.4,562.6 L587.6,563.8 L587.6,561.3 L687.0,470.8 L687.0,466.7 L687.3,466.6 L687.1,466.2 L685.9,464.1 L684.5,456.8 L680.4,456.1 L680.3,456.8 L680.1,457.9 L679.9,459.1 L679.7,460.2 L604.1,530.1 L603.6,530.6 L602.8,531.4 L602.7,531.5 L602.3,531.9 L602.0,532.2 L601.3,532.9 L602.3,534.0 L603.2,534.9 L603.1,535.3 L602.1,536.4 L602.6,537.3 L604.7,540.2 L607.4,544.0 L606.6,546.7 L605.2,551.8 L605.1,554.4 L604.1,554.8 L603.5,554.9 L596.3,558.7 L596.2,558.6 L594.7,557.9 L592.8,558.3 L591.5,558.7 L591.5,558.3 L589.7,558.9 L588.8,558.6 L588.4,558.7 L587.5,559.1 L587.7,559.5 L587.6,561.3 L604.1,530.1 L602.8,531.4 L602.7,531.5 L602.0,532.2 L601.9,532.3 L600.0,531.4 L598.7,530.1 L598.0,529.1 L596.5,530.0 L596.3,530.0 L592.1,524.1 L592.0,524.0 L586.2,516.2 L569.2,493.0 L569.0,493.1 L570.2,494.7 L569.1,496.6 L565.6,493.9 L565.6,493.7 L562.7,492.7 L559.2,499.1 L558.2,499.2 L556.1,498.5 L555.9,498.9 L553.0,497.8 L604.1,530.1 L605.8,528.4 L605.3,526.5 L605.5,524.3 L605.7,524.1 L606.0,523.6 L605.4,522.2 L607.2,521.4 L612.2,518.3 L621.9,505.3 L623.5,500.0 L629.5,475.8 L630.6,471.7 L631.0,471.8 L631.3,471.6 L637.4,465.3 L643.5,456.4 L644.0,455.2 L645.0,453.6 L648.5,456.6 L648.8,456.2 L650.4,457.2 L657.9,460.1 L660.7,459.8 L663.6,459.2 L676.7,455.2 L677.4,455.1 L677.9,456.7 L678.8,455.9 L680.4,456.2 L679.9,459.1 L679.7,460.2"/><path class="cor feas" d="M529.6,498.6 L534.1,499.4 L534.6,497.4 L537.1,498.1 L542.3,499.1 L542.3,499.0 L542.6,497.7 L542.9,496.8 L542.9,496.6 L544.6,496.9 L545.9,497.2 L547.1,497.4 L548.0,497.6 L548.9,497.8 L549.0,497.3 L551.0,497.6 L553.0,497.8 L530.2,496.2 L531.9,488.9 L528.9,488.2 L531.3,477.4 L529.4,477.0 L528.5,475.5 L529.0,474.9 L529.8,473.2 L693.4,472.3 L693.0,475.7 L691.0,475.3 L691.1,475.2 L688.6,474.9 L688.3,474.0 L688.2,473.4 L688.2,472.9 L688.1,472.3 L687.9,470.8 L687.8,470.5 L687.6,470.6 L687.4,470.9 L687.0,470.8 L684.2,470.8 L605.2,565.2 L605.1,565.0 L605.2,563.7 L605.0,563.4 L598.3,565.8 L597.7,562.3 L594.3,562.9 L594.2,562.3 L591.8,563.0 L591.8,563.2 L591.5,563.2 L589.9,563.3 L589.4,562.6 L587.6,563.8 L587.6,561.3 L687.0,470.8 L687.0,466.7 L687.3,466.6 L687.1,466.2 L685.9,464.1 L684.5,456.8 L680.4,456.1 L680.3,456.8 L680.1,457.9 L679.9,459.1 L679.7,460.2 L604.1,530.1 L603.6,530.6 L602.8,531.4 L602.7,531.5 L602.3,531.9 L602.0,532.2 L601.3,532.9 L602.3,534.0 L603.2,534.9 L603.1,535.3 L602.1,536.4 L602.6,537.3 L604.7,540.2 L607.4,544.0 L606.6,546.7 L605.2,551.8 L605.1,554.4 L604.1,554.8 L603.5,554.9 L596.3,558.7 L596.2,558.6 L594.7,557.9 L592.8,558.3 L591.5,558.7 L591.5,558.3 L589.7,558.9 L588.8,558.6 L588.4,558.7 L587.5,559.1 L587.7,559.5 L587.6,561.3 L604.1,530.1 L602.8,531.4 L602.7,531.5 L602.0,532.2 L601.9,532.3 L600.0,531.4 L598.7,530.1 L598.0,529.1 L596.5,530.0 L596.3,530.0 L592.1,524.1 L592.0,524.0 L586.2,516.2 L569.2,493.0 L569.0,493.1 L570.2,494.7 L569.1,496.6 L565.6,493.9 L565.6,493.7 L562.7,492.7 L559.2,499.1 L558.2,499.2 L556.1,498.5 L555.9,498.9 L553.0,497.8 L604.1,530.1 L605.8,528.4 L605.3,526.5 L605.5,524.3 L605.7,524.1 L606.0,523.6 L605.4,522.2 L607.2,521.4 L612.2,518.3 L621.9,505.3 L623.5,500.0 L629.5,475.8 L630.6,471.7 L631.0,471.8 L631.3,471.6 L637.4,465.3 L643.5,456.4 L644.0,455.2 L645.0,453.6 L648.5,456.6 L648.8,456.2 L650.4,457.2 L657.9,460.1 L660.7,459.8 L663.6,459.2 L676.7,455.2 L677.4,455.1 L677.9,456.7 L678.8,455.9 L680.4,456.2 L679.9,459.1 L679.7,460.2"/></g>
-<g class="cor-g feas" data-id="frontier_G02" tabindex="0" role="button" aria-label="Corridor frontier_G02"><path class="cor-halo" d="M395.2,411.4 L395.3,410.6 L396.1,410.7 L397.7,410.6 L401.4,409.3 L402.3,409.2 L406.9,407.5 L408.0,407.8 L409.3,402.8 L396.0,411.5 L396.5,412.3 L400.1,411.1 L400.8,411.0 L401.0,410.7 L401.9,410.6 L398.8,420.5 L397.3,424.3 L393.4,431.5 L392.1,435.8 L396.6,437.9 L398.6,438.6 L399.5,439.8 L399.7,440.0 L400.2,440.0 L409.8,443.0 L415.0,443.2 L423.0,444.0 L423.1,442.9 L425.0,443.5 L433.6,445.7 L443.9,446.6 L445.8,446.9 L446.8,446.9 L447.2,447.4 L449.4,447.1 L455.8,446.0 L458.4,445.6 L459.8,450.7 L410.0,403.1 L410.7,403.3 L410.5,404.1 L411.2,404.4 L411.9,404.6 L412.4,404.8 L412.6,404.9 L412.9,405.0 L412.6,406.3 L410.0,403.1 L412.4,395.1 L412.5,395.1 L412.7,394.4 L412.9,393.7 L412.8,393.7 L413.3,391.8 L413.2,391.7 L413.5,390.9 L413.8,391.0 L415.0,386.5 L416.7,386.4 L416.7,386.9 L416.7,386.7 L416.7,386.4 L415.8,386.5 L415.0,386.5 L413.6,386.4 L412.8,389.5 L408.3,388.4 L407.6,390.1 L406.5,389.8 L406.1,390.8 L405.5,390.0 L406.5,387.5"/><path class="cor feas" d="M395.2,411.4 L395.3,410.6 L396.1,410.7 L397.7,410.6 L401.4,409.3 L402.3,409.2 L406.9,407.5 L408.0,407.8 L409.3,402.8 L396.0,411.5 L396.5,412.3 L400.1,411.1 L400.8,411.0 L401.0,410.7 L401.9,410.6 L398.8,420.5 L397.3,424.3 L393.4,431.5 L392.1,435.8 L396.6,437.9 L398.6,438.6 L399.5,439.8 L399.7,440.0 L400.2,440.0 L409.8,443.0 L415.0,443.2 L423.0,444.0 L423.1,442.9 L425.0,443.5 L433.6,445.7 L443.9,446.6 L445.8,446.9 L446.8,446.9 L447.2,447.4 L449.4,447.1 L455.8,446.0 L458.4,445.6 L459.8,450.7 L410.0,403.1 L410.7,403.3 L410.5,404.1 L411.2,404.4 L411.9,404.6 L412.4,404.8 L412.6,404.9 L412.9,405.0 L412.6,406.3 L410.0,403.1 L412.4,395.1 L412.5,395.1 L412.7,394.4 L412.9,393.7 L412.8,393.7 L413.3,391.8 L413.2,391.7 L413.5,390.9 L413.8,391.0 L415.0,386.5 L416.7,386.4 L416.7,386.9 L416.7,386.7 L416.7,386.4 L415.8,386.5 L415.0,386.5 L413.6,386.4 L412.8,389.5 L408.3,388.4 L407.6,390.1 L406.5,389.8 L406.1,390.8 L405.5,390.0 L406.5,387.5"/></g>
-<g class="cor-g feas" data-id="frontier_G03" tabindex="0" role="button" aria-label="Corridor frontier_G03"><path class="cor-halo" d="M240.8,98.2 L238.6,95.2 L234.2,94.1 L234.4,90.3 L233.6,90.2 L229.8,88.1 L230.1,86.9 L229.8,88.0 L227.9,89.4 L226.2,88.5 L226.1,88.6 L223.0,86.9 L221.3,88.3 L217.9,86.9"/><path class="cor feas" d="M240.8,98.2 L238.6,95.2 L234.2,94.1 L234.4,90.3 L233.6,90.2 L229.8,88.1 L230.1,86.9 L229.8,88.0 L227.9,89.4 L226.2,88.5 L226.1,88.6 L223.0,86.9 L221.3,88.3 L217.9,86.9"/></g>
-<g class="cor-g infeas" data-id="frontier_G05" tabindex="0" role="button" aria-label="Corridor frontier_G05"><path class="cor-halo" d="M418.2,529.1 L418.7,530.2 L418.3,530.4 L417.9,529.7 L415.6,530.9 L417.2,533.8 L417.1,534.4 L419.6,542.9 L418.1,546.4 L415.2,546.6 L414.8,549.9 L412.8,549.8 L412.5,554.3 L412.2,554.6 L410.5,554.6 L405.7,553.9 L406.3,551.8 L405.8,551.7 L405.6,552.4 L395.2,545.0 L397.5,544.9 L398.4,538.9 L398.7,538.7 L401.7,539.1 L402.0,539.6 L401.4,544.3 L401.3,545.5 L401.0,547.7 L401.0,547.8 L400.8,549.1 L400.7,549.8 L400.9,549.9 L401.5,549.9 L403.3,550.0 L405.5,550.0 L406.1,550.1 L405.6,552.4"/><path class="cor infeas" d="M418.2,529.1 L418.7,530.2 L418.3,530.4 L417.9,529.7 L415.6,530.9 L417.2,533.8 L417.1,534.4 L419.6,542.9 L418.1,546.4 L415.2,546.6 L414.8,549.9 L412.8,549.8 L412.5,554.3 L412.2,554.6 L410.5,554.6 L405.7,553.9 L406.3,551.8 L405.8,551.7 L405.6,552.4 L395.2,545.0 L397.5,544.9 L398.4,538.9 L398.7,538.7 L401.7,539.1 L402.0,539.6 L401.4,544.3 L401.3,545.5 L401.0,547.7 L401.0,547.8 L400.8,549.1 L400.7,549.8 L400.9,549.9 L401.5,549.9 L403.3,550.0 L405.5,550.0 L406.1,550.1 L405.6,552.4"/></g></g>
-        <g id="labels"><g class="lbl feas" data-id="frontier_G00"><circle cx="437" cy="159" r="10"/><text x="437" y="159" dy="3.5">00</text></g>
-<g class="lbl feas" data-id="frontier_G01"><circle cx="667" cy="489" r="10"/><text x="667" y="489" dy="3.5">01</text></g>
-<g class="lbl feas" data-id="frontier_G02"><circle cx="451" cy="447" r="10"/><text x="451" y="447" dy="3.5">02</text></g>
-<g class="lbl feas" data-id="frontier_G03"><circle cx="230" cy="88" r="10"/><text x="230" y="88" dy="3.5">03</text></g>
-<g class="lbl infeas" data-id="frontier_G05"><circle cx="406" cy="552" r="10"/><text x="406" y="552" dy="3.5">05</text></g></g>
+        <g id="cors"><g class="cor-g infeas" data-id="G00" tabindex="0" role="button" aria-label="Corridor G00"><path class="cor-halo" d="M445.6,171.0 L443.4,170.5 L443.2,171.3 L440.1,170.6 L438.9,169.9 L438.3,169.0 L437.6,167.5 L436.5,166.5 L434.9,165.7 L434.1,165.8 L432.7,165.4 L432.5,165.9 L430.3,164.8 L430.7,162.3 L431.2,160.3 L429.9,159.9 L431.3,157.0 L430.8,156.7 L431.3,156.1 L429.5,156.2 L429.6,155.6 L430.1,155.5 L430.1,154.1 L430.0,154.0 L430.8,152.6 L431.7,152.5 L432.5,152.6 L434.6,152.4 L435.2,151.3 L435.9,150.2 L437.5,151.0 L437.6,150.2 L438.1,150.4 L441.0,151.4 L444.1,153.1 L444.7,152.2 L445.3,152.6 L444.9,153.1 L446.1,154.1 L445.5,155.1 L446.1,154.1 L446.4,154.2 L446.9,153.6 L449.1,150.2 L448.8,150.0 L450.5,147.7 L451.6,146.9 L451.9,146.0 L453.3,146.2 L453.5,145.2 L454.4,144.7 L456.1,145.0 L454.8,146.1 L456.1,145.0 L456.9,144.8 L458.4,144.1 L458.5,144.1 L459.7,140.0 L458.4,139.3 L457.5,140.7 L454.7,138.4 L451.5,137.1 L448.7,135.7 L447.6,136.0 L445.7,135.2 L446.1,134.3"/><path class="cor infeas" d="M445.6,171.0 L443.4,170.5 L443.2,171.3 L440.1,170.6 L438.9,169.9 L438.3,169.0 L437.6,167.5 L436.5,166.5 L434.9,165.7 L434.1,165.8 L432.7,165.4 L432.5,165.9 L430.3,164.8 L430.7,162.3 L431.2,160.3 L429.9,159.9 L431.3,157.0 L430.8,156.7 L431.3,156.1 L429.5,156.2 L429.6,155.6 L430.1,155.5 L430.1,154.1 L430.0,154.0 L430.8,152.6 L431.7,152.5 L432.5,152.6 L434.6,152.4 L435.2,151.3 L435.9,150.2 L437.5,151.0 L437.6,150.2 L438.1,150.4 L441.0,151.4 L444.1,153.1 L444.7,152.2 L445.3,152.6 L444.9,153.1 L446.1,154.1 L445.5,155.1 L446.1,154.1 L446.4,154.2 L446.9,153.6 L449.1,150.2 L448.8,150.0 L450.5,147.7 L451.6,146.9 L451.9,146.0 L453.3,146.2 L453.5,145.2 L454.4,144.7 L456.1,145.0 L454.8,146.1 L456.1,145.0 L456.9,144.8 L458.4,144.1 L458.5,144.1 L459.7,140.0 L458.4,139.3 L457.5,140.7 L454.7,138.4 L451.5,137.1 L448.7,135.7 L447.6,136.0 L445.7,135.2 L446.1,134.3"/></g>
+<g class="cor-g infeas" data-id="G01" tabindex="0" role="button" aria-label="Corridor G01"><path class="cor-halo" d="M691.8,472.0 L693.4,472.3 L693.0,475.7 L691.0,475.3 L691.1,475.2 L688.6,474.9 L688.3,474.0 L687.8,470.5 L687.6,470.6 L687.4,470.9 L687.0,470.8 L684.2,470.8 L687.0,470.8 L687.0,466.7 L687.3,466.6 L687.1,466.2 L685.9,464.1 L684.5,456.8 L680.4,456.1 L680.3,456.8 L680.1,457.9 L679.9,459.1 L679.7,460.2 L679.9,459.1 L680.4,456.2 L678.8,455.9 L677.9,456.7 L677.4,455.1 L676.7,455.2 L663.6,459.2 L660.7,459.8 L657.9,460.1 L650.4,457.2 L648.8,456.2 L648.5,456.6 L645.0,453.6 L644.0,455.2 L643.5,456.4 L637.4,465.3 L631.3,471.6 L631.0,471.8 L630.6,471.7 L623.5,500.0 L621.9,505.3 L612.2,518.3 L607.2,521.4 L605.4,522.2 L606.0,523.6 L605.7,524.1 L605.5,524.3 L605.3,526.5 L605.8,528.4 L604.1,530.1 L605.1,531.2 L604.1,530.1 L601.9,532.3 L600.0,531.4 L598.7,530.1 L598.0,529.1 L596.5,530.0 L596.3,530.0 L592.1,524.1 L569.2,493.0 L569.0,493.1 L570.2,494.7 L569.1,496.6 L565.6,493.9 L565.6,493.7 L562.7,492.7 L559.2,499.1 L558.2,499.2 L556.1,498.5 L555.9,498.9 L553.0,497.8 L551.0,497.6 L549.0,497.3 L548.9,497.8 L542.9,496.6 L542.3,499.1 L537.1,498.1 L534.6,497.4 L534.1,499.4 L529.6,498.6 L531.9,488.9 L528.9,488.2 L531.3,477.4 L529.4,477.0 L528.5,475.5 L529.0,474.9 L529.8,473.2"/><path class="cor infeas" d="M691.8,472.0 L693.4,472.3 L693.0,475.7 L691.0,475.3 L691.1,475.2 L688.6,474.9 L688.3,474.0 L687.8,470.5 L687.6,470.6 L687.4,470.9 L687.0,470.8 L684.2,470.8 L687.0,470.8 L687.0,466.7 L687.3,466.6 L687.1,466.2 L685.9,464.1 L684.5,456.8 L680.4,456.1 L680.3,456.8 L680.1,457.9 L679.9,459.1 L679.7,460.2 L679.9,459.1 L680.4,456.2 L678.8,455.9 L677.9,456.7 L677.4,455.1 L676.7,455.2 L663.6,459.2 L660.7,459.8 L657.9,460.1 L650.4,457.2 L648.8,456.2 L648.5,456.6 L645.0,453.6 L644.0,455.2 L643.5,456.4 L637.4,465.3 L631.3,471.6 L631.0,471.8 L630.6,471.7 L623.5,500.0 L621.9,505.3 L612.2,518.3 L607.2,521.4 L605.4,522.2 L606.0,523.6 L605.7,524.1 L605.5,524.3 L605.3,526.5 L605.8,528.4 L604.1,530.1 L605.1,531.2 L604.1,530.1 L601.9,532.3 L600.0,531.4 L598.7,530.1 L598.0,529.1 L596.5,530.0 L596.3,530.0 L592.1,524.1 L569.2,493.0 L569.0,493.1 L570.2,494.7 L569.1,496.6 L565.6,493.9 L565.6,493.7 L562.7,492.7 L559.2,499.1 L558.2,499.2 L556.1,498.5 L555.9,498.9 L553.0,497.8 L551.0,497.6 L549.0,497.3 L548.9,497.8 L542.9,496.6 L542.3,499.1 L537.1,498.1 L534.6,497.4 L534.1,499.4 L529.6,498.6 L531.9,488.9 L528.9,488.2 L531.3,477.4 L529.4,477.0 L528.5,475.5 L529.0,474.9 L529.8,473.2"/></g>
+<g class="cor-g infeas" data-id="G02" tabindex="0" role="button" aria-label="Corridor G02"><path class="cor-halo" d="M459.8,450.7 L458.4,445.6 L447.2,447.4 L446.8,446.9 L445.8,446.9 L443.9,446.6 L433.6,445.7 L425.0,443.5 L423.1,442.9 L423.0,444.0 L415.0,443.2 L409.8,443.0 L400.2,440.0 L399.7,440.0 L399.5,439.8 L398.6,438.6 L396.6,437.9 L392.1,435.8 L393.4,431.5 L397.3,424.3 L398.8,420.5 L401.9,410.6 L401.0,410.7 L400.8,411.0 L400.1,411.1 L396.5,412.3 L396.0,411.5 L395.2,411.4 L395.3,410.6 L397.7,410.6 L401.4,409.3 L402.3,409.2 L406.9,407.5 L408.0,407.8 L409.3,402.8 L410.0,403.1 L412.4,395.1 L412.5,395.1 L412.7,394.4 L412.9,393.7 L412.8,393.7 L413.3,391.8 L413.2,391.7 L413.5,390.9 L413.8,391.0 L415.0,386.5 L416.7,386.4 L416.7,386.9 L416.7,386.7 L416.7,386.4 L415.8,386.5 L415.0,386.5 L413.6,386.4 L412.8,389.5 L408.3,388.4 L407.6,390.1 L406.5,389.8 L406.1,390.8 L405.5,390.0 L406.5,387.5"/><path class="cor infeas" d="M459.8,450.7 L458.4,445.6 L447.2,447.4 L446.8,446.9 L445.8,446.9 L443.9,446.6 L433.6,445.7 L425.0,443.5 L423.1,442.9 L423.0,444.0 L415.0,443.2 L409.8,443.0 L400.2,440.0 L399.7,440.0 L399.5,439.8 L398.6,438.6 L396.6,437.9 L392.1,435.8 L393.4,431.5 L397.3,424.3 L398.8,420.5 L401.9,410.6 L401.0,410.7 L400.8,411.0 L400.1,411.1 L396.5,412.3 L396.0,411.5 L395.2,411.4 L395.3,410.6 L397.7,410.6 L401.4,409.3 L402.3,409.2 L406.9,407.5 L408.0,407.8 L409.3,402.8 L410.0,403.1 L412.4,395.1 L412.5,395.1 L412.7,394.4 L412.9,393.7 L412.8,393.7 L413.3,391.8 L413.2,391.7 L413.5,390.9 L413.8,391.0 L415.0,386.5 L416.7,386.4 L416.7,386.9 L416.7,386.7 L416.7,386.4 L415.8,386.5 L415.0,386.5 L413.6,386.4 L412.8,389.5 L408.3,388.4 L407.6,390.1 L406.5,389.8 L406.1,390.8 L405.5,390.0 L406.5,387.5"/></g>
+<g class="cor-g feas" data-id="G03" tabindex="0" role="button" aria-label="Corridor G03"><path class="cor-halo" d="M217.9,86.9 L221.3,88.3 L223.0,86.9 L226.1,88.6 L226.2,88.5 L227.9,89.4 L229.8,88.0 L230.1,86.9 L229.8,88.1 L233.6,90.2 L234.4,90.3 L234.2,94.1 L238.6,95.2 L240.8,98.2"/><path class="cor feas" d="M217.9,86.9 L221.3,88.3 L223.0,86.9 L226.1,88.6 L226.2,88.5 L227.9,89.4 L229.8,88.0 L230.1,86.9 L229.8,88.1 L233.6,90.2 L234.4,90.3 L234.2,94.1 L238.6,95.2 L240.8,98.2"/></g>
+<g class="cor-g infeas" data-id="G05" tabindex="0" role="button" aria-label="Corridor G05"><path class="cor-halo" d="M394.6,545.0 L397.5,544.9 L398.4,538.9 L398.7,538.7 L401.7,539.1 L402.0,539.6 L400.7,549.8 L406.1,550.1 L405.6,552.4 L405.8,551.7 L406.3,551.8 L405.7,553.9 L410.5,554.6 L412.2,554.6 L412.5,554.3 L412.8,549.8 L414.8,549.9 L415.2,546.6 L418.1,546.4 L419.6,542.9 L417.1,534.4 L417.2,533.8 L415.6,530.9 L417.9,529.7 L418.3,530.4 L418.7,530.2 L418.2,529.1"/><path class="cor infeas" d="M394.6,545.0 L397.5,544.9 L398.4,538.9 L398.7,538.7 L401.7,539.1 L402.0,539.6 L400.7,549.8 L406.1,550.1 L405.6,552.4 L405.8,551.7 L406.3,551.8 L405.7,553.9 L410.5,554.6 L412.2,554.6 L412.5,554.3 L412.8,549.8 L414.8,549.9 L415.2,546.6 L418.1,546.4 L419.6,542.9 L417.1,534.4 L417.2,533.8 L415.6,530.9 L417.9,529.7 L418.3,530.4 L418.7,530.2 L418.2,529.1"/></g></g>
+        <g id="labels"><g class="lbl infeas" data-id="G00"><circle cx="443" cy="153" r="10"/><text x="443" y="153" dy="3.5">00</text></g>
+<g class="lbl infeas" data-id="G01"><circle cx="613" cy="518" r="10"/><text x="613" y="518" dy="3.5">01</text></g>
+<g class="lbl infeas" data-id="G02"><circle cx="396" cy="427" r="10"/><text x="396" y="427" dy="3.5">02</text></g>
+<g class="lbl feas" data-id="G03"><circle cx="230" cy="88" r="10"/><text x="230" y="88" dy="3.5">03</text></g>
+<g class="lbl infeas" data-id="G05"><circle cx="409" cy="554" r="10"/><text x="409" y="554" dy="3.5">05</text></g></g>
       </g>
     </svg>
     <div class="legend">
       <span><i class="sw" style="background:var(--gap-hi)"></i>High gap</span>
       <span><i class="sw" style="background:var(--gap-med)"></i>Medium</span>
       <span><i class="sw" style="background:var(--gap-lo)"></i>Low gap</span>
-      <span><i class="ln"></i>Feasible (MST directness)</span>
-      <span><i class="ln d"></i>Still infeasible</span>
+      <span><i class="ln"></i>Feasible (detour &le; 1.80)</span>
+      <span><i class="ln d"></i>Too circuitous</span>
     </div>
   </div>
   <aside>
-    <div class="tally"><b>4 / 5</b><p>feasible under MST-aware directness
-    (was 1 / 5 under endpoint detour)</p></div>
+    <div class="tally"><b>1 / 5</b><p>feasible under the standard detour cap.
+    With honest geometry only the short 2-anchor stub qualifies; the rest genuinely wander
+    ~2&ndash;2.8&times; their end-to-end distance.</p></div>
     
-        <article class="card feas" data-id="frontier_G00" tabindex="0" role="button" aria-label="Corridor frontier_G00 details">
-          <header><span class="dot"></span><h3>G00</h3><span class="badge">Feasible</span></header>
+        <article class="card infeas" data-id="G00" tabindex="0" role="button" aria-label="Corridor G00 details">
+          <header><span class="dot"></span><h3>G00</h3><span class="badge">Too circuitous</span></header>
           <dl>
-            <div><dt>Length</dt><dd>8.5 km</dd></div>
-            <div><dt>AGEBs served</dt><dd>22</dd></div>
-            <div><dt>Total demand</dt><dd>82,085<span class="u">/day</span></dd></div>
-            <div><dt>High-gap share</dt><dd>45%<span class="u">metro 21%</span></dd></div>
-            <div><dt>Demand / km</dt><dd>34th<span class="u">pct vs routes</span></dd></div>
-            <div class="span"><dt>Circuitry</dt><dd class="circ"><span class="old">3.24</span><span class="arr">&rarr;</span><span class="new">1.68</span><span class="u">endpoint &rarr; MST directness (cap 1.80)</span></dd></div>
+            <div><dt>Length</dt><dd>7.3 km</dd></div>
+            <div><dt>AGEBs served</dt><dd>18</dd></div>
+            <div><dt>Total demand</dt><dd>66,041<span class="u">/day</span></dd></div>
+            <div><dt>High-gap share</dt><dd>50%<span class="u">metro 21%</span></dd></div>
+            <div><dt>Demand / km</dt><dd>30th<span class="u">pct vs routes</span></dd></div>
+            <div><dt>Detour ratio</dt><dd class="det infeas">2.84<span class="u">cap 1.80</span></dd></div>
           </dl>
         </article>
 
-        <article class="card feas" data-id="frontier_G01" tabindex="0" role="button" aria-label="Corridor frontier_G01 details">
-          <header><span class="dot"></span><h3>G01</h3><span class="badge">Feasible</span></header>
+        <article class="card infeas" data-id="G01" tabindex="0" role="button" aria-label="Corridor G01 details">
+          <header><span class="dot"></span><h3>G01</h3><span class="badge">Too circuitous</span></header>
           <dl>
-            <div><dt>Length</dt><dd>28.6 km</dd></div>
-            <div><dt>AGEBs served</dt><dd>47</dd></div>
-            <div><dt>Total demand</dt><dd>247,390<span class="u">/day</span></dd></div>
-            <div><dt>High-gap share</dt><dd>36%<span class="u">metro 21%</span></dd></div>
-            <div><dt>Demand / km</dt><dd>28th<span class="u">pct vs routes</span></dd></div>
-            <div class="span"><dt>Circuitry</dt><dd class="circ"><span class="old">2.63</span><span class="arr">&rarr;</span><span class="new">1.44</span><span class="u">endpoint &rarr; MST directness (cap 1.80)</span></dd></div>
+            <div><dt>Length</dt><dd>23.0 km</dd></div>
+            <div><dt>AGEBs served</dt><dd>27</dd></div>
+            <div><dt>Total demand</dt><dd>96,839<span class="u">/day</span></dd></div>
+            <div><dt>High-gap share</dt><dd>33%<span class="u">metro 21%</span></dd></div>
+            <div><dt>Demand / km</dt><dd>5th<span class="u">pct vs routes</span></dd></div>
+            <div><dt>Detour ratio</dt><dd class="det infeas">2.02<span class="u">cap 1.80</span></dd></div>
           </dl>
         </article>
 
-        <article class="card feas" data-id="frontier_G02" tabindex="0" role="button" aria-label="Corridor frontier_G02 details">
-          <header><span class="dot"></span><h3>G02</h3><span class="badge">Feasible</span></header>
+        <article class="card infeas" data-id="G02" tabindex="0" role="button" aria-label="Corridor G02 details">
+          <header><span class="dot"></span><h3>G02</h3><span class="badge">Too circuitous</span></header>
           <dl>
-            <div><dt>Length</dt><dd>12.6 km</dd></div>
-            <div><dt>AGEBs served</dt><dd>36</dd></div>
-            <div><dt>Total demand</dt><dd>234,414<span class="u">/day</span></dd></div>
-            <div><dt>High-gap share</dt><dd>47%<span class="u">metro 21%</span></dd></div>
-            <div><dt>Demand / km</dt><dd>85th<span class="u">pct vs routes</span></dd></div>
-            <div class="span"><dt>Circuitry</dt><dd class="circ"><span class="old">6.75</span><span class="arr">&rarr;</span><span class="new">1.60</span><span class="u">endpoint &rarr; MST directness (cap 1.80)</span></dd></div>
+            <div><dt>Length</dt><dd>12.1 km</dd></div>
+            <div><dt>AGEBs served</dt><dd>25</dd></div>
+            <div><dt>Total demand</dt><dd>192,357<span class="u">/day</span></dd></div>
+            <div><dt>High-gap share</dt><dd>56%<span class="u">metro 21%</span></dd></div>
+            <div><dt>Demand / km</dt><dd>73th<span class="u">pct vs routes</span></dd></div>
+            <div><dt>Detour ratio</dt><dd class="det infeas">2.09<span class="u">cap 1.80</span></dd></div>
           </dl>
         </article>
 
-        <article class="card feas" data-id="frontier_G03" tabindex="0" role="button" aria-label="Corridor frontier_G03 details">
+        <article class="card feas" data-id="G03" tabindex="0" role="button" aria-label="Corridor G03 details">
           <header><span class="dot"></span><h3>G03</h3><span class="badge">Feasible</span></header>
           <dl>
             <div><dt>Length</dt><dd>2.4 km</dd></div>
@@ -2048,31 +2047,30 @@
             <div><dt>Total demand</dt><dd>35,784<span class="u">/day</span></dd></div>
             <div><dt>High-gap share</dt><dd>60%<span class="u">metro 21%</span></dd></div>
             <div><dt>Demand / km</dt><dd>66th<span class="u">pct vs routes</span></dd></div>
-            <div class="span"><dt>Circuitry</dt><dd class="circ"><span class="old">1.36</span><span class="arr">&rarr;</span><span class="new">1.25</span><span class="u">endpoint &rarr; MST directness (cap 1.80)</span></dd></div>
+            <div><dt>Detour ratio</dt><dd class="det feas">1.36<span class="u">cap 1.80</span></dd></div>
           </dl>
         </article>
 
-        <article class="card infeas" data-id="frontier_G05" tabindex="0" role="button" aria-label="Corridor frontier_G05 details">
-          <header><span class="dot"></span><h3>G05</h3><span class="badge">Infeasible</span></header>
+        <article class="card infeas" data-id="G05" tabindex="0" role="button" aria-label="Corridor G05 details">
+          <header><span class="dot"></span><h3>G05</h3><span class="badge">Too circuitous</span></header>
           <dl>
             <div><dt>Length</dt><dd>5.4 km</dd></div>
             <div><dt>AGEBs served</dt><dd>14</dd></div>
             <div><dt>Total demand</dt><dd>80,234<span class="u">/day</span></dd></div>
             <div><dt>High-gap share</dt><dd>57%<span class="u">metro 21%</span></dd></div>
             <div><dt>Demand / km</dt><dd>69th<span class="u">pct vs routes</span></dd></div>
-            <div class="span"><dt>Circuitry</dt><dd class="circ"><span class="old">2.90</span><span class="arr">&rarr;</span><span class="new">1.93</span><span class="u">endpoint &rarr; MST directness (cap 1.80)</span></dd></div>
+            <div><dt>Detour ratio</dt><dd class="det infeas">2.69<span class="u">cap 1.80</span></dd></div>
           </dl>
         </article>
   </aside>
 </div>
 <p class="foot">Choropleth: AGEB coverage-gap category (demand vs GTFS accessibility, W3).
-Corridors: W6 frontier anchor mode. Circuitry = route length &divide; straight-line spanning
-length of the corridor's anchors; the old endpoint-detour metric inflated branching corridors.
-Generated by src/w6_experiment_map.py.</p>
+Corridors: W6 frontier anchors shaped by the MST-diameter trunk (src/w6_graph.corridor_trunk_diameter).
+Detour ratio = road length &divide; straight-line end-to-end distance. Generated by src/w6_experiment_map.py.</p>
 
 <script>
 (function() {
-  var served = {"frontier_G00": ["1412000012172", "1412000012223", "1412000012789", "1412000012810", "1412000012825", "1412000012844", "1412000013039", "1412000013715", "1412000013734", "1412000013857", "1412000013876", "1412000014111", "1412000014130", "1412000014268", "1412000014272", "1412000014304", "1412000014978", "1412000015124", "1412000015302", "1412000015317", "1412000015533", "1412000015548"], "frontier_G01": ["1407000140543", "1407000140609", "1407000140810", "1407000200079", "1407000200191", "1407000200204", "1407000200242", "1407000200257", "1407000200613", "1407000200789", "1407000200793", "1407000200933", "1407000201221", "1407000201236", "1407000201255", "1407000201382", "1407000201397", "1407000211005", "1407000211096", "1407000211113", "1407000430295", "1407000430308", "1407000430628", "1407000430647", "1407000430651", "1407000430666", "1407000430806", "1407000430897", "1407000430971", "1407000430986", "1407000431024", "1407000431039", "1407000431132", "1407000431147", "1407000641293", "1407000641306", "1407001211518", "1409701150871", "1409701150886", "1409701151992", "1409701152596", "1409701153359", "1409701153433", "1410100272336", "1410100272355", "1410100312317", "1410101902374"], "frontier_G02": ["1403900015510", "1403900015525", "1403900015544", "1403900015578", "1403900015582", "1409800010281", "1409800010775", "1409800010794", "1409800010972", "1409800011171", "1409800011186", "1409800011256", "1409800011260", "1409800011434", "1409800011468", "1409800011665", "1409800011684", "1409800011699", "1409800011720", "1409800011843", "1409800011951", "1409800011966", "1409800011970", "1409800012095", "1409800012108", "1409800012131", "1409800012150", "1409800012199", "1409800012663", "1409800012926", "1409800013093", "1409800013267", "1409800013271", "1409800013360", "1409800013375", "1409800013411"], "frontier_G03": ["1412002312079", "1412002314145", "1412002314164", "1412002314179", "1412002316226"], "frontier_G05": ["1409708221564", "1409708221579", "1409708221583", "1409708221598", "1409708221600", "1409708221615", "1409708221899", "1409708221901", "1409708222219", "1409708223471", "1409708223698", "1409708223749", "1409708531884", "1409708532238"]};
+  var served = {"G00": ["1412000012172", "1412000012223", "1412000012789", "1412000012810", "1412000012825", "1412000012844", "1412000013715", "1412000013857", "1412000013876", "1412000014111", "1412000014130", "1412000014268", "1412000014272", "1412000015124", "1412000015302", "1412000015317", "1412000015533", "1412000015548"], "G01": ["1407000140543", "1407000140609", "1407000140810", "1407000200613", "1407000201236", "1407000201255", "1407000201382", "1407000211096", "1407000430295", "1407000430308", "1407000430628", "1407000430647", "1407000430651", "1407000430666", "1407000430806", "1407000430897", "1407000430971", "1407000430986", "1407000431024", "1407000431039", "1407000431132", "1407000431147", "1407001211518", "1410100272336", "1410100272355", "1410100312317", "1410101902374"], "G02": ["1403900015510", "1403900015525", "1403900015544", "1403900015578", "1403900015582", "1409800010281", "1409800010775", "1409800010794", "1409800010972", "1409800011186", "1409800011256", "1409800011260", "1409800011684", "1409800011699", "1409800011720", "1409800011843", "1409800011951", "1409800011966", "1409800011970", "1409800012095", "1409800012108", "1409800012131", "1409800012150", "1409800012199", "1409800012663"], "G03": ["1412002312079", "1412002314145", "1412002314164", "1412002314179", "1412002316226"], "G05": ["1409708221564", "1409708221579", "1409708221583", "1409708221598", "1409708221600", "1409708221615", "1409708221899", "1409708221901", "1409708222219", "1409708223471", "1409708223698", "1409708223749", "1409708531884", "1409708532238"]};
   var map = document.getElementById('map');
   var agebs = {};
   document.querySelectorAll('.ageb').forEach(function(p) { agebs[p.getAttribute('data-a')] = p; });
