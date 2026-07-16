@@ -741,8 +741,27 @@ the length cap in every mode. Feasibility still selects for short/sparse; merit 
 long/dense corridors that blow the caps. **frontier is the better REALISM lever** (endpoint
 connectivity + higher demand/km, all feasible corridors connected) and is the recommended direction
 if one must be chosen, but its coverage cost and the unbroken feasibility-vs-merit confound mean the
-narrowed thesis claim (Next steps item 4) still stands. Decision on which mode (if any) to promote
-into `run_w6.py` is left open pending review of `comparison.md`.
+narrowed thesis claim (Next steps item 4) still stands.
+
+**Mechanism -- the binding constraint is detour_ratio, not length (traced 2026-07-15).** All 13
+infeasible corridors across the three modes fail `detour_ratio = route_km /
+dist(endpoint0,endpoint1) <= 1.8`; the 30km length cap is NEVER a sole binding constraint (every
+length violation co-occurs with an already-fatal detour violation, so raising the length cap alone
+rescues zero corridors). Stop-spacing and min-demand never bind. The endpoint detour metric is
+structurally mismatched to `build_corridor_path`'s MST/Steiner output: an MST walked into a
+LineString sums every anchor edge into `route_km`, but its two endpoints are just two leaves, which
+sit close together in a compact cluster -- so any corridor with >=3 non-collinear anchors has
+`route_km` >> endpoint distance and blows the 1.8 cap REGARDLESS of absolute length (frontier_G02:
+12.6km road, 1.9km endpoint span, detour 6.75). Only near-collinear 2-anchor point-to-point
+corridors pass (G03 in every mode; two_tier G00/G05 where the network tie-in happens to line up).
+So the feasibility filter is really a "near-linear, few-anchor" filter -- which is WHY it selects
+sparse anchor clusters independent of corridor merit. The confound is the `detour_ratio` x MST-
+topology interaction, not the anchor logic and not the length cap.
+
+Decision on which mode (if any) to promote into `run_w6.py` is left open pending review of
+`comparison.md`; the detour-metric finding above suggests the higher-leverage change may be to the
+W5 `detour_ratio` definition rather than to the anchor mode (prototyped separately 2026-07-15 --
+an MST-aware directness metric roughly triples frontier's feasible set; see session notes).
 
 ---
 
