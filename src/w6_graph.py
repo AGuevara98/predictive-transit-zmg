@@ -225,6 +225,30 @@ def corridor_path_tsp(G_proj, terminal_nodes):
     return _stitch(G_proj, _open_tsp_order(uniq, dist), path, dist)
 
 
+def anchor_span_km(G_proj, terminal_nodes):
+    """Straight-line (Euclidean) minimum spanning length of the terminals, in km.
+
+    The theoretical floor to connect a corridor's demand anchors. Used as the
+    denominator for ANCHOR-DIRECTNESS (route_km / anchor_span_km) -- "does the route
+    waste distance connecting its demand?" -- which is the right feasibility gate for a
+    demand-coverage corridor that legitimately curves, unlike endpoint detour (which
+    assumes a straight trunk). Computed over the terminal set the corridor is built to
+    connect (0.0 for <2 reachable terminals).
+    """
+    import numpy as np
+    from scipy.sparse.csgraph import minimum_spanning_tree
+    from scipy.spatial.distance import pdist, squareform
+
+    uniq = list(dict.fromkeys(terminal_nodes))
+    coords = np.array(
+        [(G_proj.nodes[n]["x"], G_proj.nodes[n]["y"]) for n in uniq if n in G_proj.nodes],
+        dtype=float,
+    )
+    if len(coords) < 2:
+        return 0.0
+    return float(minimum_spanning_tree(squareform(pdist(coords))).sum()) / 1000.0
+
+
 def corridor_trunk_diameter(G_proj, terminal_nodes):
     """Shaper B: the MST's longest leaf-to-leaf path (tree diameter) as a single trunk.
 

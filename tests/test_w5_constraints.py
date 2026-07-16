@@ -42,6 +42,29 @@ def test_detour_ratio_violation(cfg):
     assert any(v.name == "detour_ratio" for v in result.violations)
 
 
+def test_anchor_span_overrides_endpoint_detour(cfg):
+    # Endpoint detour 12/5 = 2.40 would FAIL, but the corridor efficiently connects a
+    # bent anchor set whose straight-line span is 8km -> anchor-directness 12/8 = 1.50,
+    # which passes. This is the G02 case: a curved coverage corridor, not wasteful.
+    candidate = make_candidate(route_km=12.0, n_stops=25, straight_km=5.0)
+    candidate.anchor_span_km = 8.0
+    contexts = [make_ctx(700.0), make_ctx(700.0)]
+    result = check_constraints(candidate, contexts, cfg)
+    assert result.feasible is True
+    assert not any(v.name == "detour_ratio" for v in result.violations)
+
+
+def test_anchor_directness_can_still_violate(cfg):
+    # A genuinely wasteful route: 12km to connect anchors that span only 4km straight
+    # -> anchor-directness 3.0 > 1.8, flagged even though it is anchor-based.
+    candidate = make_candidate(route_km=12.0, n_stops=25, straight_km=10.0)
+    candidate.anchor_span_km = 4.0
+    contexts = [make_ctx(700.0), make_ctx(700.0)]
+    result = check_constraints(candidate, contexts, cfg)
+    assert not result.feasible
+    assert any(v.name == "detour_ratio" for v in result.violations)
+
+
 def test_detour_ratio_at_limit_passes(cfg):
     # detour = 9.0 / 5.0 = 1.8 exactly
     candidate = make_candidate(route_km=9.0, n_stops=15, straight_km=5.0)

@@ -31,7 +31,7 @@ from src.w5_types import W5Config
 from src.w5_objective import load_ageb_context
 from src.w6_anchors import load_gap_agebs, load_gtfs_stops, network_connected_agebs
 from src.w6_candidates import build_route_candidate
-from src.w6_graph import corridor_trunk_diameter, load_or_download_osm, project_to_6372
+from src.w6_graph import anchor_span_km, corridor_trunk_diameter, load_or_download_osm, project_to_6372
 from src.w6_anchor_experiment import build_anchor_terminals, CONNECT_M
 from src.w8_corridor_merit import build_merit_baselines, score_corridor
 
@@ -58,17 +58,19 @@ def main():
         if geom is None or km <= 0.01:
             continue
         cid = f"G{gid:02d}"
-        rc = build_route_candidate(cid, geom, eng, config=cfg, route_km_override=km)
+        span = anchor_span_km(G, terminals[gid])
+        rc = build_route_candidate(cid, geom, eng, config=cfg, route_km_override=km,
+                                   anchor_span_km=span)
         if rc is None:
             continue
         ctxs = load_ageb_context(rc.served_ageb_ids, eng)
         cr = check_constraints(rc, ctxs, cfg)
         td = float(ageb.loc[ageb["cve_ageb"].isin(rc.served_ageb_ids), "transit_demand"].sum())
         merit = score_corridor(geom, km, td, baselines)
-        detour = rc.route_km / rc.straight_line_km if rc.straight_line_km else float("inf")
+        directness = km / span if span else float("inf")
         corridors.append((cid, geom, dict(
             route_km=km, n_served=len(rc.served_ageb_ids), total_demand=td,
-            hi_share=merit["hi_share"], dpk_pct=merit["dpk_pct"], detour=detour,
+            hi_share=merit["hi_share"], dpk_pct=merit["dpk_pct"], directness=directness,
             feasible=bool(cr.feasible)), sorted(rc.served_ageb_ids)))
     eng.dispose()
 
@@ -131,7 +133,7 @@ def main():
             <div><dt>Total demand</dt><dd>{s['total_demand']:,.0f}<span class="u">/day</span></dd></div>
             <div><dt>High-gap share</dt><dd>{hi:.0f}%<span class="u">metro {METRO_HI:.0f}%</span></dd></div>
             <div><dt>Demand / km</dt><dd>{s['dpk_pct']:.0f}th<span class="u">pct vs routes</span></dd></div>
-            <div><dt>Detour ratio</dt><dd class="det {fclass}">{s['detour']:.2f}<span class="u">cap {DETOUR_CAP:.2f}</span></dd></div>
+            <div><dt>Anchor directness</dt><dd class="det {fclass}">{s['directness']:.2f}<span class="u">cap {DETOUR_CAP:.2f}</span></dd></div>
           </dl>
         </article>""")
 
@@ -142,7 +144,7 @@ def main():
     )
     OUT.write_text(html, encoding="utf-8")
     print(f"[OK] wrote {OUT}  ({len(html):,} bytes; {n_feas}/{len(corridors)} feasible "
-          f"under standard endpoint detour, diameter-trunk shaper)")
+          f"under anchor directness, diameter-trunk shaper)")
 
 
 _TEMPLATE = """<div id="app">
@@ -232,12 +234,14 @@ _TEMPLATE = """<div id="app">
 
 <div class="head">
   <p class="eyebrow">W6 corridor generation &middot; frontier anchors &middot; diameter-trunk shaper</p>
-  <h1>Frontier corridors, honestly shaped</h1>
+  <h1>Frontier corridors on the coverage-gap surface</h1>
   <p class="sub">Each corridor is the longest leaf-to-leaf path of its anchors' spanning tree,
-  stitched from real road segments &mdash; no phantom straight jumps, no branch loops. Judged by
-  the standard end-to-end detour ratio (route length &divide; straight-line distance between the
-  two ends, cap 1.80). Amber clears the cap; dashed grey is too circuitous. Hover a corridor to
-  light up the AGEBs it serves.</p>
+  stitched from real road segments &mdash; no phantom straight jumps, no branch loops. Feasibility
+  is judged by ANCHOR DIRECTNESS (route length &divide; the straight-line span of the demand
+  anchors it connects, cap 1.80) &mdash; how much distance the route wastes connecting its demand,
+  rather than whether it runs straight end-to-end. That lets a corridor legitimately curve to
+  follow a bent band of demand. Amber clears the cap; dashed grey wastes distance. Hover a corridor
+  to light up the AGEBs it serves.</p>
 </div>
 
 <div class="grid">
@@ -253,20 +257,21 @@ _TEMPLATE = """<div id="app">
       <span><i class="sw" style="background:var(--gap-hi)"></i>High gap</span>
       <span><i class="sw" style="background:var(--gap-med)"></i>Medium</span>
       <span><i class="sw" style="background:var(--gap-lo)"></i>Low gap</span>
-      <span><i class="ln"></i>Feasible (detour &le; 1.80)</span>
-      <span><i class="ln d"></i>Too circuitous</span>
+      <span><i class="ln"></i>Feasible (directness &le; 1.80)</span>
+      <span><i class="ln d"></i>Wastes distance</span>
     </div>
   </div>
   <aside>
-    <div class="tally"><b>{n_feas} / {n_total}</b><p>feasible under the standard detour cap.
-    With honest geometry only the short 2-anchor stub qualifies; the rest genuinely wander
-    ~2&ndash;2.8&times; their end-to-end distance.</p></div>
+    <div class="tally"><b>{n_feas} / {n_total}</b><p>feasible under anchor directness. Corridors
+    that curve to cover a bent band of demand now qualify (e.g. G02); only a route that genuinely
+    wastes distance connecting its anchors is rejected.</p></div>
     {cards}
   </aside>
 </div>
 <p class="foot">Choropleth: AGEB coverage-gap category (demand vs GTFS accessibility, W3).
 Corridors: W6 frontier anchors shaped by the MST-diameter trunk (src/w6_graph.corridor_trunk_diameter).
-Detour ratio = road length &divide; straight-line end-to-end distance. Generated by src/w6_experiment_map.py.</p>
+Anchor directness = road length &divide; straight-line spanning length of the corridor's demand
+anchors. Generated by src/w6_experiment_map.py.</p>
 
 <script>
 (function() {{

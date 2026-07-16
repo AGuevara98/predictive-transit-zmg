@@ -131,3 +131,16 @@ def test_trunk_diameter_spans_two_farthest_terminals():
     geom, _ = corridor_trunk_diameter(G, [0, 2, 4])
     pts = _node_coords(geom)
     assert (0.0, 1000.0) in pts and (1500.0, 0.0) in pts
+
+
+def test_anchor_span_km_is_straight_line_mst():
+    from src.w6_graph import anchor_span_km
+    # Terminals at x=0, 2000, 3000 (y=0). Straight-line MST = 2000 + 1000 = 3000m.
+    G = make_linear_graph()
+    assert anchor_span_km(G, [0, 2, 3]) == pytest.approx(3.0, rel=1e-6)
+
+
+def test_anchor_span_km_single_terminal_is_zero():
+    from src.w6_graph import anchor_span_km
+    G = make_linear_graph()
+    assert anchor_span_km(G, [0]) == 0.0

@@ -16,16 +16,25 @@ def check_constraints(
     """Return feasibility status and list of all constraint violations."""
     violations: List[ConstraintViolation] = []
 
-    # 1. Detour ratio
-    if candidate.straight_line_km > 0:
-        detour = candidate.route_km / candidate.straight_line_km
+    # 1. Directness. For a demand-coverage corridor that legitimately curves, the right
+    # baseline is the straight-line span of the anchors it connects (anchor-directness),
+    # not the endpoint distance (which assumes a straight trunk and over-penalizes curved
+    # coverage lines -- see the G02 case). Use anchor_span_km when the candidate carries
+    # it; otherwise fall back to endpoint straight_line_km (W7 routes, W5 demo).
+    anchor_span = getattr(candidate, "anchor_span_km", None)
+    if anchor_span and anchor_span > 0:
+        ideal_km, basis = anchor_span, "anchor-span"
+    else:
+        ideal_km, basis = candidate.straight_line_km, "endpoint"
+    if ideal_km and ideal_km > 0:
+        detour = candidate.route_km / ideal_km
         if detour > config.max_detour_ratio:
             violations.append(ConstraintViolation(
                 name="detour_ratio",
                 value=round(detour, 3),
                 limit=config.max_detour_ratio,
                 message=(
-                    f"Detour ratio {detour:.2f} exceeds max {config.max_detour_ratio}"
+                    f"Directness {detour:.2f} ({basis}) exceeds max {config.max_detour_ratio}"
                 ),
             ))
 
