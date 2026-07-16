@@ -1,0 +1,32 @@
+{
+  "frontier_G00": {
+    "old_detour": 3.24,
+    "mst_km": 5.1,
+    "new_directness": 1.68,
+    "new_feasible": true
+  },
+  "frontier_G01": {
+    "old_detour": 2.63,
+    "mst_km": 19.8,
+    "new_directness": 1.44,
+    "new_feasible": true
+  },
+  "frontier_G02": {
+    "old_detour": 6.75,
+    "mst_km": 7.9,
+    "new_directness": 1.6,
+    "new_feasible": true
+  },
+  "frontier_G03": {
+    "old_detour": 1.36,
+    "mst_km": 2.0,
+    "new_directness": 1.25,
+    "new_feasible": true
+  },
+  "frontier_G05": {
+    "old_detour": 2.9,
+    "mst_km": 2.8,
+    "new_directness": 1.93,
+    "new_feasible": false
+  }
+}
