@@ -48,29 +48,30 @@
 
 ## W8.2 -- Benchmark: W6 vs. Premium Routes
 
-**W6 feasible corridors:** 3
+**W6 feasible corridors:** 4
 **Premium route shapes:** 33
-**Mean W6 overlap with premium routes:** 0.0%
-**Total W6 km:** 32.6 km
+**Mean W6 overlap with premium routes:** 10.5%
+**Total W6 km:** 44.9 km
 
 *(Low overlap means W6 identifies new un-served areas rather than replicating existing lines -- an expected and valid finding.)*
 
 | W6 Corridor | Best Matching Premium Route | Overlap |
 |-------------|----------------------------|---------|
-| W6_G00 | None | 0.0% |
-| W6_G03 | None | 0.0% |
-| W6_G05 | None | 0.0% |
+| W6_G00 | nan | 0.0% |
+| W6_G01 | nan | 0.0% |
+| W6_G02 | MP-C03 | 42.0% |
+| W6_G03 | nan | 0.0% |
 
 ## W8.3 -- Quantitative Before/After Metrics
 
 | Metric | Before W6 | After W6 | Delta |
 |--------|-----------|----------|-------|
-| Coverage rate (AGEBs) | 69.9% | 70.6% | +0.7% |
-| Accessibility Gini | 0.6333 | 0.6270 | -0.0063 |
-| W6 pop-served / route-km | -- | 1,748 | -- |
-| AGEBs newly served by W6 | -- | 16 | -- |
-| Population newly served | -- | 49,686 | -- |
-| Total W6 route km | -- | 32.6 km | -- |
+| Coverage rate (AGEBs) | 69.9% | 71.0% | +1.1% |
+| Accessibility Gini | 0.6333 | 0.6146 | -0.0187 |
+| W6 pop-served / route-km | -- | 4,195 | -- |
+| AGEBs newly served by W6 | -- | 47 | -- |
+| Population newly served | -- | 120,648 | -- |
+| Total W6 route km | -- | 44.9 km | -- |
 
 **Note on Gini 'after' estimate:** AGEBs within 400m of W6 corridors that currently have zero accessibility are assigned the mean accessibility of currently-served AGEBs. This is a conservative lower bound on the actual accessibility gain.
 

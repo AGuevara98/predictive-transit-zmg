@@ -617,10 +617,12 @@ W8 validates W6's corridor-generation logic two ways: a backtest (mask existing 
 - `outputs/w8/w8_before_after_metrics.png`, `outputs/w8/w8_backtest_overlap.png` — charts
 - `outputs/w8/w8_backtest_per_route.csv`, `outputs/w8/w8_benchmark_detail.csv`
 
-**Key results (2026-06-25 re-run, beta=1.2005 adopted into `w1_gravity_model.py`):**
-- Backtest: 1,344 GTFS stops masked (agencies MT + MM); masked accessibility graph 9,306 nodes / 11,235 edges; 13,874 AGEB-stop pairs within 400m — all unchanged from the beta=2.0 run (accessibility is demand-independent); 5 corridors re-proposed after masking (was 6); mean overlap fraction with masked-out premium routes = 0.249 (was 0.236)
-- Benchmark: 3 feasible W6 corridors compared against 33 premium route shapes
-- Superseded (beta=2.0) result, 2026-06-19 run: 6 corridors re-proposed after masking, mean overlap fraction = 0.236
+**Key results (2026-07-16 re-run, against the W6-re-architecture feasible set — frontier anchors + MST-diameter-trunk + anchor-directness gate):**
+- Backtest: 1,344 GTFS stops masked (agencies MT + MM); 30 anchor AGEBs after masking; 5 corridors re-proposed; mean overlap fraction with masked-out premium routes = **0.249** (unchanged from the beta=1.2005 run — the backtest independently re-runs W6 anchor selection on the masked surface, so it is nearly insensitive to which corridors are canonical)
+- Benchmark: **4 feasible W6 corridors** (G00/G01/G02/G03) compared against 33 premium route shapes; mean overlap = **10.5%** (was 0.0% under the stale 3-stub set); total W6 = 44.9 km. **W6_G02 overlaps premium route MP-C03 at 42%** — shape-proximity overlap (fraction of sampled points within 400m), a different metric from the merit analysis's Jaccard AGEB-set overlap (0.18), so not contradictory; read as revealed-preference corroboration (real planners drew a similar alignment), with a mild caveat on the "unique corridor" framing
+- Before/after metrics strengthened vs the stale 3-stub set: coverage rate +1.1% (was +0.7%), accessibility Gini -0.0187 (was -0.0063, ~3x), pop-served/km 4,195 (was 1,748), AGEBs newly served 47 (was 16), population newly served 120,648 (was 49,686), total W6 route km 44.9 (was 32.6) — the gains are larger because the new feasible set is real corridors (incl. the 23km G01 and 12.1km G02), not three short stubs
+- Superseded (beta=1.2005, 2026-06-25, pre-re-architecture 3-stub set): benchmark 3 feasible corridors, mean premium overlap 0.0%, coverage +0.7%, Gini -0.0063; backtest 5 corridors / 0.249 overlap
+- Superseded (beta=2.0, 2026-06-19): 6 corridors re-proposed after masking, mean overlap 0.236
 
 **Run:** `python src/run_w8.py` (depends on `outputs/w6/corridor_candidates.geojson` from W6)
 ## W8 — Line 4 out-of-sample backtest (2026-07-12)
@@ -863,10 +865,14 @@ Last refreshed 2026-07-16, after the W6 re-architecture (frontier anchors + MST-
 shaper + anchor-directness gate; see the "W6 re-architecture -- 2026-07-15" section above) was
 merged to `main` (PR #8). Ordered by priority.
 
-1. **Re-run `run_w8.py` against the new corridors (HIGHEST PRIORITY).** The backtest/benchmark
-   overlap numbers in the W8 section are STALE -- they predate the re-architecture and read the
-   now-changed `outputs/w6/corridor_candidates.geojson`. Re-running re-validates the new feasible
-   set (incl. W6_G02) against the masked-premium and Line 4 backtests.
+1. ✅ **DONE 2026-07-16 — Re-ran `run_w8.py` against the new corridors.** The W8 section now
+   carries the refreshed numbers: benchmark 4 feasible corridors / 10.5% mean premium overlap
+   (W6_G02 x MP-C03 42%), before/after gains ~2-3x the stale 3-stub set; backtest overlap 0.249
+   unchanged (backtest re-runs anchor selection independently of the canonical corridors).
+   Regenerated `outputs/w8/`. NOTE: the Line 4 out-of-sample probe (`w8_line4_*.py`) was NOT
+   re-run this pass — those scripts read the live DB + `linea_4.geojson` directly and do not
+   depend on `outputs/w6/corridor_candidates.geojson`, but the recall-0.00 finding predates the
+   re-architecture and should be re-checked against the new feasible set (fold into item 2).
 2. **Strengthen validation power.** Add masked backtests for Line 3 (2020) and Mi Macro (2022)
    alongside the existing premium-route backtest, so validation is not n=1 on Line 4.
 3. **Decide the G05 reject / cap sensitivity.** With the metric now anchor-based, only W6_G05
