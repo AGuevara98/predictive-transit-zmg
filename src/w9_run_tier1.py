@@ -1,171 +1,151 @@
 """
-W9.5 -- Tier-1 Pipeline Orchestrator for Monterrey
-====================================================
-Runs the W1-equivalent demand estimation pipeline for ZM Monterrey using
-Tier-1 data only (INEGI CPV2020 census, DENUE, OSM).
+W9.5 -- Tier-1 Pipeline Orchestrator (city-parameterized)
+=========================================================
+Runs the W1-equivalent demand-estimation pipeline for a transfer city using
+Tier-1 data only (INEGI CPV2020 census, DENUE, AGEB shapefile). No transit
+supply data required.
 
-Steps:
-  1. Check for Monterrey census data; print download instructions if absent
-  2. Load and validate AGEB-level census data
-  3. Compute trip productions and attractions
-  4. Run doubly-constrained gravity model
-  5. Apply vehicle-ownership transit-propensity weighting
-  6. Write outputs to outputs/w9/
-  7. Print transfer comparison: ZMG vs Monterrey mean transit demand
+Cities (select with --city; default mty for backward compatibility):
+  mty  -> Monterrey, Nuevo Leon        (src/w9_city_config.py)
+  tol  -> Toluca, Estado de Mexico     (src/w9_city_config_tol.py)  -- LARGE metro
+  ags  -> Aguascalientes               (src/w9_city_config_ags.py)  -- COMPACT metro
+
+Steps: load census -> DENUE attractions -> shapefile centroids -> Furness gravity
+-> vehicle-ownership transit-propensity weighting -> outputs/w9/{key}_*.csv +
+a ZMG-vs-city transfer comparison.
 
 Usage:
-    python src/w9_run_tier1.py
+    python src/w9_run_tier1.py                # Monterrey (default)
+    python src/w9_run_tier1.py --city tol     # Toluca
+    python src/w9_run_tier1.py --city ags     # Aguascalientes
 
-If census data is not available locally, the script exits with code 0 (not
-an error) after printing clear download instructions.
+Data paths are derived by convention from CITY_KEY + CVE_ENT (matching the
+committed MTY layout), with raw-INEGI-download layouts checked as fallback:
+  census slim : data/raw/census/ageb_urbana_{ENT}_cpv2020_{KEY}.csv
+  denue combo : data/raw/denue/{KEY}_denue_combined.csv
+  ageb shp    : data/2020_1_{ENT}_A/2020_1_{ENT}_A.shp
+
+If census data is absent the script prints download instructions and exits 0.
 """
+import argparse
+import importlib
 import sys
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import EMPLOYMENT_PROXY_MAP, SCIAN_SECTORS
-from src.w9_city_config import (
-    CITY_NAME, CVE_ENT, ZM_MUNICIPALITIES,
-    BBOX_LON_MIN, BBOX_LON_MAX, BBOX_LAT_MIN, BBOX_LAT_MAX,
-    TRIPS_PER_PERSON_DAY, YOUTH_MULTIPLIER,
-    EMPLOY_WEIGHT, POI_WEIGHT, RETAIL_WEIGHT,
-    GRAVITY_BETA, GRAVITY_MAX_ITER, GRAVITY_TOL, GRAVITY_FLOW_THRESHOLD,
-    CENSUS_ZIP_URL, CENSUS_DIR_NAME, CENSUS_CSV_NAME,
-    POP_COL, YOUTH_COL_LOW, YOUTH_COL_HIGH, YOUTH_COL_COMBINED,
-    VEHICLES_COL, OCCUPIED_HOUSING_COL,
-    COL_ENTIDAD, COL_MUN, COL_LOC, COL_AGEB, COL_MZA,
-)
 
-
-# =============================================================================
-# Paths
-# =============================================================================
 PROJECT_ROOT = Path(__file__).parent.parent
 OUTPUT_DIR   = PROJECT_ROOT / "outputs" / "w9"
 DATA_DIR     = PROJECT_ROOT / "data"
 
-# Committed slim extract (data/raw/census/, survives a fresh clone) checked
-# first; raw INEGI download layouts checked as fallback for full re-extraction.
-CENSUS_PATHS = [
-    PROJECT_ROOT / "data" / "raw" / "census" / "ageb_urbana_19_cpv2020_mty.csv",
-    DATA_DIR / CENSUS_DIR_NAME / "conjunto_de_datos" / CENSUS_CSV_NAME,
-    DATA_DIR / CENSUS_CSV_NAME,  # flat layout fallback
-]
+# City key -> config module name
+CITY_CONFIGS = {
+    "mty": "src.w9_city_config",
+    "tol": "src.w9_city_config_tol",
+    "ags": "src.w9_city_config_ags",
+}
 
-# Committed slim extract checked first (glob fallback handles other date
-# suffixes in the raw INEGI download).
-DENUE_PATHS = [
-    PROJECT_ROOT / "data" / "raw" / "denue" / "mty_denue_combined.csv",
-    DATA_DIR / "denue_19_0420_csv" / "conjunto_de_datos" / "denue_inegi_19_.csv",
-]
-
-# INEGI Marco Geoestadistico AGEB shapefile for Nuevo Leon
-AGEB_SHP_PATHS = [
-    DATA_DIR / "2020_1_19_A" / "2020_1_19_A.shp",
-]
+# ZMG reference stats (corrected 1,881-AGEB universe; from the W1 run) for the
+# transfer comparison. mean_vehicle_rate/transit_prop are beta-independent.
+ZMG_REF = {
+    "city": "ZMG (Guadalajara)", "n_agebs": 1881, "n_municipalities": 10,
+    "mean_vehicle_rate": 0.577, "mean_transit_prop": 0.423, "cve_ent": "14",
+}
 
 
-# =============================================================================
-# Step 1: Census data check
-# =============================================================================
-def find_census_file():
-    """Return the first existing census CSV path, or None if not found."""
-    for p in CENSUS_PATHS:
-        if p.exists():
-            return p
+def load_city_config(city_key: str):
+    if city_key not in CITY_CONFIGS:
+        raise SystemExit(f"Unknown --city '{city_key}'. Choose from {list(CITY_CONFIGS)}.")
+    return importlib.import_module(CITY_CONFIGS[city_key])
+
+
+def resolve_paths(cfg) -> dict:
+    """Data-file candidate paths for a city, derived by convention + raw fallbacks."""
+    ent, key = cfg.CVE_ENT, cfg.CITY_KEY
+    census = [
+        DATA_DIR / "raw" / "census" / f"ageb_urbana_{ent}_cpv2020_{key}.csv",
+        DATA_DIR / cfg.CENSUS_DIR_NAME / "conjunto_de_datos" / cfg.CENSUS_CSV_NAME,
+        DATA_DIR / cfg.CENSUS_CSV_NAME,
+    ]
+    denue = [
+        DATA_DIR / "raw" / "denue" / f"{key}_denue_combined.csv",
+        DATA_DIR / f"denue_{ent}_0420_csv" / "conjunto_de_datos" / f"denue_inegi_{ent}_.csv",
+    ]
+    denue += sorted(DATA_DIR.glob(f"denue_{ent}_*/conjunto_de_datos/denue_inegi_{ent}_.csv"))
+    shp = [DATA_DIR / f"2020_1_{ent}_A" / f"2020_1_{ent}_A.shp"]
+    shp += sorted(DATA_DIR.glob(f"2020_1_{ent}_*/*.shp"))
+    return {"census": census, "denue": denue, "shp": shp}
+
+
+def _first_existing(paths):
+    for p in paths:
+        if Path(p).exists():
+            return Path(p)
     return None
 
 
-def find_denue_file():
-    """Return the DENUE CSV path, or None if not found."""
-    for p in DENUE_PATHS:
-        if p.exists():
-            return p
-    matches = sorted(DATA_DIR.glob("denue_19_*/conjunto_de_datos/denue_inegi_19_.csv"))
-    return matches[0] if matches else None
-
-
-def find_ageb_shp():
-    """Return the INEGI AGEB shapefile path, or None if not found."""
-    for p in AGEB_SHP_PATHS:
-        if p.exists():
-            return p
-    matches = sorted(DATA_DIR.glob("2020_1_19_*/*.shp"))
-    return matches[0] if matches else None
-
-
-def print_census_download_instructions() -> None:
+def print_census_download_instructions(cfg, census_paths) -> None:
     print("\n" + "=" * 70)
-    print("  CENSUS DATA NOT FOUND -- DOWNLOAD REQUIRED")
+    print(f"  CENSUS DATA NOT FOUND FOR {cfg.CITY_NAME.upper()} -- DOWNLOAD REQUIRED")
     print("=" * 70)
-    print(f"\n  The Monterrey (Nuevo Leon) CPV2020 census file was not found.")
-    print(f"  Expected locations:")
-    for p in CENSUS_PATHS:
+    print(f"\n  Expected (first is the committed slim-extract path):")
+    for p in census_paths:
         print(f"    {p}")
     print(f"\n  Download steps:")
-    print(f"  1. Download the ZIP archive from INEGI:")
-    print(f"     {CENSUS_ZIP_URL}")
-    print(f"  2. Extract to: {DATA_DIR / CENSUS_DIR_NAME}/")
-    print(f"     The CSV should be at:")
-    print(f"     {CENSUS_PATHS[0]}")
-    print(f"  3. Re-run this script.")
-    print(f"\n  Note: The file is approximately 50-100 MB compressed.")
-    print(f"        The column schema is identical to the ZMG (Jalisco) census.")
+    print(f"  1. Portal (INEGI direct URLs 404 now; use the interactive picker):")
+    print(f"     {cfg.CENSUS_ZIP_URL}")
+    print(f"     Microdatos > AGEB y manzana urbana > state {cfg.CVE_ENT} > CSV")
+    print(f"  2. Extract under data/{cfg.CENSUS_DIR_NAME}/ (or drop the raw CSV in data/)")
+    print(f"  3. Slim to the ZM extract:")
+    print(f"       python scripts/data_prep/make_city_census_extract.py --city {cfg.CITY_KEY}")
+    print(f"  4. Re-run: python src/w9_run_tier1.py --city {cfg.CITY_KEY}")
     print()
 
 
 # =============================================================================
-# Step 2: Load census data
+# Step 2: Census + DENUE
 # =============================================================================
-def load_census(census_path: Path) -> pd.DataFrame:
+def load_census(cfg, census_path: Path) -> pd.DataFrame:
     print(f"[Step 2] Loading census: {census_path.name}...")
     census = pd.read_csv(census_path, dtype=str, encoding="utf-8-sig")
 
     if "cve_ageb" in census.columns:
-        # Committed slim extract (data/raw/census/ageb_urbana_19_cpv2020_mty.csv):
-        # already AGEB-level (MZA="000" pre-filtered) and already restricted to
-        # ZM municipalities, via scripts/data_prep/make_mty_census_extract.py.
+        # Committed slim extract: already AGEB-level + ZM-municipio filtered.
         pass
     else:
-        # Raw INEGI download layout -- filter and build cve_ageb ourselves.
-        census = census[census[COL_MZA] == "000"].copy()
+        census = census[census[cfg.COL_MZA] == "000"].copy()
         census["cve_ageb"] = (
-            census[COL_ENTIDAD].str.zfill(2)
-            + census[COL_MUN].str.zfill(3)
-            + census[COL_LOC].str.zfill(4)
-            + census[COL_AGEB].str.zfill(4)
+            census[cfg.COL_ENTIDAD].str.zfill(2) + census[cfg.COL_MUN].str.zfill(3)
+            + census[cfg.COL_LOC].str.zfill(4) + census[cfg.COL_AGEB].str.zfill(4)
         )
-        census = census[census[COL_MUN].isin(ZM_MUNICIPALITIES)].copy()
-    print(f"  [OK] {len(census):,} AGEB rows in {len(ZM_MUNICIPALITIES)} municipalities")
+        census = census[census[cfg.COL_MUN].isin(cfg.ZM_MUNICIPALITIES)].copy()
+    print(f"  [OK] {len(census):,} AGEB rows in {len(cfg.ZM_MUNICIPALITIES)} municipalities")
 
-    # Parse numeric columns
-    numeric_cols = [POP_COL, VEHICLES_COL, OCCUPIED_HOUSING_COL]
-    for col in numeric_cols:
+    for col in [cfg.POP_COL, cfg.VEHICLES_COL, cfg.OCCUPIED_HOUSING_COL]:
         if col in census.columns:
             census[col] = pd.to_numeric(census[col], errors="coerce").fillna(0)
         else:
             print(f"  [WARN] Column '{col}' not found; defaulting to 0")
             census[col] = 0.0
 
-    # Youth population: try combined column, fall back to sum of age bands
-    if YOUTH_COL_COMBINED in census.columns:
-        census["youth_pop"] = pd.to_numeric(
-            census[YOUTH_COL_COMBINED], errors="coerce"
-        ).fillna(0)
+    if cfg.YOUTH_COL_COMBINED in census.columns:
+        census["youth_pop"] = pd.to_numeric(census[cfg.YOUTH_COL_COMBINED], errors="coerce").fillna(0)
     else:
-        for c in [YOUTH_COL_LOW, YOUTH_COL_HIGH]:
+        for c in [cfg.YOUTH_COL_LOW, cfg.YOUTH_COL_HIGH]:
             if c not in census.columns:
                 census[c] = 0
             census[c] = pd.to_numeric(census[c], errors="coerce").fillna(0)
-        census["youth_pop"] = census[YOUTH_COL_LOW] + census[YOUTH_COL_HIGH]
+        census["youth_pop"] = census[cfg.YOUTH_COL_LOW] + census[cfg.YOUTH_COL_HIGH]
 
-    census["pe_youth_share"] = census["youth_pop"] / census[POP_COL].clip(lower=1)
-    census["pe_population"]  = census[POP_COL]
+    census["pe_youth_share"] = census["youth_pop"] / census[cfg.POP_COL].clip(lower=1)
+    census["pe_population"]  = census[cfg.POP_COL]
     census["vehicle_rate"]   = (
-        census[VEHICLES_COL] / census[OCCUPIED_HOUSING_COL].clip(lower=1)
+        census[cfg.VEHICLES_COL] / census[cfg.OCCUPIED_HOUSING_COL].clip(lower=1)
     ).clip(0, 1)
 
     print(f"  [OK] Mean population  : {census['pe_population'].mean():,.0f}")
@@ -173,29 +153,19 @@ def load_census(census_path: Path) -> pd.DataFrame:
     return census[["cve_ageb", "pe_population", "pe_youth_share", "vehicle_rate"]]
 
 
-def load_denue_features(denue_path: Path) -> pd.DataFrame:
-    """Load DENUE establishments and aggregate place features per AGEB.
-
-    Uses the AGEB code columns already present in the DENUE file (no spatial join needed).
-    Returns a DataFrame with columns: cve_ageb, employment_proxy, poi_count, retail_count.
-    """
+def load_denue_features(cfg, denue_path: Path) -> pd.DataFrame:
     print(f"[Step 2b] Loading DENUE: {denue_path.name}...")
     usecols = ["cve_ent", "cve_mun", "cve_loc", "ageb", "codigo_act", "per_ocu"]
     denue = pd.read_csv(denue_path, dtype=str, encoding="latin-1", usecols=usecols)
 
-    denue = denue[denue["cve_ent"].str.strip() == CVE_ENT].copy()
+    denue = denue[denue["cve_ent"].str.strip().str.zfill(2) == cfg.CVE_ENT].copy()
     denue["cve_mun_z"] = denue["cve_mun"].str.strip().str.zfill(3)
-    denue = denue[denue["cve_mun_z"].isin(ZM_MUNICIPALITIES)].copy()
-
+    denue = denue[denue["cve_mun_z"].isin(cfg.ZM_MUNICIPALITIES)].copy()
     denue["cve_ageb"] = (
-        denue["cve_ent"].str.strip().str.zfill(2)
-        + denue["cve_mun_z"]
-        + denue["cve_loc"].str.strip().str.zfill(4)
-        + denue["ageb"].str.strip().str.zfill(4)
+        denue["cve_ent"].str.strip().str.zfill(2) + denue["cve_mun_z"]
+        + denue["cve_loc"].str.strip().str.zfill(4) + denue["ageb"].str.strip().str.zfill(4)
     )
-
     denue["emp_proxy"] = denue["per_ocu"].str.strip().map(EMPLOYMENT_PROXY_MAP).fillna(0)
-
     retail_prefixes = tuple(SCIAN_SECTORS.get("retail", ["46"]))
     denue["is_retail"] = denue["codigo_act"].str.strip().str.startswith(retail_prefixes)
 
@@ -204,22 +174,16 @@ def load_denue_features(denue_path: Path) -> pd.DataFrame:
         poi_count=("cve_ageb", "count"),
         retail_count=("is_retail", "sum"),
     ).reset_index()
-
     print(f"  [OK] {len(denue):,} establishments -> {len(agg):,} AGEBs")
-    print(f"  [OK] Mean employment_proxy: {agg['employment_proxy'].mean():.1f}")
-    print(f"  [OK] Mean poi_count       : {agg['poi_count'].mean():.1f}")
     return agg
 
 
 # =============================================================================
-# Step 3: Trip productions and attractions
+# Step 3: Trip ends
 # =============================================================================
-def compute_trip_ends(census_df: pd.DataFrame,
-                       place_df: pd.DataFrame = None) -> pd.DataFrame:
+def compute_trip_ends(cfg, census_df, place_df=None) -> pd.DataFrame:
     print("[Step 3] Computing trip productions and attractions...")
-
-    # Productions: same formula as ZMG W1.1
-    rate = TRIPS_PER_PERSON_DAY * (1 + YOUTH_MULTIPLIER * census_df["pe_youth_share"])
+    rate = cfg.TRIPS_PER_PERSON_DAY * (1 + cfg.YOUTH_MULTIPLIER * census_df["pe_youth_share"])
     census_df = census_df.copy()
     census_df["productions"] = (census_df["pe_population"] * rate).clip(lower=0)
 
@@ -228,9 +192,9 @@ def compute_trip_ends(census_df: pd.DataFrame,
         for col in ["employment_proxy", "poi_count", "retail_count"]:
             merged[col] = merged[col].fillna(0)
         merged["attractions"] = (
-            EMPLOY_WEIGHT  * merged["employment_proxy"]
-            + POI_WEIGHT   * merged["poi_count"]
-            + RETAIL_WEIGHT * merged["retail_count"]
+            cfg.EMPLOY_WEIGHT * merged["employment_proxy"]
+            + cfg.POI_WEIGHT  * merged["poi_count"]
+            + cfg.RETAIL_WEIGHT * merged["retail_count"]
         ).clip(lower=0)
         census_df = merged.drop(columns=["employment_proxy", "poi_count", "retail_count"])
         print("  [OK] Attractions from DENUE employment + POI + retail")
@@ -238,14 +202,11 @@ def compute_trip_ends(census_df: pd.DataFrame,
         census_df["attractions"] = census_df["productions"].copy()
         print("  [NOTE] Attractions = population proxy (DENUE not loaded)")
 
-    # Scale so sum(A) == sum(P)
     total_prod = census_df["productions"].sum()
     total_attr = census_df["attractions"].sum()
     if total_attr > 0:
         census_df["attractions"] *= total_prod / total_attr
-
     print(f"  [OK] Total productions : {total_prod:,.0f}")
-    print(f"  [OK] Mean productions  : {census_df['productions'].mean():,.1f}")
     return census_df
 
 
@@ -253,230 +214,172 @@ def compute_trip_ends(census_df: pd.DataFrame,
 # Step 4: Gravity model
 # =============================================================================
 def load_ageb_centroids(shp_path: Path, cve_agebs: list) -> pd.DataFrame:
-    """Load AGEB polygon centroids from INEGI shapefile, reprojected to EPSG:6372.
-
-    Returns a DataFrame with columns: cve_ageb, x, y (projected metres).
-    AGEBs not matched in the shapefile are dropped (they will be absent from trip_df).
-    """
     import geopandas as gpd
     print(f"[Step 4a] Loading AGEB centroids from shapefile: {shp_path.name}...")
-    gdf = gpd.read_file(shp_path)
-    gdf = gdf.to_crs("EPSG:6372")
-
-    # INEGI Marco Geoestadistico: try CVEGEO first (13-char), then build from parts
+    gdf = gpd.read_file(shp_path).to_crs("EPSG:6372")
     if "CVEGEO" in gdf.columns:
         gdf["cve_ageb"] = gdf["CVEGEO"].astype(str).str.strip()
     else:
-        # Build from individual code columns (CVE_ENT, CVE_MUN, CVE_LOC, CVE_AGEB)
         parts = {"CVE_ENT": 2, "CVE_MUN": 3, "CVE_LOC": 4, "CVE_AGEB": 4}
-        for col, width in parts.items():
+        for col in parts:
             if col not in gdf.columns:
                 raise KeyError(f"Shapefile missing expected column: {col}")
         gdf["cve_ageb"] = (
-            gdf["CVE_ENT"].astype(str).str.zfill(2)
-            + gdf["CVE_MUN"].astype(str).str.zfill(3)
-            + gdf["CVE_LOC"].astype(str).str.zfill(4)
-            + gdf["CVE_AGEB"].astype(str).str.zfill(4)
+            gdf["CVE_ENT"].astype(str).str.zfill(2) + gdf["CVE_MUN"].astype(str).str.zfill(3)
+            + gdf["CVE_LOC"].astype(str).str.zfill(4) + gdf["CVE_AGEB"].astype(str).str.zfill(4)
         )
-
     centroids = gdf.copy()
     centroids["x"] = gdf.geometry.centroid.x
     centroids["y"] = gdf.geometry.centroid.y
-    centroids = centroids[["cve_ageb", "x", "y"]].copy()
-
-    # Keep only AGEBs that appear in the census
-    cve_set = set(cve_agebs)
-    matched = centroids[centroids["cve_ageb"].isin(cve_set)]
-    n_total = len(cve_agebs)
-    n_matched = len(matched)
-    print(f"  [OK] {n_matched:,} / {n_total:,} AGEBs matched to shapefile")
-    if n_matched < n_total * 0.90:
-        print(f"  [WARN] Less than 90% match rate -- check CVEGEO format in shapefile")
+    matched = centroids[centroids["cve_ageb"].isin(set(cve_agebs))][["cve_ageb", "x", "y"]]
+    print(f"  [OK] {len(matched):,} / {len(cve_agebs):,} AGEBs matched to shapefile")
+    if len(matched) < len(cve_agebs) * 0.90:
+        print("  [WARN] <90% match rate -- check CVEGEO format / municipio codes")
     return matched
 
 
-def _random_centroids_fallback(census_df: pd.DataFrame) -> pd.DataFrame:
-    """Random proxy centroids within MTY bbox (used only when shapefile is absent)."""
+def _random_centroids_fallback(cfg, census_df) -> pd.DataFrame:
     print("[Step 4a] No AGEB shapefile found -- using random proxy centroids")
     print("  [WARN] Gravity model distances are meaningless with random centroids.")
     rng = np.random.default_rng(42)
     n = len(census_df)
-    x_range = (BBOX_LON_MAX - BBOX_LON_MIN) * 100_173
-    y_range = (BBOX_LAT_MAX - BBOX_LAT_MIN) * 110_574
     census_df = census_df.copy()
-    census_df["x"] = rng.uniform(0, x_range, n)
-    census_df["y"] = rng.uniform(0, y_range, n)
+    census_df["x"] = rng.uniform(0, (cfg.BBOX_LON_MAX - cfg.BBOX_LON_MIN) * 100_173, n)
+    census_df["y"] = rng.uniform(0, (cfg.BBOX_LAT_MAX - cfg.BBOX_LAT_MIN) * 110_574, n)
     return census_df
 
 
-def run_gravity_model(trip_df: pd.DataFrame) -> np.ndarray:
+def run_gravity_model(cfg, trip_df):
     print("[Step 4] Running doubly-constrained gravity model...")
     from scipy.spatial.distance import cdist
     from src.w1_gravity_model import furness_ipf
-
     coords = trip_df[["x", "y"]].values
     D = cdist(coords, coords, metric="euclidean")
     np.fill_diagonal(D, 0.0)
-
     prods = trip_df["productions"].values.astype(float)
     attrs = trip_df["attractions"].values.astype(float)
-
     print(f"  [OK] Distance matrix: {D.shape}, mean non-zero dist = {D[D>0].mean():.0f} m")
-    T = furness_ipf(prods, attrs, D, beta=GRAVITY_BETA,
-                    max_iter=GRAVITY_MAX_ITER, tol=GRAVITY_TOL)
+    T = furness_ipf(prods, attrs, D, beta=cfg.GRAVITY_BETA,
+                    max_iter=cfg.GRAVITY_MAX_ITER, tol=cfg.GRAVITY_TOL)
     return T, D
 
 
 # =============================================================================
 # Step 5: Transit demand surface
 # =============================================================================
-def compute_transit_demand(trip_df: pd.DataFrame, T: np.ndarray) -> pd.DataFrame:
+def compute_transit_demand(trip_df, T) -> pd.DataFrame:
     print("[Step 5] Computing transit demand surface...")
-
-    # Total OD demand per AGEB (produced + attracted)
-    n = len(trip_df)
-    produced_flow  = T.sum(axis=1)
-    attracted_flow = T.sum(axis=0)
-    total_demand   = produced_flow + attracted_flow
-
+    total_demand = T.sum(axis=1) + T.sum(axis=0)
     result = trip_df[["cve_ageb", "vehicle_rate"]].copy()
     result["total_demand"]       = total_demand
     result["transit_propensity"] = (1.0 - result["vehicle_rate"]).clip(0, 1)
     result["transit_demand"]     = result["total_demand"] * result["transit_propensity"]
-
     print(f"  [OK] Mean transit_propensity : {result['transit_propensity'].mean():.3f}")
     print(f"  [OK] Mean transit_demand     : {result['transit_demand'].mean():,.1f}")
     return result
 
 
 # =============================================================================
-# Step 6: Write outputs
+# Step 6-7: Outputs + transfer comparison
 # =============================================================================
-def write_outputs(result: pd.DataFrame, T: np.ndarray, cve_list: list) -> None:
+def write_outputs(cfg, result, T, cve_list) -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    print("[Step 6] Writing outputs to outputs/w9/...")
-
-    result.to_csv(OUTPUT_DIR / "mty_demand_surface.csv", index=False)
-    print("  [OK] CSV -> outputs/w9/mty_demand_surface.csv")
-
-    # OD matrix summary
-    n_pairs = int((T >= GRAVITY_FLOW_THRESHOLD).sum()) - len(cve_list)  # minus diagonal
+    key = cfg.CITY_KEY
+    print(f"[Step 6] Writing outputs to outputs/w9/ ({key})...")
+    result.to_csv(OUTPUT_DIR / f"{key}_demand_surface.csv", index=False)
+    n_pairs = int((T >= cfg.GRAVITY_FLOW_THRESHOLD).sum()) - len(cve_list)
     pd.DataFrame([{
-        "city"                : CITY_NAME,
-        "n_agebs"             : len(cve_list),
-        "beta"                : GRAVITY_BETA,
-        "flow_threshold"      : GRAVITY_FLOW_THRESHOLD,
-        "n_od_pairs_stored"   : max(0, n_pairs),
-        "total_flow"          : float(T.sum()),
-        "mean_transit_demand" : result["transit_demand"].mean(),
-        "mean_vehicle_rate"   : result["vehicle_rate"].mean(),
-        "mean_transit_prop"   : result["transit_propensity"].mean(),
-    }]).to_csv(OUTPUT_DIR / "mty_tier1_summary.csv", index=False)
-    print("  [OK] CSV -> outputs/w9/mty_tier1_summary.csv")
+        "city": cfg.CITY_NAME, "n_agebs": len(cve_list), "beta": cfg.GRAVITY_BETA,
+        "flow_threshold": cfg.GRAVITY_FLOW_THRESHOLD, "n_od_pairs_stored": max(0, n_pairs),
+        "total_flow": float(T.sum()), "mean_transit_demand": result["transit_demand"].mean(),
+        "mean_vehicle_rate": result["vehicle_rate"].mean(),
+        "mean_transit_prop": result["transit_propensity"].mean(),
+    }]).to_csv(OUTPUT_DIR / f"{key}_tier1_summary.csv", index=False)
+    print(f"  [OK] {key}_demand_surface.csv + {key}_tier1_summary.csv")
 
 
-# =============================================================================
-# Step 7: Transfer comparison
-# =============================================================================
-def print_transfer_comparison(mty_result: pd.DataFrame) -> None:
+def print_transfer_comparison(cfg, result) -> None:
     print("\n" + "=" * 70)
-    print("TRANSFER COMPARISON: ZMG vs Monterrey")
+    print(f"TRANSFER COMPARISON: ZMG vs {cfg.CITY_NAME}")
     print("=" * 70)
-
-    # ZMG reference values (from W1 run, documented in CLAUDE.md)
-    zmg_stats = {
-        "city"                : "ZMG (Guadalajara)",
-        "n_agebs"             : 2068,
-        "mean_vehicle_rate"   : 0.577,
-        "mean_transit_prop"   : 0.423,
-        "cve_ent"             : "14",
-        "n_municipalities"    : 10,
+    city_stats = {
+        "city": f"{cfg.CITY_NAME} (W9 run)", "n_agebs": len(result),
+        "n_municipalities": len(cfg.ZM_MUNICIPALITIES),
+        "mean_vehicle_rate": result["vehicle_rate"].mean(),
+        "mean_transit_prop": result["transit_propensity"].mean(), "cve_ent": cfg.CVE_ENT,
     }
-
-    mty_stats = {
-        "city"                : f"{CITY_NAME} (W9 run)",
-        "n_agebs"             : len(mty_result),
-        "mean_vehicle_rate"   : mty_result["vehicle_rate"].mean(),
-        "mean_transit_prop"   : mty_result["transit_propensity"].mean(),
-        "cve_ent"             : CVE_ENT,
-        "n_municipalities"    : len(ZM_MUNICIPALITIES),
-    }
-
-    print(f"  {'Metric':<30} {'ZMG':>15} {'Monterrey':>15}")
-    print(f"  {'-'*30} {'-'*15} {'-'*15}")
+    print(f"  {'Metric':<24} {'ZMG':>15} {cfg.CITY_NAME:>18}")
+    print(f"  {'-'*24} {'-'*15} {'-'*18}")
     for key in ["n_agebs", "n_municipalities", "mean_vehicle_rate", "mean_transit_prop"]:
-        zmg_val = zmg_stats.get(key, "N/A")
-        mty_val = mty_stats.get(key, "N/A")
-        if isinstance(zmg_val, float):
-            print(f"  {key:<30} {zmg_val:>15.3f} {mty_val:>15.3f}")
+        z, c = ZMG_REF.get(key), city_stats.get(key)
+        if isinstance(z, float):
+            print(f"  {key:<24} {z:>15.3f} {c:>18.3f}")
         else:
-            print(f"  {key:<30} {zmg_val!s:>15} {mty_val!s:>15}")
-
-    vr_diff = mty_stats["mean_vehicle_rate"] - zmg_stats["mean_vehicle_rate"]
-    print(f"\n  Vehicle rate delta (MTY - ZMG): {vr_diff:+.3f}")
+            print(f"  {key:<24} {z!s:>15} {c!s:>18}")
+    vr_diff = city_stats["mean_vehicle_rate"] - ZMG_REF["mean_vehicle_rate"]
+    print(f"\n  Vehicle rate delta ({cfg.CITY_KEY} - ZMG): {vr_diff:+.3f}")
     if vr_diff > 0.05:
-        print("  [NOTE] Monterrey has higher car ownership -> lower transit propensity")
+        print("  [NOTE] Higher car ownership -> lower transit propensity than ZMG")
     elif vr_diff < -0.05:
-        print("  [NOTE] Monterrey has lower car ownership -> higher transit propensity")
+        print("  [NOTE] Lower car ownership -> higher transit propensity than ZMG")
     else:
-        print("  [NOTE] Car ownership levels are similar between cities")
-
-    transfer_report = pd.DataFrame([zmg_stats, mty_stats])
-    transfer_report.to_csv(OUTPUT_DIR / "transfer_comparison.csv", index=False)
-    print(f"\n  [OK] Transfer comparison -> outputs/w9/transfer_comparison.csv")
+        print("  [NOTE] Car ownership similar to ZMG")
+    pd.DataFrame([ZMG_REF, city_stats]).to_csv(
+        OUTPUT_DIR / f"transfer_comparison_{cfg.CITY_KEY}.csv", index=False)
+    print(f"  [OK] transfer_comparison_{cfg.CITY_KEY}.csv")
 
 
 # =============================================================================
 # Main
 # =============================================================================
-def main():
+def run_city(city_key: str) -> None:
+    cfg = load_city_config(city_key)
+    paths = resolve_paths(cfg)
     print("\n" + "=" * 70)
-    print(f"W9.5 -- TIER-1 PIPELINE FOR {CITY_NAME.upper()}")
+    print(f"W9.5 -- TIER-1 PIPELINE FOR {cfg.CITY_NAME.upper()} ({city_key})")
     print("=" * 70)
 
-    # Step 1: Check for census data
-    census_path = find_census_file()
+    census_path = _first_existing(paths["census"])
     if census_path is None:
-        print_census_download_instructions()
+        print_census_download_instructions(cfg, paths["census"])
         print("[INFO] Pipeline cannot proceed without census data. Exiting.")
-        sys.exit(0)
-
+        return
     print(f"[Step 1] Census data found: {census_path}")
 
-    # Steps 2-5: Run pipeline
-    census_df = load_census(census_path)
+    census_df = load_census(cfg, census_path)
 
-    denue_path = find_denue_file()
-    if denue_path:
-        place_df = load_denue_features(denue_path)
-    else:
-        place_df = None
+    denue_path = _first_existing(paths["denue"])
+    place_df = load_denue_features(cfg, denue_path) if denue_path else None
+    if denue_path is None:
         print("[Step 2b] DENUE not found; attractions will use population proxy")
 
-    trip_df = compute_trip_ends(census_df, place_df)
+    trip_df = compute_trip_ends(cfg, census_df, place_df)
 
-    shp_path = find_ageb_shp()
+    shp_path = _first_existing(paths["shp"])
     if shp_path:
         centroids = load_ageb_centroids(shp_path, trip_df["cve_ageb"].tolist())
         trip_df = trip_df.merge(centroids, on="cve_ageb", how="inner")
         print(f"  [OK] {len(trip_df):,} AGEBs with real centroids")
     else:
-        trip_df = _random_centroids_fallback(trip_df)
+        trip_df = _random_centroids_fallback(cfg, trip_df)
 
-    T, D      = run_gravity_model(trip_df)
-    result    = compute_transit_demand(trip_df, T)
-
-    # Step 6: Write outputs
-    write_outputs(result, T, trip_df["cve_ageb"].tolist())
-
-    # Step 7: Transfer comparison
-    print_transfer_comparison(result)
+    T, _   = run_gravity_model(cfg, trip_df)
+    result = compute_transit_demand(trip_df, T)
+    write_outputs(cfg, result, T, trip_df["cve_ageb"].tolist())
+    print_transfer_comparison(cfg, result)
 
     print("\n" + "=" * 70)
-    print(f"W9.5 TIER-1 PIPELINE COMPLETE ({CITY_NAME.upper()})")
+    print(f"W9.5 TIER-1 PIPELINE COMPLETE ({cfg.CITY_NAME.upper()})")
     print("=" * 70)
     print(result[["total_demand", "vehicle_rate", "transit_propensity", "transit_demand"]]
           .describe().to_string())
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description="W9 Tier-1 demand pipeline (city-parameterized)")
+    ap.add_argument("--city", default="mty", choices=list(CITY_CONFIGS),
+                    help="Transfer city (default: mty)")
+    run_city(ap.parse_args().city)
 
 
 if __name__ == "__main__":

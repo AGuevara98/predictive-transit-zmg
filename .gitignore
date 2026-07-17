@@ -23,6 +23,17 @@ data/ageb_mza_urbana_19_cpv2020_csv.zip
 data/ageb_mza_urbana_19_cpv2020_csv/
 data/denue_19_0420_csv/
 
+# W9 Toluca/Aguascalientes (states 15/01) raw archives -- ignore like MTY.
+data/2020_1_15_A.zip
+data/2020_1_01_A.zip
+data/ageb_mza_urbana_15_cpv2020_csv/
+data/ageb_mza_urbana_01_cpv2020_csv/
+data/denue_15_*/
+data/denue_01_*/
+# Toluca GTFS is large (~28MB, 60k stops) -- re-downloadable (curl -k, see
+# w9_city_config_tol.py). Aguascalientes GTFS (~2MB) is committed like ZMG's.
+data/gtfs_tol/
+
 # OD survey — large, gitignored per data agreement
 data/encuesta_origen_destino/
 # data/raw: ignore everything, then un-ignore the committed nppv_features inputs
@@ -32,6 +43,8 @@ data/raw/census/*
 !data/raw/census/zmg_indicators_combined.csv
 !data/raw/census/ageb_urbana_14_cpv2020_zmg.csv
 !data/raw/census/ageb_urbana_19_cpv2020_mty.csv
+!data/raw/census/ageb_urbana_15_cpv2020_tol.csv
+!data/raw/census/ageb_urbana_01_cpv2020_ags.csv
 !data/raw/ridership/
 data/raw/ridership/*
 !data/raw/ridership/jalisco_ridership_etup.csv
@@ -40,6 +53,8 @@ data/raw/ridership/*
 data/raw/denue/*
 !data/raw/denue/zmg_denue_combined.csv
 !data/raw/denue/mty_denue_combined.csv
+!data/raw/denue/tol_denue_combined.csv
+!data/raw/denue/ags_denue_combined.csv
 
 # ML model artifacts — reproducible from source, not for VCS
 outputs/**/*.pkl
