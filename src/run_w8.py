@@ -95,7 +95,8 @@ def write_report(metrics: dict, backtest: dict, benchmark: dict) -> None:
         f"**Premium routes masked:** Mi Macro (MM) + Mi Tren (MT) agencies",
         f"**Stops excluded:** {backtest['n_excluded_stops']:,}",
         f"**Anchor AGEBs found after masking:** {backtest['n_anchors_found']}",
-        f"**Corridors re-proposed:** {backtest['n_corridors_reproposed']}",
+        f"**Corridors built after masking:** {backtest.get('n_corridors_built', '?')}",
+        f"**Corridors re-proposed (feasible):** {backtest['n_corridors_reproposed']}",
     ]
 
     if backtest["mean_overlap_fraction"] is not None:
