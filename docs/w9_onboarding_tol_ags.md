@@ -117,6 +117,40 @@ build — OSM node + DENUE place indicators), W4 prioritization, W5/W6 corridor 
 **diagnostic (W1→W3, the thesis's strong contribution) is now demonstrated end-to-end on two new
 metros of very different size.**
 
+## Results — NPP features + W4 prioritization (run 2026-07-17)
+
+The full 14-feature NODE+PLACE+PEOPLE build (`src/w9_build_nppv.py --city {tol,ags}`) and the
+CRITIC/EWM + equity prioritization (`src/w9_run_w4.py --city {tol,ags}`) now run for both cities,
+reusing the pure ZMG feature + weighting functions.
+
+**Inputs assembled per city:**
+- **Node:** OSM drive graphs downloaded via osmnx (Toluca 116k nodes / 271k edges; Aguascalientes
+  42k / 96k) — intersections, 4-way density, street density per AGEB.
+- **Place:** slim INEGI DENUE aggregated by AGEB code (SCIAN sector from `codigo_act`, employment
+  from `per_ocu`) — POI/employment/retail/service density, land-use mix.
+- **People:** census + **CONAPO marginación (IM_2020, continuous)** + **CONEVAL rezago** (published
+  at AGEB level only as a *grade* Muy bajo…Muy alto → mapped to an ordinal 0–4 as `IRS_2020`, a
+  documented approximation of ZMG's continuous index; direction preserved, higher = more rezago).
+  Equity data via `scripts/data_prep/make_city_indicators_extract.py --city {tol,ags}`.
+
+**W4 top prioritization drivers (ensemble CRITIC/EWM weight):**
+
+| City | 1st | 2nd | 3rd | final_score mean |
+|------|-----|-----|-----|------------------|
+| Toluca | `pe_rezago_n` (0.18) | `p_employment_proxy_n` (0.14) | `p_service_density_n` (0.12) | 0.457 |
+| Aguascalientes | `pe_rezago_n` (0.25) | `p_employment_proxy_n` (0.13) | `p_service_density_n` (0.13) | 0.440 |
+
+**Transfer finding:** the objective weighting *adapts per city* — `pe_rezago_n` (social-lag
+variation) is the top discriminator in both new metros, whereas ZMG's top drivers were
+`pe_population_n` / `p_employment_proxy_n`. The framework re-derives its own weights from each
+city's data rather than importing ZMG's. Outputs: `outputs/w9/{key}_nppv_features.csv`,
+`{key}_w4_weights.csv`, `{key}_prioritization.csv`.
+
+Equity approximation caveat: for a fully ZMG-identical equity term, substitute CONEVAL's continuous
+IRS (not published at AGEB level in 2020) — the ordinal-grade mapping is the faithful available
+proxy. Marginación is the exact CONAPO continuous IM_2020, INVERTED in normalization (higher
+`pe_marginacion_n` = more marginalized), matching the 2026-07-12 ZMG equity fix.
+
 ## Notes / caveats
 
 - **β = 1.2005** (the current ZMG-calibrated prior) is used for both cities; no local EOD

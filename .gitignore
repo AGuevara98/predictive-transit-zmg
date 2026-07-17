@@ -10,6 +10,12 @@ data/continuonacional_15m.tif
 data/osm_zmg_drive.graphml
 # Monterrey OSM drive graph ~100 MB (auto-downloaded by w9_osm_download.py)
 data/osm_mty_drive.graphml
+# Toluca/Aguascalientes OSM drive graphs (re-downloadable via osmnx; 134MB/43MB)
+data/osm_tol_drive.graphml
+data/osm_ags_drive.graphml
+# CONAPO marginacion + CONEVAL rezago national source files (~56MB; slim per-city
+# extracts committed under data/raw/census/{key}_indicators_combined.csv)
+data/raw/indicators_src/
 # Raw ZMG transit layer
 data/transporte_publico.gpkg
 # Monterrey transit lines (W9)
@@ -45,6 +51,8 @@ data/raw/census/*
 !data/raw/census/ageb_urbana_19_cpv2020_mty.csv
 !data/raw/census/ageb_urbana_15_cpv2020_tol.csv
 !data/raw/census/ageb_urbana_01_cpv2020_ags.csv
+!data/raw/census/tol_indicators_combined.csv
+!data/raw/census/ags_indicators_combined.csv
 !data/raw/ridership/
 data/raw/ridership/*
 !data/raw/ridership/jalisco_ridership_etup.csv
