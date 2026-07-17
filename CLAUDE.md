@@ -858,24 +858,36 @@ W9 applies the pipeline to **Monterrey, Nuevo León** (ZM Monterrey, CVE_ENT=19,
 - W8 and W9 full run can proceed in parallel once GTFS is acquired
 
 ## E. Next steps
- 
-1. ~~**Test Question B (the real effectiveness test).**~~ DONE 2026-07-13 -- see the "W8 --
-   Question B" section above. `src/w8_corridor_merit.py` scores the 3 feasible corridors on
-   need / non-redundancy / demand-per-km; verdict is essentially negative (only the degenerate
-   1.4km G03 stub passes all three; feasibility is confounded with anchor-cluster sparsity).
-2. ~~**Decide `ANCHOR_TRIM_COL` in run_w6.py.**~~ DONE 2026-07-13 -- KEPT as `coverage_gap_n`
-   (conceptually targets the gap surface) and rewrote the code comment to state the honest null
-   finding (gap ~ demand in the unserved pool; switching the axis does not change corridors and
-   the real limitation is architectural, not the trim column).
-3. **Strengthen validation power.** Add masked backtests for Line 3 (2020) and Mi Macro (2022)
+
+Last refreshed 2026-07-16, after the W6 re-architecture (frontier anchors + MST-diameter-trunk
+shaper + anchor-directness gate; see the "W6 re-architecture -- 2026-07-15" section above) was
+merged to `main` (PR #8). Ordered by priority.
+
+1. **Re-run `run_w8.py` against the new corridors (HIGHEST PRIORITY).** The backtest/benchmark
+   overlap numbers in the W8 section are STALE -- they predate the re-architecture and read the
+   now-changed `outputs/w6/corridor_candidates.geojson`. Re-running re-validates the new feasible
+   set (incl. W6_G02) against the masked-premium and Line 4 backtests.
+2. **Strengthen validation power.** Add masked backtests for Line 3 (2020) and Mi Macro (2022)
    alongside the existing premium-route backtest, so validation is not n=1 on Line 4.
-4. **Narrow the thesis claim (Gap A)** to match the evidence: "data-driven demand-gap
-   prioritization + corridor identification, validated against a revealed corridor; automated
-   corridor generation carries characterized limitations."
-5. **Refresh downstream after the equity fix:** re-run `run_w3.py` (SHAP direction narrative),
-   and report the alpha in {0.10, 0.20, 0.30} equity sensitivity now that the equity term is
-   correctly signed.
-6. **Commit** the session's changes (see manifest + files list in D).
+3. **Decide the G05 reject / cap sensitivity.** With the metric now anchor-based, only W6_G05
+   (directness 1.93) fails the 1.8 cap. Sweep `max_detour_ratio` to confirm 1.8 is the right cut
+   under anchor-directness (it was inherited from the endpoint-detour era).
+4. **Update the thesis claim (Gap A) -- now MORE positive than the stale wording said.** Evidence
+   as of this session: the generator produces at least one substantive, feasible, merit-passing
+   corridor on its own terms (W6_G02: 56% High-gap, unique, 73rd-pct demand/km) once corridors are
+   shaped as real paths and judged by anchor-directness. Claim should read roughly: "data-driven
+   demand-gap prioritization + corridor identification and generation; generated corridors are
+   validated on need/non-redundancy/efficiency and against a revealed corridor, with characterized
+   residual limitations (e.g. low-efficiency connectors like G00/G01 still surface)."
+5. **Consider the TSP-path shaper.** `corridor_path_tsp` (built + tested) visits all anchors;
+   evaluate it against the chosen diameter-trunk for groups where dropping off-trunk anchors loses
+   meaningful demand.
+6. **Refresh downstream after the equity fix:** re-run `run_w3.py` (SHAP direction narrative), and
+   report the alpha in {0.10, 0.20, 0.30} equity sensitivity now that the equity term is correctly
+   signed.
+7. **Reconcile stale numbers in this doc.** Several W6/W7/W8 test counts and "3 feasible corridors"
+   mentions elsewhere predate the re-architecture; only the top W6 status bullet + the
+   re-architecture section were updated this session.
 
 ## Methodological References
 
