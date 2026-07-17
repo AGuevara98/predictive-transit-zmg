@@ -21,7 +21,7 @@ Master's thesis: a **7-phase geospatial ML pipeline** to predict optimal transit
 - W8 (Validation): ✅ Code complete — backtest + benchmark + before/after metrics run end-to-end via `python src/run_w8.py`; see W8 section below
 - **W8**: append — "First out-of-sample validation run 2026-07-12 (Line 4 backtest). Diagnostic
   layer corroborated; generative layer does NOT reconstruct Line 4. See W8 Line 4 section."
-- W9 (Transferability): 🔄 In progress — Tier-1 pipeline for Monterrey operational; DENUE + AGEB shapefile + OSM graph acquired; GTFS still needed for W3 equivalent; see W9 section below
+- W9 (Transferability): 🔄 In progress — Monterrey dropped as a live transfer target (its GTFS is unavailable). **Replaced 2026-07-17 by Toluca (large, 16 munis) + Aguascalientes (compact, 3 munis)** — both have verified downloadable GTFS (`docs/w9_gtfs_scouting_findings.md`); `w9_run_tier1.py` is now `--city {mty,tol,ags}` and both are wired (`docs/w9_onboarding_tol_ags.md`). GTFS staged; awaiting the browser-download of the INEGI census + AGEB shapefile per state (INEGI blocks scripted fetch) to produce Tier-1 results. MTY Tier-1 pipeline still operational. See W9 section below
 
 **Legacy phase status (pre-restructure):**
 - Phase 1 (Data Acquisition): ✅ Complete
