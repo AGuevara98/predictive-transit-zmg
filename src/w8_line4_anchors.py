@@ -1,15 +1,21 @@
 """
 W8 probe -- WHY did W6 miss Line 4? Trace the anchor funnel.
 
-Reproduces W6's exact anchor selection (src.w6_anchors, wired as in run_w6):
+Reproduces W6's exact anchor selection (src.w6_anchors, wired as in the 2026-07-15
+re-architecture of run_w6):
   load_gap_agebs -> select_anchors_jenks(k=5, min_demand=500)
-  -> trim to top N_ANCHORS=30 by transit_demand -> cluster_anchors(k=6)
+  -> select_frontier_anchors (within 400m of a network-connected AGEB)
+  -> trim to top N_ANCHORS=30 by coverage_gap_n -> cluster_anchors(k=6)
 and reports, at each stage, how many AGEBs on the real Line 4 corridor survive.
 
 Localizes the failure:
   ~0 survive the Jenks/demand filter  -> ELIGIBILITY problem (Line 4 gap/demand too low)
-  survive the filter but not the top-30 trim -> RANKING problem (out-competed on demand)
+  survive Jenks but not the frontier seam -> FRONTIER problem (Line 4 is deep-interior unserved)
+  survive the frontier but not the top-30 trim -> RANKING problem (out-competed on gap)
   survive to final anchors but corridor routed away -> ROUTING problem (KMeans/MST)
+
+Note: uses the LIVE (unmasked) network -- Line 4 is absent from the data/gtfs/ snapshot,
+so it is genuinely unserved and needs no masking (unlike the run_backtest hold-outs).
 
 Run (WSL, venv active): python src/w8_line4_anchors.py
 """
@@ -25,6 +31,7 @@ from config import PG_URI
 from src.w6_anchors import (
     N_ANCHORS, N_CORRIDORS, MIN_DEMAND,
     load_gap_agebs, select_anchors_jenks, cluster_anchors,
+    network_connected_agebs, select_frontier_anchors,
 )
 
 BUF = 800
@@ -56,12 +63,19 @@ def main():
     print(f"[Stage 1] Jenks top-class & demand >= {MIN_DEMAND:.0f}: "
           f"{len(pool)} in anchor pool; {len(pool_l4)} of them on Line 4")
 
-    # Stage 2 -- trim to top N_ANCHORS by demand (exact W6 logic)
-    anchors = pool
+    # Stage 1b -- frontier restriction to the served/unserved seam (re-architecture)
+    connected = network_connected_agebs(eng, radius_m=400.0)
+    frontier = select_frontier_anchors(pool, connected, radius_m=400.0)
+    frontier_l4 = frontier[frontier["cve_ageb"].isin(l4_ids)]
+    print(f"[Stage 1b] Frontier seam (within 400m of a connected AGEB): "
+          f"{len(frontier)} anchors; {len(frontier_l4)} on Line 4")
+
+    # Stage 2 -- trim to top N_ANCHORS by coverage_gap_n (exact re-architecture logic)
+    anchors = frontier
     if len(anchors) > N_ANCHORS:
-        anchors = anchors.nlargest(N_ANCHORS, "transit_demand").reset_index(drop=True)
+        anchors = anchors.nlargest(N_ANCHORS, "coverage_gap_n").reset_index(drop=True)
     anchors_l4 = anchors[anchors["cve_ageb"].isin(l4_ids)]
-    print(f"[Stage 2] Trim to top {N_ANCHORS} by demand: "
+    print(f"[Stage 2] Trim to top {N_ANCHORS} by coverage_gap_n: "
           f"{len(anchors)} final anchors; {len(anchors_l4)} on Line 4")
 
     # Stage 3 -- cluster; which group(s) do the surviving Line 4 anchors land in

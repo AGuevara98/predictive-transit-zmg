@@ -37,10 +37,18 @@ from src.w3_accessibility import (
 )
 
 # Reuse W6 pipeline building blocks
-from src.w6_anchors import cluster_anchors, select_anchors_jenks
+from src.w5_constraints import check_constraints
+from src.w5_objective import load_ageb_context
+from src.w5_types import W5Config
+from src.w6_anchors import (
+    cluster_anchors,
+    select_anchors_jenks,
+    select_frontier_anchors,
+)
 from src.w6_candidates import build_route_candidate
 from src.w6_graph import (
-    build_corridor_path,
+    anchor_span_km,
+    corridor_trunk_diameter,
     load_or_download_osm,
     project_to_6372,
     snap_to_osm_nodes,
@@ -54,10 +62,14 @@ N_SAMPLE_POINTS = 200   # sample count along each route shape for overlap calcul
 # Step 1: Identify premium-route stop IDs
 # ---------------------------------------------------------------------------
 
-def get_premium_stop_ids(data_dir: Path, agency_ids: Set[str] = None) -> Set[str]:
-    """Return stop_ids belonging to routes operated by the given agencies.
+def get_premium_stop_ids(
+    data_dir: Path, agency_ids: Set[str] = None, route_ids: Set[str] = None
+) -> Set[str]:
+    """Return stop_ids belonging to the masked routes.
 
-    Default agencies: MM (Mi Macro BRT) and MT (Mi Tren light rail).
+    Selection: `route_ids` (exact route-level mask, e.g. Line 3 = {MT_L3, ST_L3}) when
+    given, else all routes of `agency_ids` (default MM + MT). route_ids takes precedence
+    so a single line can be masked without pulling its whole agency.
     """
     if agency_ids is None:
         agency_ids = {"MM", "MT"}
@@ -70,7 +82,10 @@ def get_premium_stop_ids(data_dir: Path, agency_ids: Set[str] = None) -> Set[str
         usecols=["trip_id", "stop_id"],
     )
 
-    premium_routes = set(routes.loc[routes["agency_id"].isin(agency_ids), "route_id"])
+    if route_ids is not None:
+        premium_routes = set(route_ids)
+    else:
+        premium_routes = set(routes.loc[routes["agency_id"].isin(agency_ids), "route_id"])
     premium_trips = set(trips.loc[trips["route_id"].isin(premium_routes), "trip_id"])
     premium_stops = set(
         stop_times.loc[stop_times["trip_id"].isin(premium_trips), "stop_id"]
@@ -111,9 +126,11 @@ def compute_shape_overlap(
 def load_premium_route_shapes(
     data_dir: Path,
     agency_ids: Set[str] = None,
+    route_ids: Set[str] = None,
 ) -> gpd.GeoDataFrame:
-    """Reconstruct one LineString per premium route from shapes.txt.
+    """Reconstruct one LineString per masked route from shapes.txt.
 
+    Selection mirrors get_premium_stop_ids: `route_ids` when given, else `agency_ids`.
     Returns GeoDataFrame with columns: route_id, shape_id, geometry (EPSG:6372).
     """
     if agency_ids is None:
@@ -123,7 +140,10 @@ def load_premium_route_shapes(
     trips = pd.read_csv(data_dir / "trips.txt", dtype=str)
     shapes = pd.read_csv(data_dir / "shapes.txt", dtype={"shape_id": str})
 
-    premium_routes = set(routes.loc[routes["agency_id"].isin(agency_ids), "route_id"])
+    if route_ids is not None:
+        premium_routes = set(route_ids)
+    else:
+        premium_routes = set(routes.loc[routes["agency_id"].isin(agency_ids), "route_id"])
 
     # One shape_id per route -- take the first shape_id per route
     route_shapes = (
@@ -237,25 +257,69 @@ def compute_masked_gap(
 
 
 # ---------------------------------------------------------------------------
+# Step 5b: Masked network connectivity (for frontier anchors)
+# ---------------------------------------------------------------------------
+
+def masked_network_connected(
+    masked_gap_gdf: gpd.GeoDataFrame,
+    excluded_stop_ids: Set[str],
+    data_dir: Path,
+    radius_m: float = 400.0,
+) -> gpd.GeoDataFrame:
+    """AGEBs whose centroid is within radius_m of a REMAINING (non-masked) GTFS stop.
+
+    The masked-world analogue of w6_anchors.network_connected_agebs (which queries the
+    full base.gtfs_stops). Frontier anchor selection must use the served/unserved seam
+    of the network AFTER masking -- otherwise a corridor could be judged "connected" via
+    a premium stop that the backtest just removed. Returns the subset of masked_gap_gdf
+    (carrying cx, cy) that select_frontier_anchors needs.
+    """
+    from scipy.spatial import cKDTree
+
+    stops_df = pd.read_csv(data_dir / "stops.txt", dtype={"stop_id": str})
+    stops_df = stops_df[~stops_df["stop_id"].isin(excluded_stop_ids)].copy()
+    if len(stops_df) == 0 or len(masked_gap_gdf) == 0:
+        return masked_gap_gdf.iloc[0:0].copy()
+    stops_gdf = gpd.GeoDataFrame(
+        stops_df,
+        geometry=gpd.points_from_xy(stops_df["stop_lon"], stops_df["stop_lat"]),
+        crs="EPSG:4326",
+    ).to_crs(CRS_CANONICAL)
+
+    tree = cKDTree(np.c_[stops_gdf.geometry.x.values, stops_gdf.geometry.y.values])
+    dist, _ = tree.query(masked_gap_gdf[["cx", "cy"]].values, k=1)
+    return masked_gap_gdf[dist <= radius_m].copy().reset_index(drop=True)
+
+
+# ---------------------------------------------------------------------------
 # Step 6: Full backtest orchestrator
 # ---------------------------------------------------------------------------
 
-def run_backtest(engine, data_dir: Path = DATA_DIR, agency_ids: Set[str] = None) -> dict:
+def run_backtest(
+    engine,
+    data_dir: Path = DATA_DIR,
+    agency_ids: Set[str] = None,
+    route_ids: Set[str] = None,
+) -> dict:
     """Run full hold-out backtest.
 
-    1. Mask premium routes (MM + MT) from GTFS
+    1. Mask routes from GTFS -- `route_ids` (exact lines, e.g. Line 3 = {MT_L3, ST_L3})
+       when given, else all routes of `agency_ids` (default MM + MT premium).
     2. Recompute accessibility without those stops
     3. Recompute coverage gap
-    4. Re-run W6 anchor selection + clustering + path generation
-    5. Evaluate overlap between re-proposed corridors and masked route shapes
-    Returns a dict with summary statistics.
+    4. Re-run the canonical W6 generator on the masked surface: frontier anchors
+       (masked served/unserved seam) -> coverage_gap_n trim -> MST-diameter-trunk ->
+       anchor-directness feasibility gate. "Re-proposed" = the FEASIBLE corridors.
+    5. Evaluate overlap between re-proposed (feasible) corridors and masked route shapes
+    Returns a dict with summary statistics (incl. n_corridors_built vs n_corridors_reproposed).
     """
     if agency_ids is None:
         agency_ids = {"MM", "MT"}
+    mask_label = f"routes {sorted(route_ids)}" if route_ids else f"agencies {sorted(agency_ids)}"
 
-    print("[Backtest] Identifying premium stop IDs...")
-    excluded = get_premium_stop_ids(data_dir, agency_ids)
-    print(f"  [OK] {len(excluded)} premium stops masked (agencies: {agency_ids})")
+    print("[Backtest] Identifying masked stop IDs...")
+    excluded = get_premium_stop_ids(data_dir, agency_ids, route_ids=route_ids)
+    print(f"  [OK] {len(excluded)} stops masked ({mask_label})")
 
     with engine.connect() as conn:
         ageb_gdf = gpd.read_postgis(
@@ -277,50 +341,77 @@ def run_backtest(engine, data_dir: Path = DATA_DIR, agency_ids: Set[str] = None)
     print("[Backtest] Computing masked coverage gap...")
     masked_gap_gdf = compute_masked_gap(demand_df, masked_acc, ageb_gdf)
 
-    print("[Backtest] Re-running W6 anchor selection...")
-    anchors = select_anchors_jenks(masked_gap_gdf, k_classes=5, min_demand=500.0)
-    if len(anchors) == 0:
-        print("  [WARN] No anchors found after masking. Skipping path generation.")
-        return {
-            "n_excluded_stops": len(excluded),
-            "n_anchors_found": 0,
-            "n_corridors_reproposed": 0,
-            "mean_overlap_fraction": None,
-            "per_route_overlap": [],
-        }
-
+    print("[Backtest] Re-running W6 anchor selection (frontier, masked connectivity)...")
+    # Canonical run_w6 pipeline (2026-07-15 re-architecture): frontier anchors on the
+    # MASKED served/unserved seam, coverage_gap_n trim, MST-diameter-trunk shaper, and
+    # the anchor-directness feasibility gate. Replaces the retired build_corridor_path +
+    # transit_demand-trim + no-frontier + no-feasibility path so backtest overlap is
+    # measured on the same generator run_w6 actually ships.
     N_ANCHORS = 30
     N_CORRIDORS = 6
+    cfg = W5Config()
+
+    empty = {
+        "n_excluded_stops": len(excluded),
+        "n_anchors_found": 0,
+        "n_corridors_built": 0,
+        "n_corridors_reproposed": 0,
+        "mean_overlap_fraction": None,
+        "per_route_overlap": [],
+    }
+
+    anchors = select_anchors_jenks(masked_gap_gdf, k_classes=5, min_demand=500.0)
+    if len(anchors) == 0:
+        print("  [WARN] No Jenks anchors after masking. Skipping.")
+        return empty
+
+    connected = masked_network_connected(masked_gap_gdf, excluded, data_dir, radius_m=400.0)
+    anchors = select_frontier_anchors(anchors, connected, radius_m=400.0)
+    if len(anchors) == 0:
+        print("  [WARN] No frontier anchors after masking. Skipping.")
+        return empty
     if len(anchors) > N_ANCHORS:
-        anchors = anchors.nlargest(N_ANCHORS, "transit_demand").reset_index(drop=True)
+        anchors = anchors.nlargest(N_ANCHORS, "coverage_gap_n").reset_index(drop=True)
     anchors = cluster_anchors(anchors, n_corridors=N_CORRIDORS)
+    print(f"  [OK] {len(anchors)} frontier anchors, "
+          f"{anchors['corridor_group'].nunique()} groups")
 
     print("[Backtest] Loading OSM graph...")
-    G_raw = load_or_download_osm()
-    G_proj = project_to_6372(G_raw)
+    G_proj = project_to_6372(load_or_download_osm())
 
-    print("[Backtest] Snapping anchors and building corridor paths...")
+    print("[Backtest] Building diameter-trunk corridors + anchor-directness gate...")
     osm_node_ids = snap_to_osm_nodes(G_proj, anchors["cx"].tolist(), anchors["cy"].tolist())
     anchors = anchors.copy()
     anchors["osm_node"] = osm_node_ids
 
-    reproposed = []
+    reproposed = []       # FEASIBLE corridor geoms (what run_w6 ships)
+    n_built = 0
     for gid in sorted(anchors["corridor_group"].unique()):
-        group_rows = anchors[anchors["corridor_group"] == gid]
-        geom, route_km = build_corridor_path(G_proj, group_rows["osm_node"].tolist())
-        if geom is not None and route_km > 0.01:
+        nodes = anchors.loc[anchors["corridor_group"] == gid, "osm_node"].tolist()
+        geom, route_km = corridor_trunk_diameter(G_proj, nodes)
+        if geom is None or route_km <= 0.01:
+            continue
+        n_built += 1
+        span = anchor_span_km(G_proj, nodes)
+        rc = build_route_candidate(f"BT_G{gid:02d}", geom, engine, config=cfg,
+                                   route_km_override=route_km, anchor_span_km=span)
+        if rc is None:
+            continue
+        ctxs = load_ageb_context(rc.served_ageb_ids, engine)
+        if check_constraints(rc, ctxs, cfg).feasible:
             reproposed.append(geom)
 
-    print(f"  [OK] {len(reproposed)} corridors re-proposed after masking")
+    print(f"  [OK] {n_built} corridors built, {len(reproposed)} feasible after masking")
 
     print("[Backtest] Loading masked route shapes...")
-    masked_shapes = load_premium_route_shapes(data_dir, agency_ids)
-    print(f"  [OK] {len(masked_shapes)} premium route shapes loaded")
+    masked_shapes = load_premium_route_shapes(data_dir, agency_ids, route_ids=route_ids)
+    print(f"  [OK] {len(masked_shapes)} masked route shapes loaded")
 
     if not reproposed or len(masked_shapes) == 0:
         return {
             "n_excluded_stops": len(excluded),
             "n_anchors_found": len(anchors),
+            "n_corridors_built": n_built,
             "n_corridors_reproposed": len(reproposed),
             "mean_overlap_fraction": None,
             "per_route_overlap": [],
@@ -345,6 +436,7 @@ def run_backtest(engine, data_dir: Path = DATA_DIR, agency_ids: Set[str] = None)
     return {
         "n_excluded_stops": len(excluded),
         "n_anchors_found": len(anchors),
+        "n_corridors_built": n_built,
         "n_corridors_reproposed": len(reproposed),
         "mean_overlap_fraction": mean_overlap,
         "per_route_overlap": per_route,

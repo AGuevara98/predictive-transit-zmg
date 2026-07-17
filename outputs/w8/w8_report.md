@@ -5,46 +5,47 @@
 **Premium routes masked:** Mi Macro (MM) + Mi Tren (MT) agencies
 **Stops excluded:** 1,344
 **Anchor AGEBs found after masking:** 30
-**Corridors re-proposed:** 5
-**Mean route-shape overlap:** 24.9%
+**Corridors built after masking:** 5
+**Corridors re-proposed (feasible):** 5
+**Mean route-shape overlap:** 15.0%
 
 ### Per-Route Overlap
 
 | Route ID | Max Overlap (%) |
 |----------|----------------|
-| MC-A03 | 0.0% |
-| MC-A05 | 53.5% |
-| MC-A06 | 100.0% |
-| MC-A07 | 21.5% |
-| MC-A08 | 37.0% |
-| MC-A09 | 55.0% |
-| MC-A10 | 55.0% |
-| MC-A13 | 0.0% |
-| MC-A15 | 60.5% |
-| MC-A16 | 30.5% |
-| MC-A17 | 12.0% |
-| MC-A18 | 18.5% |
-| MC-A19 | 8.5% |
-| MC-A20 | 12.0% |
-| MC-A21 | 9.5% |
-| MC-L1 | 17.0% |
-| MC-L1E | 17.5% |
-| MP-A01 | 25.5% |
-| MP-A02 | 23.5% |
+| MC-A03 | 40.0% |
+| MC-A05 | 24.5% |
+| MC-A06 | 0.0% |
+| MC-A07 | 47.5% |
+| MC-A08 | 14.0% |
+| MC-A09 | 18.5% |
+| MC-A10 | 0.0% |
+| MC-A13 | 7.5% |
+| MC-A15 | 60.0% |
+| MC-A16 | 63.5% |
+| MC-A17 | 55.5% |
+| MC-A18 | 32.5% |
+| MC-A19 | 11.5% |
+| MC-A20 | 21.0% |
+| MC-A21 | 13.0% |
+| MC-L1 | 13.5% |
+| MC-L1E | 13.0% |
+| MP-A01 | 0.0% |
+| MP-A02 | 0.0% |
 | MP-A03 | 0.0% |
-| MP-A04 | 11.5% |
-| MP-A05-1 | 30.5% |
-| MP-A06 | 32.5% |
-| MP-A07 | 20.0% |
-| MP-C01 | 68.0% |
-| MP-C02 | 11.0% |
-| MP-C03 | 20.5% |
-| MP-T01 | 16.0% |
-| MP-T02 | 13.5% |
-| MP-T03 | 19.0% |
-| MT_L3 | 8.0% |
-| MT_L1 | 5.5% |
-| MT_L2 | 9.5% |
+| MP-A04 | 0.0% |
+| MP-A05-1 | 0.0% |
+| MP-A06 | 10.5% |
+| MP-A07 | 0.0% |
+| MP-C01 | 7.5% |
+| MP-C02 | 8.5% |
+| MP-C03 | 7.5% |
+| MP-T01 | 6.0% |
+| MP-T02 | 10.5% |
+| MP-T03 | 10.5% |
+| MT_L3 | 0.0% |
+| MT_L1 | 0.0% |
+| MT_L2 | 0.0% |
 
 ## W8.2 -- Benchmark: W6 vs. Premium Routes
 
