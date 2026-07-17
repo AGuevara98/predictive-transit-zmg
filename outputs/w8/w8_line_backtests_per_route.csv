@@ -1,0 +1,5 @@
+line,route_id,shape_id,max_overlap_fraction
+L1,ST_L1,ST_L1_r1,0.0
+L1,MT_L1,MT_L1_r1,0.0
+L2,ST_L2,ST_L2_r1,0.0
+L2,MT_L2,MT_L2_r1,0.0
