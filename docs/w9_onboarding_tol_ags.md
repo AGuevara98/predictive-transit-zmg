@@ -85,6 +85,38 @@ Shapefile match rates (real AGEBs → polygons): Toluca 538/577 (93%), Aguascali
 locality totals at MZA=="000", AGEB=="0000") and alpha-suffix AGEBs, per the ZMG base.ageb
 convention.
 
+## Results — W3 supply + coverage-gap diagnostic (the GTFS payoff, run 2026-07-17)
+
+`src/w9_run_w3.py --city {tol,ags}` builds the W3 supply layer (GTFS
+cumulative-opportunities accessibility, 45-min budget, jobs reachable) and the coverage-gap
+diagnostic from files, reusing the pure ZMG W3 functions. **This is the layer Monterrey could
+never reach** (no GTFS). Consolidated (`outputs/w9/w9_w3_comparison.csv`):
+
+| City | Urban AGEBs | Mean vehicle rate | Unserved % (no stop ≤400m) | High-gap % |
+|------|-------------|-------------------|-----------------------------|------------|
+| ZMG (Guadalajara) | 1,881 | 0.577 | 32.7% | 20.7% |
+| **Toluca** | 538 | 0.529 | 19.1% | **14.9%** |
+| **Aguascalientes** | 356 | 0.667 | 19.7% | **9.6%** |
+
+**Findings:**
+1. **The diagnostic transfers cleanly and differentiates cities.** High-gap share follows a clear
+   gradient — ZMG 20.7% > Toluca 14.9% > Aguascalientes 9.6%. Because High-gap = (top-2 demand
+   quintile ∩ bottom-2 access quintile), a *low* share means demand and supply are well aligned:
+   Aguascalientes' compact network serves its (modest, car-suppressed) demand well; Guadalajara has
+   the most high-demand-yet-underserved AGEBs.
+2. **Both transfer cities are better-covered than ZMG** (~19% unserved vs 32.7%) — their compact
+   urban footprints plus dense feeder GTFS (Toluca's feed alone has 60,295 stops) reach more of
+   their area; ZMG's 615 zero-access AGEBs are largely peripheral.
+
+Both cities use **DENUE employment** as the accessibility opportunity (matching ZMG). Toluca's
+Edomex DENUE is split into two INEGI parts (`denue_15_1_csv.zip` + `denue_15_2_csv.zip`, ~820k
+establishments combined); Aguascalientes' downloads as one (`denue_01_csv.zip`).
+
+Not yet built for the transfer cities: W3.3 supervised retrain (needs the full 14-feature NPP
+build — OSM node + DENUE place indicators), W4 prioritization, W5/W6 corridor generation. The
+**diagnostic (W1→W3, the thesis's strong contribution) is now demonstrated end-to-end on two new
+metros of very different size.**
+
 ## Notes / caveats
 
 - **β = 1.2005** (the current ZMG-calibrated prior) is used for both cities; no local EOD
