@@ -55,10 +55,21 @@ def main() -> None:
         sys.exit(1)
 
     df = pd.read_csv(src, dtype=str, encoding="utf-8-sig")
-    df = df[(df["MZA"] == "000") & (df["MUN"].str.zfill(3).isin(cfg.ZM_MUNICIPALITIES))].copy()
+    # The "AGEB y manzana urbana" file has hierarchical summary rows at MZA=="000":
+    # municipio totals (AGEB "0000", LOC "0000"), locality totals (AGEB "0000"), and
+    # the real AGEB-level rows. Keep ONLY real AGEBs: MZA=="000" AND AGEB != "0000".
+    # Also drop alpha-suffix AGEBs (e.g. "022A") to match the ZMG base.ageb convention
+    # (DDL.sql: cve_ageb NOT LIKE '%A%') and the urban AGEB polygon shapefile.
     df["MUN"] = df["MUN"].str.zfill(3)
+    df["AGEB4"] = df["AGEB"].str.zfill(4)
+    df = df[
+        (df["MZA"] == "000")
+        & (df["MUN"].isin(cfg.ZM_MUNICIPALITIES))
+        & (df["AGEB4"] != "0000")
+        & (~df["AGEB4"].str.contains("A", case=False, na=False))
+    ].copy()
     df["cve_ageb"] = (df["ENTIDAD"].str.zfill(2) + df["MUN"]
-                      + df["LOC"].str.zfill(4) + df["AGEB"].str.zfill(4))
+                      + df["LOC"].str.zfill(4) + df["AGEB4"])
     for c in KEEP:
         if c not in df.columns:
             print(f"  [WARN] column {c} absent; filling 0")

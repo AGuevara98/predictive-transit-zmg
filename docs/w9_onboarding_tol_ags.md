@@ -58,6 +58,33 @@ The GTFS feeds are staged so the coverage-gap diagnostic (the strong thesis cont
 can follow: adapt `w3_accessibility.py` / `w3_coverage_gap.py` to read `data/gtfs_{tol,ags}/`
 and the city demand surface. This is the next build after Tier-1 results look right.
 
+## Results — Tier-1 demand surface (run 2026-07-17)
+
+Both cities ran end-to-end. Consolidated transfer comparison
+(`outputs/w9/w9_transfer_comparison_4city.csv`), sorted by car ownership:
+
+| City | Metro pop | ZM munis | Urban AGEBs (matched) | Mean vehicle rate | Mean transit propensity | DENUE |
+|------|-----------|----------|-----------------------|-------------------|-------------------------|-------|
+| **Toluca** | 2.3M | 16 | 538 | **0.529** | **0.471** | population proxy |
+| ZMG (Guadalajara) | 5.0M | 10 | 1,881 | 0.577 | 0.423 | full |
+| Monterrey | 2.3M | 12 | 1,903 | 0.635 | 0.365 | full |
+| **Aguascalientes** | 1.1M | 3 | 356 | **0.667** | **0.333** | full |
+
+**Two transfer findings:**
+1. **A monotonic transit-dependence gradient:** Toluca (most transit-dependent) → ZMG → Monterrey
+   → Aguascalientes (most car-oriented). Toluca has *lower* car ownership than Guadalajara (a
+   lower-income metro → higher transit propensity); Aguascalientes is the most car-oriented
+   (prosperous, compact). The demand surface transfers cleanly and discriminates between metros.
+2. **Urban-AGEB count decouples from metro population:** Toluca's 2.3M metro has only 538 urban
+   AGEBs vs ZMG's 1,881 — because ZM Toluca spreads across 16 municipios with many semi-rural
+   AGEBs, only a minority of which are dense/urban. The pipeline's unit-of-analysis scales very
+   differently across metros; a "large metro" by population can be small in urban AGEBs.
+
+Shapefile match rates (real AGEBs → polygons): Toluca 538/577 (93%), Aguascalientes 356/357
+(99.7%). Match is computed after the census extract drops hierarchical summary rows (municipio /
+locality totals at MZA=="000", AGEB=="0000") and alpha-suffix AGEBs, per the ZMG base.ageb
+convention.
+
 ## Notes / caveats
 
 - **β = 1.2005** (the current ZMG-calibrated prior) is used for both cities; no local EOD
