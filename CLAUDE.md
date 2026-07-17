@@ -17,7 +17,7 @@ Master's thesis: a **7-phase geospatial ML pipeline** to predict optimal transit
 - W5 (Multi-objective function): ✅ Complete — code skeleton (types, objective, constraints, Pareto) + spec contract for W6/W7; 39 tests; see W5 section below
 - W6 (New corridor generation): ✅ Complete — **re-architected 2026-07-15** into frontier anchors + MST-diameter-trunk shaper + anchor-directness feasibility gate (see the "W6 re-architecture" entry below). 4 feasible corridors (W6_G00/G01/G02/G03; G05 rejected on directness 1.93); **W6_G02 is the first substantive corridor to pass W8 Question B** (56% High-gap, unique, 73rd-pct demand/km — a real 12.1km/25-AGEB line, not a stub). Prior state (superseded): 3 BRT corridors via baseline anchors + MST-flatten + hub injection. See W6 section below.
 - **W6**: superseded — the `ANCHOR_TRIM_COL` / hub-injection notes below predate the 2026-07-15 re-architecture; hub injection and the MST-flatten shaper are retired.
-- W7 (Existing route audit): ✅ Code complete — 247 SITEUR routes scored via W5 (route count reflects the current GTFS snapshot in `data/gtfs/`, not the base.ageb correction); Low-demand/Indirect/Redundant flags; modification proposals; `straight_line_km` fixed 2026-06-24 for closed-loop routes (was collapsing to ~0); re-run 2026-06-25 on beta=1.2005 (flag totals unchanged: 229 flagged); 34 tests; see W7 section below
+- W7 (Existing route audit): ✅ Code complete — 247 SITEUR routes scored via W5 (route count reflects the current GTFS snapshot in `data/gtfs/`, not the base.ageb correction); Low-demand/Indirect/Redundant flags; modification proposals; `straight_line_km` fixed 2026-06-24 for closed-loop routes (was collapsing to ~0); re-run 2026-06-25 on beta=1.2005 (flag totals unchanged: 229 flagged); 43 tests; see W7 section below
 - W8 (Validation): ✅ Code complete — backtest + benchmark + before/after metrics run end-to-end via `python src/run_w8.py`; see W8 section below
 - **W8**: append — "First out-of-sample validation run 2026-07-12 (Line 4 backtest). Diagnostic
   layer corroborated; generative layer does NOT reconstruct Line 4. See W8 Line 4 section."
@@ -388,8 +388,8 @@ W3 builds an independent transit supply measure, defines the coverage gap (the n
 3. **W3.3 — Model retrain on coverage-gap target** (`src/w3_retrain.py`)
    - Binary target: `is_high_gap = 1` if `gap_category == 'High-gap'` else 0
    - Features: 14 normalized NPP-V indicators — all transit-supply variables excluded (`route_km_800m`, `stops_*`) to prevent circularity
-   - **Test metrics (re-run 2026-06-25 on beta=1.2005):** RF PR-AUC 0.872, ROC-AUC 0.965; LightGBM PR-AUC 0.835, ROC-AUC 0.961 — no leakage flags (was LightGBM PR-AUC 0.842/ROC-AUC 0.960, RF PR-AUC 0.837/ROC-AUC 0.957 under beta=2.0; RF is now the better model on this metric)
-   - **Top SHAP drivers (LightGBM):** `pe_population_n` > `pe_rezago_n` > `pe_marginacion_n` > `p_employment_proxy_n` > `pe_pop_density_n` — high-gap areas are dense, high-need, employment-rich zones not served by current SITEUR network
+   - **Test metrics (re-run 2026-07-17, post equity-fix):** LightGBM PR-AUC 0.883, ROC-AUC 0.962; RF PR-AUC 0.877, ROC-AUC 0.962 — no leakage flags (supersedes the 2026-06-25 pre-equity-fix run: RF 0.872/0.965, LightGBM 0.835/0.961; shifts are from the `pe_marginacion` median-impute vs zero-fill, a non-monotonic change, not the de-inversion which is monotonic and tree-invariant)
+   - **Top SHAP drivers (LightGBM, 2026-07-17):** `pe_population_n` > `pe_rezago_n` > `p_employment_proxy_n` > `pe_marginacion_n` > `n_intersection_density_n` — high-gap areas are dense, high-need, employment-rich zones not served by current SITEUR network; `pe_marginacion_n` SHAP *direction* is now correctly signed (de-inverted) in the refreshed `outputs/w3/shap/` beeswarm plots
    - Output: `outputs/w3/models/`, `outputs/w3/metrics/`, `outputs/w3/shap/`; run ID `w3_coverage_gap_v1`
 
 **Orchestrator:** `src/run_w3.py` (timeout 7,200s for accessibility step)
@@ -521,6 +521,14 @@ W5 defines the formal evaluation framework that W6 (corridor generation) and W7 
 
 ## W6 — New Corridor Generation (completed 2026-06-15)
 
+> ⚠️ **SUPERSEDED (2026-07-15).** Everything in THIS section — the "3 feasible corridors",
+> the BRT/LRT split, `build_corridor_path`, hub injection, Jenks baseline anchors, endpoint
+> detour, and the "21 tests" count — describes the PRE-re-architecture pipeline and is kept
+> only for history. The canonical W6 is now **frontier anchors + MST-diameter-trunk shaper +
+> anchor-directness gate** with **4 feasible corridors (G00/G01/G02/G03)** and **39 W6 tests**;
+> see the "W6 re-architecture -- 2026-07-15" section below for current numbers. Do not cite the
+> figures in this section as current.
+
 W6 generates demand-driven new transit corridor candidates using anchor AGEBs from the W3 coverage-gap surface, MST-based OSM routing, and W5 multi-objective evaluation.
 
 **Completed sub-tasks:**
@@ -583,7 +591,7 @@ W7 scores every SITEUR GTFS route against the W5 multi-objective function, flags
 - `src/w7_modifications.py` — proposes shortcut / merge / retire per flagged route; estimates shortcut score as 1.1×straight_line_km
 - `src/run_w7.py` — orchestrator: migration → GTFS load → scoring → proposals → DB write → 6 output files
 - `db_setup/migrations/007_w7_tables.sql` — `features.route_audit` table with GIST index
-- `tests/test_w7_gtfs_loader.py` (13 tests), `tests/test_w7_route_scorer.py` (12 tests), `tests/test_w7_modifications.py` (9 tests)
+- `tests/test_w7_gtfs_loader.py` (13 tests), `tests/test_w7_route_scorer.py` (16 tests), `tests/test_w7_modifications.py` (14 tests) — 43 total
 
 **Errata (fixed 2026-06-24) — `straight_line_km` collapsed to ~0 for closed-loop routes:** `_straight_km()` in `w7_gtfs_loader.py` originally measured Euclidean distance between a shape's *first and last* coordinate. For the 11 GTFS routes that are genuine closed loops (start == end terminal, e.g. C104, C108, C133-V1, the T09/T18 pairs, MP-A05-1), that distance floored at the 0.001km div-by-zero guard, sending `detour_ratio` (`route_km/straight_line_km`) into the tens of thousands and making every loop route's "Indirect" flag and shortcut proposal (`straight_line_km×1.1`) meaningless (e.g. "shrink this 82.8km loop to 0.0km"). Fixed by redefining `straight_line_km` as the route's **convex-hull diameter** (max distance between any two points on the shape) — equal to the old endpoint distance for simple point-to-point routes (so non-loop routes are unaffected in net counts), but a real value for loops. Verified against the live `gdl_metro` DB: `route_km`, `f1_demand_gain`, and `total_score` are untouched (they don't depend on this metric); `detour_ratio` never increased for any of the 247 routes; only 6/247 routes lost their "Indirect" flag (3 became "Low demand", 3 became unflagged) because their detour ratio dropped below the 1.5 threshold once measured correctly. Flag totals: 229 flagged (was 232) — 109 Indirect (was 115), 80 Low demand (was 77), 40 Redundant (unchanged — Redundant doesn't depend on this metric). `outputs/w7/` regenerated 2026-06-24.
 
@@ -820,6 +828,72 @@ endpoint detour). W6 test count references elsewhere in this doc predate the new
 
 ---
 
+## Post-re-architecture follow-through (2026-07-16/17)
+
+Cleared Next-steps items 1, 3, 5, 6 and the bulk of 2 in one session on branch
+`chore/w8-rerun-post-rearch` (off `feat/db-setup-from-scratch`, unpushed). Committed:
+W8 re-run (`0faa5a5`) + detour-cap sweep (`fc94826`); the items below are read-only harnesses
+in scratchpad unless noted.
+
+**#1 W8 re-run (committed).** See the updated W8 "Key results (2026-07-16 re-run)" above.
+
+**#3 detour-cap sweep (committed).** See the updated Next-steps item 3. 1.8 confirmed on a stable
+plateau; anchor-directness is the sole binding constraint.
+
+**#5 TSP vs diameter-trunk shaper.** Read-only harness built BOTH shapers per group. Diameter
+confirmed as the default: for the 2-3-anchor groups (G03/G05) TSP == diameter; for G02 (the
+meritorious corridor) TSP ~ diameter (+1 AGEB/+7k demand, both feasible); G00 TSP is a small
+FEASIBLE win (+2 AGEBs/+9.5k demand, directness 1.76<1.8); G01 is the only group where diameter
+drops meaningful demand -- TSP would capture +12 AGEBs/+89k demand (~2x) but blows the 30km cap
+(31.8km -> INfeasible). So diameter's dropped demand is the price of feasibility, not a defect;
+TSP rescues no corridor and would lose G01. A "TSP-where-feasible" hybrid would only marginally
+help G00. Verdict: keep diameter.
+
+**#6 equity refresh (DONE).** (a) Re-ran `src/w3_retrain.py` standalone (accessibility/coverage-gap
+are equity-independent, so the full slow run_w3 was unnecessary) -> SHAP plots regenerated with the
+de-inverted `pe_marginacion_n` (`outputs/w3/shap/`, 2026-07-17). Refreshed metrics: LightGBM
+PR-AUC 0.883 / ROC-AUC 0.962, RF PR-AUC 0.877 / ROC-AUC 0.962, no leakage flags (the W3 section's
+0.835/0.872 numbers are from the 2026-06-25 pre-equity-fix run; supersede with these). SHAP top-5
+now LightGBM: pe_population_n > pe_rezago_n > p_employment_proxy_n > pe_marginacion_n >
+n_intersection_density_n. (b) alpha sensitivity on `final_score = (1-a)*npp + a*equity` over
+a in {0.10,0.20,0.30}: prioritization is ROBUST to alpha -- Spearman vs the a=0.20 baseline 0.990
+(a=0.10) / 0.984 (a=0.30); top-50 overlap 36-37/50; top-100 overlap 78-82/100; quintile membership
+changes for 14-16% of AGEBs. Equity weight matters at the margin (which specific AGEBs top the
+list) but not for broad structure. (`fs_0.20` reproduced the stored `final_score` exactly.)
+
+**#2 validation power -- n>1 masked backtests + Line 4 re-check.** Extends the single premium
+backtest to three more natural experiments. **All use the LEGACY backtest generator** (see Known
+issue below), so they are comparable to the existing premium 0.249, NOT a validation of the
+re-architected generator:
+- **Mi Macro only (agency MM):** 1,268 stops masked, 5 corridors re-proposed, mean route-shape
+  overlap **0.267** (median 0.195) across 30 MM routes -- in line with the MM+MT premium 0.249.
+- **Line 3 (routes MT_L3+ST_L3):** 126 stops masked, 6 corridors re-proposed, overlap **0.000** --
+  the generator does NOT re-discover Line 3. Masking only the rail stops barely moves accessibility
+  (non-zero AGEBs 1266->1266; parallel buses remain), so no strong new gap forms on the corridor.
+- **Line 4 out-of-sample (probes re-run vs the NEW feasible set):** best match is now FEASIBLE
+  W6_G02 but only **5% recall** (closest approach 0m -- it touches Line 4 at one point, clips ~5%
+  of its 43.3km); all other feasible corridors 0% (6.4-26km away). Modest improvement over the
+  pre-re-architecture state (where only the infeasible 60km sprawl clipped 6%; feasible recall was
+  ~0), but still non-reconstruction. Anchor funnel unchanged: 15/68 Line 4 AGEBs clear the Jenks
+  pool, top-30-demand trim keeps 1. NOTE the Line 4 anchor probe still uses pre-frontier anchor
+  logic. Consistent story across all four: the generator partially traces the dense Mi Macro BRT
+  feeders (~0.25-0.27) but does not reconstruct rail lines (Line 3 0.00, Line 4 0.05) -- matching
+  the documented anchor-funnel limitation, now measured on n=4 rather than n=1.
+
+**Known issue (surfaced this session): the W8 backtest + Line 4 anchor probe use the RETIRED
+generator.** `src/w8_backtest.py::run_backtest` and `src/w8_line4_anchors.py` still call
+`build_corridor_path` (the branching-MST flatten) with a `transit_demand` anchor trim, no frontier
+restriction, and NO feasibility filter (they overlap ALL re-proposed corridors). So every backtest
+overlap number in this doc -- the premium 0.249, and the MM 0.267 / Line 3 0.000 above -- reflects
+the LEGACY generator, not canonical `run_w6` (frontier + diameter-trunk + anchor-directness). This
+does not change the qualitative finding (low overlap = the generator does not replicate premium
+lines), but the exact fractions are not the re-architected pipeline's. FOLLOW-UP (own task): align
+`run_backtest`/`w8_line4_anchors` to the re-architecture -- the subtle part is computing
+"network-connected" for frontier anchors from the MASKED GTFS stops, not the full DB set -- then
+re-run all masks through the correct generator.
+
+---
+
 ## W9 — Transferability (in progress 2026-06-15)
 
 W9 applies the pipeline to **Monterrey, Nuevo León** (ZM Monterrey, CVE_ENT=19, 12 municipalities, ~1,958 AGEBs) as the second city for transferability validation.
@@ -861,46 +935,60 @@ W9 applies the pipeline to **Monterrey, Nuevo León** (ZM Monterrey, CVE_ENT=19,
 
 ## E. Next steps
 
-Last refreshed 2026-07-16, after the W6 re-architecture (frontier anchors + MST-diameter-trunk
-shaper + anchor-directness gate; see the "W6 re-architecture -- 2026-07-15" section above) was
-merged to `main` (PR #8). Ordered by priority.
+Last refreshed 2026-07-17. The W6 re-architecture (frontier anchors + MST-diameter-trunk shaper +
+anchor-directness gate; see the "W6 re-architecture -- 2026-07-15" section above) merged to `main`
+(PR #8); items 1/3/5/6 and most of 2 were then cleared on branch `chore/w8-rerun-post-rearch` (see
+"Post-re-architecture follow-through (2026-07-16/17)" above for full numbers). Remaining work first,
+then the closed items for the record.
 
-1. ✅ **DONE 2026-07-16 — Re-ran `run_w8.py` against the new corridors.** The W8 section now
-   carries the refreshed numbers: benchmark 4 feasible corridors / 10.5% mean premium overlap
-   (W6_G02 x MP-C03 42%), before/after gains ~2-3x the stale 3-stub set; backtest overlap 0.249
-   unchanged (backtest re-runs anchor selection independently of the canonical corridors).
-   Regenerated `outputs/w8/`. NOTE: the Line 4 out-of-sample probe (`w8_line4_*.py`) was NOT
-   re-run this pass — those scripts read the live DB + `linea_4.geojson` directly and do not
-   depend on `outputs/w6/corridor_candidates.geojson`, but the recall-0.00 finding predates the
-   re-architecture and should be re-checked against the new feasible set (fold into item 2).
-2. **Strengthen validation power.** Add masked backtests for Line 3 (2020) and Mi Macro (2022)
-   alongside the existing premium-route backtest, so validation is not n=1 on Line 4.
-3. ✅ **RESOLVED 2026-07-16 — 1.8 cap confirmed; keep it.** Swept `max_detour_ratio` over
-   {1.5..2.1} via a read-only harness that replays run_w6 steps 2-8 (deterministic;
-   directness reproduced the doc exactly: G01 1.161, G03 1.249, G00 1.443, G02 1.543, G05 1.931).
-   Anchor-directness is the SOLE binding constraint for all 5 corridors (all pass at cap=99;
-   stop-spacing/min-demand/length never bind), so the cap alone sets the feasible set. The set
-   `{G00,G01,G02,G03}` is INVARIANT across the whole [1.6, 1.9] band -- 1.8 sits mid-plateau, not
-   on a knife-edge. Admitting G05 needs cap >=1.94 (~2.0; G05 is a low-merit 5.4km connector,
-   directness 1.93); dropping G02 (the one substantive merit-passing corridor) needs cap <1.55.
-   Both edges are far from 1.8, so the inherited 1.8 is defensible and unchanged. Harness lives in
-   scratchpad (read-only, no DB writes / no run_w6 change).
-4. **Update the thesis claim (Gap A) -- now MORE positive than the stale wording said.** Evidence
-   as of this session: the generator produces at least one substantive, feasible, merit-passing
-   corridor on its own terms (W6_G02: 56% High-gap, unique, 73rd-pct demand/km) once corridors are
-   shaped as real paths and judged by anchor-directness. Claim should read roughly: "data-driven
-   demand-gap prioritization + corridor identification and generation; generated corridors are
-   validated on need/non-redundancy/efficiency and against a revealed corridor, with characterized
-   residual limitations (e.g. low-efficiency connectors like G00/G01 still surface)."
-5. **Consider the TSP-path shaper.** `corridor_path_tsp` (built + tested) visits all anchors;
-   evaluate it against the chosen diameter-trunk for groups where dropping off-trunk anchors loses
-   meaningful demand.
-6. **Refresh downstream after the equity fix:** re-run `run_w3.py` (SHAP direction narrative), and
-   report the alpha in {0.10, 0.20, 0.30} equity sensitivity now that the equity term is correctly
-   signed.
-7. **Reconcile stale numbers in this doc.** Several W6/W7/W8 test counts and "3 feasible corridors"
-   mentions elsewhere predate the re-architecture; only the top W6 status bullet + the
-   re-architecture section were updated this session.
+**Open:**
+
+A. **Align the W8 backtest + Line 4 anchor probe to the re-architected generator (HIGHEST
+   PRIORITY, and the honest gap behind item 2).** `run_backtest` and `w8_line4_anchors.py` still use
+   the retired `build_corridor_path` + demand-trim + no-frontier + no-feasibility-filter path, so
+   the backtest overlap numbers (premium 0.249, MM 0.267, Line 3 0.000) reflect the LEGACY
+   generator. Port them to frontier + diameter-trunk + anchor-directness; the subtlety is computing
+   "network-connected" for frontier anchors from the MASKED GTFS stops, not the full DB set. Then
+   re-run all masks. Qualitative findings are expected to hold; this makes the fractions citable for
+   the current pipeline.
+
+B. **W9 transferability** unchanged: blocked on a Metrorrey/Transmetro GTFS feed (see W9 section);
+   Tier-1 demand surface for Monterrey is complete.
+
+C. **Optional: TSP-where-feasible hybrid shaper.** #5 showed a pure TSP swap loses G01; a hybrid
+   that uses TSP only where it stays feasible would marginally improve G00 (+2 AGEBs/+9.5k demand).
+   Low priority -- diameter is the confirmed default.
+
+**Closed this session (2026-07-16/17):**
+
+1. ✅ **Re-ran `run_w8.py` against the new corridors** (committed `0faa5a5`). W8 "Key results
+   (2026-07-16 re-run)": benchmark 4 feasible corridors / 10.5% mean premium overlap (W6_G02 x
+   MP-C03 42%), before/after gains ~2-3x the stale 3-stub set. Regenerated `outputs/w8/`.
+2. ✅ **Validation power extended to n=4** (mostly done; see open item A for the caveat). Mi Macro
+   backtest 0.267, Line 3 backtest 0.000 (generator does not re-discover Line 3), Line 4 probes
+   re-run vs the new feasible set (best feasible recall 5%, still non-reconstruction). Consistent:
+   partial overlap of the dense MM feeders, no rail reconstruction.
+3. ✅ **1.8 detour cap confirmed** (committed `fc94826`). Sole binding constraint; feasible set
+   invariant across [1.6,1.9]; 1.8 sits mid-plateau.
+4. ✅ **Thesis claim (Gap A) settled -- adopt this wording:** *"A data-driven, transferable
+   framework that (i) diagnoses transit demand-gap priority at AGEB resolution (W3/W4, validated:
+   Line 4 corridor 1.6x the metro High-gap rate) and (ii) identifies and generates candidate
+   corridors evaluated on genuine need, non-redundancy, and demand efficiency (W5/W6). On its own
+   terms the generator produces at least one substantive, feasible, merit-passing corridor (W6_G02:
+   56% High-gap, unique, 73rd-pct demand/km) once corridors are shaped as real paths and judged by
+   anchor-directness. Residual, characterized limitations remain: it surfaces low-efficiency
+   connectors (G00/G01) alongside good corridors, and does not reconstruct built rail lines (Line 3
+   0.00, Line 4 0.05 recall) -- expected, since reconstruction of politically/financially chosen
+   lines is a weak, asymmetric proxy for corridor merit."* The diagnostic layer is the strong
+   contribution; the generative layer is a characterized, partially-positive contribution -- no
+   longer the "essentially negative" framing from 2026-07-13.
+5. ✅ **TSP vs diameter-trunk evaluated** -- diameter kept as default (see follow-through section;
+   optional hybrid noted in open item C).
+6. ✅ **Equity fix downstream refreshed** -- `w3_retrain` SHAP plots regenerated with the
+   de-inverted `pe_marginacion_n`; alpha in {0.10,0.20,0.30} sensitivity reported (prioritization
+   robust, Spearman >=0.98).
+7. ✅ **Stale numbers reconciled** -- old W6 section banner-flagged SUPERSEDED; W6 test count
+   21->39, W7 34->43; refreshed W3.3 metrics noted; legacy-backtest-shaper known issue documented.
 
 ## Methodological References
 
