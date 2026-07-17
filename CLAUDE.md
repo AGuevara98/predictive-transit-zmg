@@ -965,6 +965,30 @@ C. **Optional: TSP-where-feasible hybrid shaper.** #5 showed a pure TSP swap los
    that uses TSP only where it stays feasible would marginally improve G00 (+2 AGEBs/+9.5k demand).
    Low priority -- diameter is the confirmed default.
 
+D. **TODO (next session) -- rewrite the Phase 6 synthesis report.**
+   `outputs/phase6/master_thesis_synthesis.md` was written pre-restructure and is flagged
+   "will be rewritten after W8" (see Phase 6 status at the top of this doc). The W8 foundation
+   is now stable, so this is unblocked and is the highest thesis-value next step. The rewrite
+   should reflect: the demand-driven W1-W8 re-architecture (not the legacy Phase 1-5 framing);
+   the settled Gap-A thesis claim (item 4 in "Closed this session"); the corrected equity term
+   (2026-07-12 pe_marginacion de-inversion) and refreshed W3.3 SHAP; the aligned W8 validation
+   numbers (premium backtest 0.150, MM 0.166, Line 3 0.000, Line 4 recall 0.05, benchmark 4
+   feasible corridors / 10.5% premium overlap); and W6_G02 as the substantive merit-passing
+   corridor. Retire references to the removed Phase 2/5 models. Cross-check every number against
+   the live DB / `outputs/` before writing -- much of the prose in the current file predates the
+   1,881-AGEB base.ageb correction.
+
+E. **TODO (next session) -- deepen validation to n>2 clean masked backtests.**
+   Current masked backtests: premium (MM+MT), Mi Macro (MM), Line 3 (MT_L3+ST_L3), plus the Line 4
+   out-of-sample probe. Add Line 1 and Line 2 as separate route-level masks (now trivial via the
+   new `run_backtest(route_ids=...)` arg -- Mi Tren routes are `MT_L1`/`MT_L2`, with `ST_L1`/`ST_L2`
+   duplicates; mask both representations per line as done for Line 3). Goal: characterize WHICH line
+   types the generator does/does not trace (hypothesis from the current n=4: it weakly traces dense
+   Mi Macro BRT feeders ~0.15-0.17 but not rail lines, Line 3 0.00). Watch for the SiTren/Mi Tren
+   GTFS duplication (ST_* vs MT_* both present) when defining each line's route_id set. Report a
+   per-line overlap table to firm up the "diagnostic strong / generative characterized-limitation"
+   validation narrative.
+
 **Closed this session (2026-07-16/17):**
 
 1. ✅ **Re-ran `run_w8.py` against the new corridors** (committed `0faa5a5`). W8 "Key results
