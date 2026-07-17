@@ -29,7 +29,7 @@ Master's thesis: a **7-phase geospatial ML pipeline** to predict optimal transit
 - Phase 3 (CRITIC/EWM Objective Weighting): ✅ Complete — weights in `features.nppv_weights`; **repositioned as W4 prioritization layer**
 - Phase 4 (K-Means Clustering / Transit Suitability Typologies): ✅ Complete — clusters in `features.nppv_clusters`; **kept as descriptive segmentation only**
 - Phase 5 (Predictive Modeling & Interpretability): 🗑️ Retired 2026-06-24 — RF + XGBoost on K-Means labels (1.0000 accuracy, tautological); fully superseded by W3.3's coverage-gap retrain. Outputs removed from `outputs/phase5/`.
-- Phase 6 (Synthesis Report): ✅ Complete — `outputs/phase6/master_thesis_synthesis.md`; **will be rewritten after W8**
+- Phase 6 (Synthesis Report): ✅ Complete — `outputs/phase6/master_thesis_synthesis.md`; **rewritten 2026-07-17** around the demand-driven W1–W8 architecture (settled Gap-A claim; corrected equity term; aligned W8 numbers; W6_G02 as the merit-passing corridor). All numbers cross-checked against the live DB / `outputs/` on the rewrite date. Legacy Phase 1–5 framing retired from the doc.
 - Phase 7 (Steiner Tree Route Synthesis): 📋 Subsumed into W5+W6
 
 ## Environment Setup
@@ -973,18 +973,19 @@ C. **Optional: TSP-where-feasible hybrid shaper.** #5 showed a pure TSP swap los
    that uses TSP only where it stays feasible would marginally improve G00 (+2 AGEBs/+9.5k demand).
    Low priority -- diameter is the confirmed default.
 
-D. **TODO (next session) -- rewrite the Phase 6 synthesis report.**
-   `outputs/phase6/master_thesis_synthesis.md` was written pre-restructure and is flagged
-   "will be rewritten after W8" (see Phase 6 status at the top of this doc). The W8 foundation
-   is now stable, so this is unblocked and is the highest thesis-value next step. The rewrite
-   should reflect: the demand-driven W1-W8 re-architecture (not the legacy Phase 1-5 framing);
-   the settled Gap-A thesis claim (item 4 in "Closed this session"); the corrected equity term
-   (2026-07-12 pe_marginacion de-inversion) and refreshed W3.3 SHAP; the aligned W8 validation
-   numbers (premium backtest 0.150, MM 0.166, Line 3 0.000, Line 4 recall 0.05, benchmark 4
-   feasible corridors / 10.5% premium overlap); and W6_G02 as the substantive merit-passing
-   corridor. Retire references to the removed Phase 2/5 models. Cross-check every number against
-   the live DB / `outputs/` before writing -- much of the prose in the current file predates the
-   1,881-AGEB base.ageb correction.
+D. ✅ **DONE 2026-07-17 -- rewrote the Phase 6 synthesis report.**
+   `outputs/phase6/master_thesis_synthesis.md` fully rewritten (was pre-restructure Phase 1-5
+   framing). Now organized around the demand-driven W1-W8 architecture: framework overview +
+   workstream map; data foundation (corrected 1,881-AGEB universe); per-workstream sections
+   (W1 demand surface, W2 beta=1.2005 calibration, W3 coverage-gap + retrain RF 0.877/LightGBM
+   0.883, W4 NPP + corrected equity + alpha robustness, W5 objective, W6 re-architecture + 4
+   feasible corridors, W7 audit 247/229-flagged, W8 validation, W9 transfer); the settled Gap-A
+   claim verbatim; limitations. W6_G02 (56% High-gap / 73rd-pct demand/km) framed as the
+   substantive merit-passing corridor; legacy Phase 2/5 models retired from the narrative.
+   **Every number cross-checked against the live gdl_metro DB + current outputs/ on the rewrite
+   date** (gap counts 390/1413/78, route_candidates 5/4-feasible, route_audit 247, W1 demand
+   8.47M / vehicle-rate 0.577, W8 premium 0.150 / Lines 1-3 0.000 / benchmark 10.5% / coverage
+   +1.1% / Gini -0.0187, merit G02+G03 PASS / G00+G01 mixed).
 
 E. ✅ **DONE 2026-07-17 -- deepened validation to n=6 masked backtests (4 line-level + 2 agency) + per-line table.**
    Added Line 1 (MT_L1+ST_L1) and Line 2 (MT_L2+ST_L2) route-level masks via the aligned
