@@ -875,9 +875,16 @@ merged to `main` (PR #8). Ordered by priority.
    re-architecture and should be re-checked against the new feasible set (fold into item 2).
 2. **Strengthen validation power.** Add masked backtests for Line 3 (2020) and Mi Macro (2022)
    alongside the existing premium-route backtest, so validation is not n=1 on Line 4.
-3. **Decide the G05 reject / cap sensitivity.** With the metric now anchor-based, only W6_G05
-   (directness 1.93) fails the 1.8 cap. Sweep `max_detour_ratio` to confirm 1.8 is the right cut
-   under anchor-directness (it was inherited from the endpoint-detour era).
+3. ✅ **RESOLVED 2026-07-16 — 1.8 cap confirmed; keep it.** Swept `max_detour_ratio` over
+   {1.5..2.1} via a read-only harness that replays run_w6 steps 2-8 (deterministic;
+   directness reproduced the doc exactly: G01 1.161, G03 1.249, G00 1.443, G02 1.543, G05 1.931).
+   Anchor-directness is the SOLE binding constraint for all 5 corridors (all pass at cap=99;
+   stop-spacing/min-demand/length never bind), so the cap alone sets the feasible set. The set
+   `{G00,G01,G02,G03}` is INVARIANT across the whole [1.6, 1.9] band -- 1.8 sits mid-plateau, not
+   on a knife-edge. Admitting G05 needs cap >=1.94 (~2.0; G05 is a low-merit 5.4km connector,
+   directness 1.93); dropping G02 (the one substantive merit-passing corridor) needs cap <1.55.
+   Both edges are far from 1.8, so the inherited 1.8 is defensible and unchanged. Harness lives in
+   scratchpad (read-only, no DB writes / no run_w6 change).
 4. **Update the thesis claim (Gap A) -- now MORE positive than the stale wording said.** Evidence
    as of this session: the generator produces at least one substantive, feasible, merit-passing
    corridor on its own terms (W6_G02: 56% High-gap, unique, 73rd-pct demand/km) once corridors are
