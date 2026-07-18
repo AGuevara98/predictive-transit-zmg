@@ -1,0 +1,6 @@
+candidate_id,corridor_group,route_km,n_stops,n_served_agebs,total_demand,directness,connects_to_existing,f1_demand_gain,f3_equity,total_score,feasible,mode_assignment,pareto_rank
+W6_G00,0,18.276,38,7,83384.0,1.393,True,0.0913,0.3294,0.2714,True,Light Rail/Metro,3
+W6_G01,1,12.553,26,23,133728.0,1.191,True,0.0322,0.1417,0.213,True,Light Rail/Metro,3
+W6_G02,2,20.591,42,2,21485.0,8.76,True,0.0967,0.5537,0.3136,False,BRT,2
+W6_G03,3,1.237,3,3,9860.0,1.26,True,0.1872,0.4882,0.549,True,Local Bus,2
+W6_G05,5,0.818,3,2,16755.0,1.142,True,0.2216,0.7287,0.647,True,BRT,1

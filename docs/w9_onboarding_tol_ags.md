@@ -151,6 +151,40 @@ IRS (not published at AGEB level in 2020) — the ordinal-grade mapping is the f
 proxy. Marginación is the exact CONAPO continuous IM_2020, INVERTED in normalization (higher
 `pe_marginacion_n` = more marginalized), matching the 2026-07-12 ZMG equity fix.
 
+## Results — W6 corridor generation (the generative layer, run 2026-07-17)
+
+`src/w9_run_w6.py --city {tol,ags}` runs the canonical re-architected W6 generator (frontier
+anchors → MST-diameter trunk → anchor-directness feasibility gate, cap 1.8) from files, reusing
+the pure ZMG W6/W5 functions (the 4 DB lookups replaced with in-memory geopandas over the city's
+coverage-gap CSV + shapefile centroids + city GTFS stops). **This completes the full W1→W6 pipeline
+for both transfer cities.**
+
+**Feasible corridors produced (both cities generate substantive ones):**
+
+| City | Corridor | km | Served AGEBs | Demand/day | Directness | Mode |
+|------|----------|----|--------------|-----------|-----------|------|
+| **Toluca** | W6_G01 | 12.6 | 23 | 133,728 | 1.19 | Light Rail/Metro |
+| Toluca | W6_G00 | 18.3 | 7 | 83,384 | 1.39 | Light Rail/Metro |
+| **Aguascalientes** | W6_G05 | 5.9 | 12 | 107,633 | 1.27 | Light Rail/Metro |
+| Aguascalientes | W6_G00 | 4.8 | 5 | 40,244 | 1.20 | BRT |
+
+Toluca: 5 corridors / 4 feasible; Aguascalientes: 5 / 3 feasible. Each city has short-stub
+corridors too, and one high-demand corridor that blows the 1.8 directness cap (Toluca G02 at 8.76,
+Aguascalientes G03 at 2.03) — the same feasibility-vs-directness signature documented for ZMG.
+**Toluca W6_G01 (23 AGEBs / 133k demand, feasible) is the transfer analogue of ZMG's substantive
+merit-passer W6_G02** — the generative layer transfers and produces real, feasible, high-demand
+corridors on both new metros, not just stubs.
+
+Outputs: `outputs/w9/{key}_corridor_scores.csv`, `{key}_corridor_candidates.geojson`,
+`{key}_w6_report.md`.
+
+**W9 status: the complete demand-driven pipeline (W1 demand → W2 β prior → W3 supply/coverage-gap
+→ W4 prioritization → W5/W6 corridor generation) now runs end-to-end on Toluca (large) and
+Aguascalientes (compact) — two metros Monterrey's missing GTFS made impossible.** Not run: W7
+(existing-route audit — needs each city's GTFS routes scored) and W8 (masked backtests). W3.3
+supervised retrain is also available but not run (the coverage-gap target + 14 NPP features are in
+place per city).
+
 ## Notes / caveats
 
 - **β = 1.2005** (the current ZMG-calibrated prior) is used for both cities; no local EOD
