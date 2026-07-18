@@ -909,9 +909,44 @@ gate, so it does not affect which corridors are re-proposed.
 
 ---
 
-## W9 — Transferability (in progress 2026-06-15)
+## W9 — Transferability (full W1→W6 transfer complete 2026-07-17)
 
-W9 applies the pipeline to **Monterrey, Nuevo León** (ZM Monterrey, CVE_ENT=19, 12 municipalities, ~1,958 AGEBs) as the second city for transferability validation.
+**Current state:** the complete demand-driven pipeline (W1→W6) runs end-to-end for **Toluca**
+(large, 16 munis) and **Aguascalientes** (compact, 3 munis) via `src/w9_*.py --city {tol,ags}`.
+Monterrey was the original target but its GTFS is unavailable (blocks W3), so it was kept as a
+Tier-1 reference and replaced by two GTFS-available metros. **Full writeup:
+`outputs/w9/w9_transferability_report.md` + `docs/w9_onboarding_tol_ags.md`.** The Monterrey detail
+below is retained as historical record.
+
+**Transfer-city modules (all CSV-based, `--city {mty,tol,ags}`):**
+- `src/w9_city_config_tol.py`, `src/w9_city_config_ags.py` — identity, CONAPO municipio codes, bbox,
+  GTFS source, β=1.2005 prior.
+- `src/w9_run_tier1.py` (W1 demand), `src/w9_run_w3.py` (GTFS accessibility + coverage-gap),
+  `src/w9_build_nppv.py` (14-feature NPP), `src/w9_run_w4.py` (CRITIC/EWM + equity),
+  `src/w9_run_w6.py` (frontier/MST-diameter/directness corridor generation). All reuse the pure ZMG
+  functions (import-safe; engines are lazy).
+- Data-prep: `scripts/data_prep/make_city_{census,denue,indicators}_extract.py`.
+
+**Key transfer results (2026-07-17):**
+- Car-dependence gradient (mean vehicle rate): Toluca 0.529 < ZMG 0.577 < MTY 0.635 < Aguascalientes
+  0.667. Urban-AGEB count decouples from metro pop (Toluca 2.3M → 538 AGEBs; Ags 356).
+- Coverage-gap (High-gap %): ZMG 20.7% > Toluca 14.9% > Aguascalientes 9.6% (diagnostic transfers +
+  differentiates).
+- W4 weights re-derive per city — `pe_rezago_n` top driver in both new metros (vs ZMG population).
+- W6: Toluca 5 corridors/4 feasible (G01 12.6km/23 AGEBs/133k demand/LRT = transfer analogue of
+  ZMG's merit-passer W6_G02); Aguascalientes 5/3 feasible (G05 5.9km/12 AGEBs/107k/LRT). Same
+  feasibility-vs-directness signature as ZMG.
+- Data plumbing notes: INEGI blocks scripted census/shapefile download (browser only); DENUE masiva
+  works (Edomex split `denue_15_1/2`); equity from CONAPO IMU_2020 + CONEVAL GRS (AGEB grade→ordinal
+  IRS proxy); OSM via osmnx. Large raw sources gitignored; slim per-city extracts committed.
+- Not run for transfer cities: W7 audit, W8 backtests, W3.3 retrain (inputs in place; not needed for
+  the transfer claim).
+
+---
+
+### Original second city (Monterrey) — historical record
+
+W9 originally applied the pipeline to **Monterrey, Nuevo León** (ZM Monterrey, CVE_ENT=19, 12 municipalities, ~1,958 AGEBs) as the second city for transferability validation.
 
 **Second city: Monterrey, Nuevo León**
 - 12 ZM municipalities (CONAPO 2020): Apodaca, Cadereyta Jiménez, García, San Pedro Garza García, General Escobedo, Guadalupe, Juárez, Monterrey, Salinas Victoria, San Nicolás de los Garza, Santa Catarina, Santiago
@@ -936,17 +971,10 @@ W9 applies the pipeline to **Monterrey, Nuevo León** (ZM Monterrey, CVE_ENT=19,
 - Mean vehicle rate: MTY 0.634 vs ZMG 0.577 (+0.057) → Monterrey has structurally lower transit propensity due to higher car ownership
 - 1,958 AGEBs across 12 municipalities
 
-**Remaining for W9:**
-1. GTFS feed for Metrorrey/Transmetro — needed for W3 accessibility equivalent; check `datos.gob.mx` or `transmetro.monterrey.gob.mx`
-2. OSM street features per AGEB (node indicators) — needed for W4 NPP equivalent
-3. EOD survey (optional, Tier-2) — for W2 beta calibration; use β=2.0 prior if unavailable
-4. Run W3→W4→W5→W6 equivalent for MTY after GTFS acquired
-5. Transfer error report comparing MTY vs ZMG pipeline outputs
-
-**Next steps (W8 onward):**
-- W8 requires W7 run output; backtest sub-task (mask high-ridership segments, test W6 re-proposes them) can start now
-- W9 full pipeline blocked on GTFS; Tier-1 demand surface is complete
-- W8 and W9 full run can proceed in parallel once GTFS is acquired
+**Monterrey remaining (superseded — Monterrey is now a Tier-1-only reference, not a live transfer
+target; GTFS never obtained):** its W3→W6 were never run for lack of GTFS. The transferability
+goal is met instead by Toluca + Aguascalientes (see the current-state block at the top of this
+section). MTY's Tier-1 demand surface remains operational (`w9_run_tier1.py --city mty`).
 
 ## E. Next steps
 
@@ -966,8 +994,12 @@ A. ✅ **DONE 2026-07-17 — aligned the W8 backtest + Line 4 anchor probe to th
    held and in fact strengthened (lower overlap = less premium-line replication). `outputs/w8/`
    regenerated; 6 new tests. See "W8 backtest alignment (RESOLVED 2026-07-17)" above.
 
-B. **W9 transferability** unchanged: blocked on a Metrorrey/Transmetro GTFS feed (see W9 section);
-   Tier-1 demand surface for Monterrey is complete.
+B. ✅ **DONE 2026-07-17 — W9 transferability re-targeted and completed.** Monterrey dropped as a
+   live target (GTFS unavailable) and replaced by **Toluca (large) + Aguascalientes (compact)**,
+   both scouted with verified downloadable GTFS. The **full W1→W6 pipeline now runs end-to-end for
+   both** via `src/w9_*.py --city {tol,ags}` (see the W9 section current-state block +
+   `outputs/w9/w9_transferability_report.md`). Optional deepening for the transfer cities (not
+   required for the claim): W7 audit, W8 backtests, W3.3 retrain — inputs are all in place.
 
 C. **Optional: TSP-where-feasible hybrid shaper.** #5 showed a pure TSP swap loses G01; a hybrid
    that uses TSP only where it stays feasible would marginally improve G00 (+2 AGEBs/+9.5k demand).
