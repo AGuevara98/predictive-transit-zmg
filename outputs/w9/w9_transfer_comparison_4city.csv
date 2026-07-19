@@ -1,0 +1,5 @@
+city,metro_pop_M,zm_munis,urban_agebs,mean_vehicle_rate,mean_transit_prop,denue
+Toluca,2.3,16,538,0.529,0.471,proxy (no DENUE)
+ZMG (Guadalajara),5.0,10,1881,0.577,0.423,full
+Monterrey,2.3,12,1903,0.635,0.365,DENUE
+Aguascalientes,1.1,3,356,0.667,0.333,DENUE

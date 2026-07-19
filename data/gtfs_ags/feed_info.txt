@@ -1,0 +1,2 @@
+feed_publisher_name,feed_publisher_url,feed_lang,default_lang,feed_start_date,feed_end_date,feed_version,feed_contact_email,feed_contact_url
+Gobierno del Estado de Aguascalientes,https://www.aguascalientes.gob.mx/cmov,ES,ES,20230101,20251231,20250902,desarrollo.portales@gmail.com,https://eservicios2.aguascalientes.gob.mx/servicios/buzon/correos.html

@@ -1,0 +1,3 @@
+line,route_ids,n_stops_masked,n_corridors_built,n_corridors_reproposed,mean_overlap_fraction
+L1,"MT_L1,ST_L1",138,5,4,0.0
+L2,"MT_L2,ST_L2",108,5,4,0.0

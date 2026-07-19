@@ -21,7 +21,7 @@ Master's thesis: a **7-phase geospatial ML pipeline** to predict optimal transit
 - W8 (Validation): ✅ Code complete — backtest + benchmark + before/after metrics run end-to-end via `python src/run_w8.py`; see W8 section below
 - **W8**: append — "First out-of-sample validation run 2026-07-12 (Line 4 backtest). Diagnostic
   layer corroborated; generative layer does NOT reconstruct Line 4. See W8 Line 4 section."
-- W9 (Transferability): 🔄 In progress — Tier-1 pipeline for Monterrey operational; DENUE + AGEB shapefile + OSM graph acquired; GTFS still needed for W3 equivalent; see W9 section below
+- W9 (Transferability): 🔄 In progress — Monterrey dropped as a live transfer target (its GTFS is unavailable). **Replaced 2026-07-17 by Toluca (large, 16 munis) + Aguascalientes (compact, 3 munis)** — both have verified downloadable GTFS (`docs/w9_gtfs_scouting_findings.md`); `w9_run_tier1.py` is now `--city {mty,tol,ags}` and both are wired (`docs/w9_onboarding_tol_ags.md`). **Tier-1 + W3 diagnostic complete for both (2026-07-17):** demand surface + GTFS accessibility + coverage-gap run end-to-end via `w9_run_tier1.py`/`w9_run_w3.py --city {tol,ags}`. 3-city coverage-gap: ZMG 20.7% > Toluca 14.9% > Aguascalientes 9.6% High-gap. **W1→W4 now all run for both** (Tier-1 demand, W3 GTFS accessibility+coverage-gap, full 14-feature NPP build via `w9_build_nppv.py`, W4 CRITIC/EWM+equity prioritization via `w9_run_w4.py`) — OSM graphs via osmnx, equity from CONAPO marginación (IM_2020) + CONEVAL rezago (AGEB grade→ordinal). W4 transfer finding: `pe_rezago_n` is the top objective-weight driver in both new metros (vs ZMG's population/employment) — weighting re-derived per city. **The FULL demand-driven pipeline W1→W6 now runs end-to-end for both** (add `w9_run_w6.py`: frontier-anchor / MST-diameter-trunk / anchor-directness generator, CSV-based). Both generate substantive feasible corridors — Toluca W6_G01 (12.6km, 23 AGEBs, 133k demand, LRT) is the transfer analogue of ZMG's merit-passer W6_G02; Aguascalientes W6_G05 (5.9km, 12 AGEBs, 107k, LRT). Same feasibility-vs-directness signature as ZMG (one high-demand corridor per city blows the 1.8 cap). The entire framework is transferred to two metros of very different size — cities MTY's missing GTFS made impossible. See `docs/w9_onboarding_tol_ags.md`. Remaining for transfer cities: W7 audit + W8 backtests + optional W3.3 retrain. MTY Tier-1 still operational. See W9 section below
 
 **Legacy phase status (pre-restructure):**
 - Phase 1 (Data Acquisition): ✅ Complete
@@ -29,7 +29,7 @@ Master's thesis: a **7-phase geospatial ML pipeline** to predict optimal transit
 - Phase 3 (CRITIC/EWM Objective Weighting): ✅ Complete — weights in `features.nppv_weights`; **repositioned as W4 prioritization layer**
 - Phase 4 (K-Means Clustering / Transit Suitability Typologies): ✅ Complete — clusters in `features.nppv_clusters`; **kept as descriptive segmentation only**
 - Phase 5 (Predictive Modeling & Interpretability): 🗑️ Retired 2026-06-24 — RF + XGBoost on K-Means labels (1.0000 accuracy, tautological); fully superseded by W3.3's coverage-gap retrain. Outputs removed from `outputs/phase5/`.
-- Phase 6 (Synthesis Report): ✅ Complete — `outputs/phase6/master_thesis_synthesis.md`; **will be rewritten after W8**
+- Phase 6 (Synthesis Report): ✅ Complete — `outputs/phase6/master_thesis_synthesis.md`; **rewritten 2026-07-17** around the demand-driven W1–W8 architecture (settled Gap-A claim; corrected equity term; aligned W8 numbers; W6_G02 as the merit-passing corridor). All numbers cross-checked against the live DB / `outputs/` on the rewrite date. Legacy Phase 1–5 framing retired from the doc.
 - Phase 7 (Steiner Tree Route Synthesis): 📋 Subsumed into W5+W6
 
 ## Environment Setup
@@ -861,10 +861,11 @@ a in {0.10,0.20,0.30}: prioritization is ROBUST to alpha -- Spearman vs the a=0.
 changes for 14-16% of AGEBs. Equity weight matters at the margin (which specific AGEBs top the
 list) but not for broad structure. (`fs_0.20` reproduced the stored `final_score` exactly.)
 
-**#2 validation power -- n>1 masked backtests + Line 4 re-check.** Extends the single premium
-backtest to three more natural experiments. As of 2026-07-17 these run through the ALIGNED
-(re-architected) generator -- see "W8 backtest alignment" below -- so the fractions are citable for
-canonical `run_w6`. Aligned numbers first, legacy (retired build_corridor_path) in parentheses:
+**#2 validation power -- n=6 masked backtests + Line 4 re-check.** Extends the single premium
+backtest to five more natural experiments (Mi Macro, Lines 1/2/3, Line 4 out-of-sample). As of
+2026-07-17 these run through the ALIGNED (re-architected) generator -- see "W8 backtest alignment"
+below -- so the fractions are citable for canonical `run_w6`. Aligned numbers first, legacy
+(retired build_corridor_path) in parentheses:
 - **Premium (MM+MT):** 1,344 stops masked, 5 built / 5 feasible, mean overlap **0.150** (legacy
   0.249) -- the diameter-trunk generator traces premium routes LESS than the old branching flatten.
 - **Mi Macro only (agency MM):** 1,268 stops masked, 5/5 feasible, mean overlap **0.166** (legacy
@@ -872,15 +873,22 @@ canonical `run_w6`. Aligned numbers first, legacy (retired build_corridor_path) 
 - **Line 3 (routes MT_L3+ST_L3):** 126 stops masked, 5 built / 4 feasible, overlap **0.000** (legacy
   0.000) -- the generator does NOT re-discover Line 3. Masking only the rail stops barely moves
   accessibility (non-zero AGEBs ~1266; parallel buses remain), so no strong new gap forms.
+- **Line 1 (routes MT_L1+ST_L1):** 138 stops masked, 5 built / 4 feasible, overlap **0.000** (both
+  the rail and SiTren-feeder shapes) -- added 2026-07-17 (item E). Same mechanism as Line 3.
+- **Line 2 (routes MT_L2+ST_L2):** 108 stops masked, 5 built / 4 feasible, overlap **0.000** -- added
+  2026-07-17 (item E). Per-line table + harness: `outputs/w8/w8_line_backtests_report.md`,
+  `src/w8_line_backtests.py`. NB `ST_L*` are the SiTren FEEDER buses (route_type 3, ~85m spacing),
+  NOT spatial duplicates of the `MT_*` rail lines (shape overlap <0.10) despite the shared L1/L2/L3
+  numbering -- masking both per line removes rail + feeder together.
 - **Line 4 out-of-sample (overlap probe vs the NEW feasible set):** best match is FEASIBLE W6_G02 at
   only **5% recall** (closest approach 0m -- touches Line 4 at one point); other feasible corridors
   0% (6.4-26km away). Still non-reconstruction. The Line 4 anchor probe was ALSO aligned to the
   frontier pipeline (2026-07-17), which sharpens the mechanism: 15/68 Line 4 AGEBs clear Jenks, but
   the **frontier seam drops them 15 -> 4** (Line 4 is mostly deep-interior unserved, not on the
   served/unserved seam), and the coverage_gap_n top-30 trim drops the last 4 -> **0 survive** (the
-  old demand-trim probe kept 1). Consistent story across all four: the aligned generator traces the
-  dense Mi Macro feeders only weakly (~0.15-0.17) and does not reconstruct rail lines (Line 3 0.00,
-  Line 4 0.05) -- the documented anchor-funnel limitation, now measured on n=4 and on the correct
+  old demand-trim probe kept 1). Consistent story across all six masks: the aligned generator traces
+  the dense Mi Macro feeders only weakly (~0.15-0.17) and does not reconstruct rail lines (Lines
+  1/2/3 all 0.00, Line 4 0.05) -- the documented anchor-funnel limitation, now measured on n=6 and on the correct
   generator.
 
 **W8 backtest alignment (RESOLVED 2026-07-17 -- was the "legacy generator" known issue).**
@@ -901,9 +909,44 @@ gate, so it does not affect which corridors are re-proposed.
 
 ---
 
-## W9 — Transferability (in progress 2026-06-15)
+## W9 — Transferability (full W1→W6 transfer complete 2026-07-17)
 
-W9 applies the pipeline to **Monterrey, Nuevo León** (ZM Monterrey, CVE_ENT=19, 12 municipalities, ~1,958 AGEBs) as the second city for transferability validation.
+**Current state:** the complete demand-driven pipeline (W1→W6) runs end-to-end for **Toluca**
+(large, 16 munis) and **Aguascalientes** (compact, 3 munis) via `src/w9_*.py --city {tol,ags}`.
+Monterrey was the original target but its GTFS is unavailable (blocks W3), so it was kept as a
+Tier-1 reference and replaced by two GTFS-available metros. **Full writeup:
+`outputs/w9/w9_transferability_report.md` + `docs/w9_onboarding_tol_ags.md`.** The Monterrey detail
+below is retained as historical record.
+
+**Transfer-city modules (all CSV-based, `--city {mty,tol,ags}`):**
+- `src/w9_city_config_tol.py`, `src/w9_city_config_ags.py` — identity, CONAPO municipio codes, bbox,
+  GTFS source, β=1.2005 prior.
+- `src/w9_run_tier1.py` (W1 demand), `src/w9_run_w3.py` (GTFS accessibility + coverage-gap),
+  `src/w9_build_nppv.py` (14-feature NPP), `src/w9_run_w4.py` (CRITIC/EWM + equity),
+  `src/w9_run_w6.py` (frontier/MST-diameter/directness corridor generation). All reuse the pure ZMG
+  functions (import-safe; engines are lazy).
+- Data-prep: `scripts/data_prep/make_city_{census,denue,indicators}_extract.py`.
+
+**Key transfer results (2026-07-17):**
+- Car-dependence gradient (mean vehicle rate): Toluca 0.529 < ZMG 0.577 < MTY 0.635 < Aguascalientes
+  0.667. Urban-AGEB count decouples from metro pop (Toluca 2.3M → 538 AGEBs; Ags 356).
+- Coverage-gap (High-gap %): ZMG 20.7% > Toluca 14.9% > Aguascalientes 9.6% (diagnostic transfers +
+  differentiates).
+- W4 weights re-derive per city — `pe_rezago_n` top driver in both new metros (vs ZMG population).
+- W6: Toluca 5 corridors/4 feasible (G01 12.6km/23 AGEBs/133k demand/LRT = transfer analogue of
+  ZMG's merit-passer W6_G02); Aguascalientes 5/3 feasible (G05 5.9km/12 AGEBs/107k/LRT). Same
+  feasibility-vs-directness signature as ZMG.
+- Data plumbing notes: INEGI blocks scripted census/shapefile download (browser only); DENUE masiva
+  works (Edomex split `denue_15_1/2`); equity from CONAPO IMU_2020 + CONEVAL GRS (AGEB grade→ordinal
+  IRS proxy); OSM via osmnx. Large raw sources gitignored; slim per-city extracts committed.
+- Not run for transfer cities: W7 audit, W8 backtests, W3.3 retrain (inputs in place; not needed for
+  the transfer claim).
+
+---
+
+### Original second city (Monterrey) — historical record
+
+W9 originally applied the pipeline to **Monterrey, Nuevo León** (ZM Monterrey, CVE_ENT=19, 12 municipalities, ~1,958 AGEBs) as the second city for transferability validation.
 
 **Second city: Monterrey, Nuevo León**
 - 12 ZM municipalities (CONAPO 2020): Apodaca, Cadereyta Jiménez, García, San Pedro Garza García, General Escobedo, Guadalupe, Juárez, Monterrey, Salinas Victoria, San Nicolás de los Garza, Santa Catarina, Santiago
@@ -928,17 +971,10 @@ W9 applies the pipeline to **Monterrey, Nuevo León** (ZM Monterrey, CVE_ENT=19,
 - Mean vehicle rate: MTY 0.634 vs ZMG 0.577 (+0.057) → Monterrey has structurally lower transit propensity due to higher car ownership
 - 1,958 AGEBs across 12 municipalities
 
-**Remaining for W9:**
-1. GTFS feed for Metrorrey/Transmetro — needed for W3 accessibility equivalent; check `datos.gob.mx` or `transmetro.monterrey.gob.mx`
-2. OSM street features per AGEB (node indicators) — needed for W4 NPP equivalent
-3. EOD survey (optional, Tier-2) — for W2 beta calibration; use β=2.0 prior if unavailable
-4. Run W3→W4→W5→W6 equivalent for MTY after GTFS acquired
-5. Transfer error report comparing MTY vs ZMG pipeline outputs
-
-**Next steps (W8 onward):**
-- W8 requires W7 run output; backtest sub-task (mask high-ridership segments, test W6 re-proposes them) can start now
-- W9 full pipeline blocked on GTFS; Tier-1 demand surface is complete
-- W8 and W9 full run can proceed in parallel once GTFS is acquired
+**Monterrey remaining (superseded — Monterrey is now a Tier-1-only reference, not a live transfer
+target; GTFS never obtained):** its W3→W6 were never run for lack of GTFS. The transferability
+goal is met instead by Toluca + Aguascalientes (see the current-state block at the top of this
+section). MTY's Tier-1 demand surface remains operational (`w9_run_tier1.py --city mty`).
 
 ## E. Next steps
 
@@ -958,22 +994,56 @@ A. ✅ **DONE 2026-07-17 — aligned the W8 backtest + Line 4 anchor probe to th
    held and in fact strengthened (lower overlap = less premium-line replication). `outputs/w8/`
    regenerated; 6 new tests. See "W8 backtest alignment (RESOLVED 2026-07-17)" above.
 
-B. **W9 transferability** unchanged: blocked on a Metrorrey/Transmetro GTFS feed (see W9 section);
-   Tier-1 demand surface for Monterrey is complete.
+B. ✅ **DONE 2026-07-17 — W9 transferability re-targeted and completed.** Monterrey dropped as a
+   live target (GTFS unavailable) and replaced by **Toluca (large) + Aguascalientes (compact)**,
+   both scouted with verified downloadable GTFS. The **full W1→W6 pipeline now runs end-to-end for
+   both** via `src/w9_*.py --city {tol,ags}` (see the W9 section current-state block +
+   `outputs/w9/w9_transferability_report.md`). Optional deepening for the transfer cities (not
+   required for the claim): W7 audit, W8 backtests, W3.3 retrain — inputs are all in place.
 
 C. **Optional: TSP-where-feasible hybrid shaper.** #5 showed a pure TSP swap loses G01; a hybrid
    that uses TSP only where it stays feasible would marginally improve G00 (+2 AGEBs/+9.5k demand).
    Low priority -- diameter is the confirmed default.
+
+D. ✅ **DONE 2026-07-17 -- rewrote the Phase 6 synthesis report.**
+   `outputs/phase6/master_thesis_synthesis.md` fully rewritten (was pre-restructure Phase 1-5
+   framing). Now organized around the demand-driven W1-W8 architecture: framework overview +
+   workstream map; data foundation (corrected 1,881-AGEB universe); per-workstream sections
+   (W1 demand surface, W2 beta=1.2005 calibration, W3 coverage-gap + retrain RF 0.877/LightGBM
+   0.883, W4 NPP + corrected equity + alpha robustness, W5 objective, W6 re-architecture + 4
+   feasible corridors, W7 audit 247/229-flagged, W8 validation, W9 transfer); the settled Gap-A
+   claim verbatim; limitations. W6_G02 (56% High-gap / 73rd-pct demand/km) framed as the
+   substantive merit-passing corridor; legacy Phase 2/5 models retired from the narrative.
+   **Every number cross-checked against the live gdl_metro DB + current outputs/ on the rewrite
+   date** (gap counts 390/1413/78, route_candidates 5/4-feasible, route_audit 247, W1 demand
+   8.47M / vehicle-rate 0.577, W8 premium 0.150 / Lines 1-3 0.000 / benchmark 10.5% / coverage
+   +1.1% / Gini -0.0187, merit G02+G03 PASS / G00+G01 mixed).
+
+E. ✅ **DONE 2026-07-17 -- deepened validation to n=6 masked backtests (4 line-level + 2 agency) + per-line table.**
+   Added Line 1 (MT_L1+ST_L1) and Line 2 (MT_L2+ST_L2) route-level masks via the aligned
+   `run_backtest(route_ids=...)`; both **0.000** overlap (rail AND feeder shapes), 5 built / 4
+   feasible each. Consolidated per-line table (`outputs/w8/w8_line_backtests_report.md`,
+   `w8_line_backtests_summary.csv`, `w8_line_backtests_per_route.csv`; harness
+   `src/w8_line_backtests.py`): premium 0.150, Mi Macro 0.166, **Line 1/2/3 all 0.000**, Line 4
+   0.05 recall. **Confirmed hypothesis:** the generator weakly traces the dense Mi Macro BRT
+   feeder network (~0.15-0.17) but does NOT reconstruct any rail line (Lines 1-4 ~0.00-0.05) --
+   masking a single rail line barely moves accessibility (parallel buses survive; non-zero AGEBs
+   stay 1,266), so no strong new gap forms on the held-out corridor. **Corrected a doc error
+   surfaced here:** `ST_L1/ST_L2` are NOT "duplicates" of the `MT_*` rail lines -- verified shape
+   overlap < 0.10; `MT_*` = Mi Tren tram (route_type 0, ~1km spacing), `ST_*` = SiTren feeder bus
+   (route_type 3, ~85m spacing) on a different alignment. Masking both per line removes the whole
+   line system (rail + feeder), per Line 3.
 
 **Closed this session (2026-07-16/17):**
 
 1. ✅ **Re-ran `run_w8.py` against the new corridors** (committed `0faa5a5`). W8 "Key results
    (2026-07-16 re-run)": benchmark 4 feasible corridors / 10.5% mean premium overlap (W6_G02 x
    MP-C03 42%), before/after gains ~2-3x the stale 3-stub set. Regenerated `outputs/w8/`.
-2. ✅ **Validation power extended to n=4, on the aligned generator** (caveat in old item A now
-   resolved -- see item A above). Aligned masked backtests: premium 0.150, Mi Macro 0.166, Line 3
-   0.000 (generator does not re-discover Line 3); Line 4 probes re-run vs the new feasible set (best
-   feasible recall 5%, still non-reconstruction). Consistent: weak overlap of the dense MM feeders,
+2. ✅ **Validation power extended to n=6, on the aligned generator** (caveat in old item A now
+   resolved -- see item A above; Lines 1/2 added under item E 2026-07-17). Aligned masked backtests:
+   premium 0.150, Mi Macro 0.166, Lines 1/2/3 all 0.000 (generator does not re-discover any rail
+   line); Line 4 probes re-run vs the new feasible set (best feasible recall 5%, still
+   non-reconstruction). Consistent: weak overlap of the dense MM feeders,
    no rail reconstruction.
 3. ✅ **1.8 detour cap confirmed** (committed `fc94826`). Sole binding constraint; feasible set
    invariant across [1.6,1.9]; 1.8 sits mid-plateau.

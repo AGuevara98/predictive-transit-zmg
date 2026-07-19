@@ -1,0 +1,185 @@
+route_id,service_id,trip_id,trip_short_name,direction_id,shape_id
+R_01,ES,R_01_ES_0,Vicente Guerrero - Margaritas,0,R_01_IDA
+R_01,ES,R_01_ES_1,Margaritas - Vicente Guerrero,1,R_01_REGRESO
+R_01,FS,R_01_FS_0,Vicente Guerrero - Margaritas,0,R_01_IDA
+R_01,FS,R_01_FS_1,Margaritas - Vicente Guerrero,1,R_01_REGRESO
+R_02,ES,R_02_ES_0,Lunaria - Centro (Calle Morelos),0,R_02_IDA
+R_02,ES,R_02_ES_1,Centro (Calle Morelos) - Lunaria,1,R_02_REGRESO
+R_02,FS,R_02_FS_0,Lunaria - Centro (Calle Morelos),0,R_02_IDA
+R_02,FS,R_02_FS_1,Centro (Calle Morelos) - Lunaria,1,R_02_REGRESO
+R_03,ES,R_03_ES_0,La Ribera - Uaa Sur,0,R_03_IDA
+R_03,ES,R_03_ES_1,Uaa Sur - La Ribera,1,R_03_REGRESO
+R_03,FS,R_03_FS_0,La Ribera - Uaa Sur,0,R_03_IDA
+R_03,FS,R_03_FS_1,Uaa Sur - La Ribera,1,R_03_REGRESO
+R_04,ES,R_04_ES_0,Jesús María - Terminal Sur,0,R_04_IDA
+R_04,ES,R_04_ES_1,Terminal Sur - Jesús María,1,R_04_REGRESO
+R_04,FS,R_04_FS_0,Jesús María - Terminal Sur,0,R_04_IDA
+R_04,FS,R_04_FS_1,Terminal Sur - Jesús María,1,R_04_REGRESO
+R_05,ES,R_05_ES_0,La Ribera - Vicente Guerrero,0,R_05_IDA
+R_05,ES,R_05_ES_1,Vicente Guerrero - La Ribera,1,R_05_REGRESO
+R_05,FS,R_05_FS_0,La Ribera - Vicente Guerrero,0,R_05_IDA
+R_05,FS,R_05_FS_1,Vicente Guerrero - La Ribera,1,R_05_REGRESO
+R_06,ES,R_06_ES_0,Terminal Sur - Jesús María,0,R_06_IDA
+R_06,ES,R_06_ES_1,Jesús María - Terminal Sur,1,R_06_REGRESO
+R_06,FS,R_06_FS_0,Terminal Sur - Jesús María,0,R_06_IDA
+R_06,FS,R_06_FS_1,Jesús María - Terminal Sur,1,R_06_REGRESO
+R_07,ES,R_07_ES_0,Centro (Calle Morelos) - Las Palmas,0,R_07_IDA
+R_07,ES,R_07_ES_1,Las Palmas - Centro (Calle Morelos),1,R_07_REGRESO
+R_07,FS,R_07_FS_0,Centro (Calle Morelos) - Las Palmas,0,R_07_IDA
+R_07,FS,R_07_FS_1,Las Palmas - Centro (Calle Morelos),1,R_07_REGRESO
+R_08,ES,R_08_ES_0,Centro (Rivero Y Gutiérrez) - Utma,0,R_08_IDA
+R_08,ES,R_08_ES_1,Utma - Centro (Rivero Y Gutiérrez),1,R_08_REGRESO
+R_08,FS,R_08_FS_0,Centro (Rivero Y Gutiérrez) - Utma,0,R_08_IDA
+R_08,FS,R_08_FS_1,Utma - Centro (Rivero Y Gutiérrez),1,R_08_REGRESO
+R_09,ES,R_09_ES_0,Terminal Sur - Los Laureles,0,R_09_IDA
+R_09,ES,R_09_ES_1,Los Laureles - Terminal Sur,1,R_09_REGRESO
+R_09,FS,R_09_FS_0,Terminal Sur - Los Laureles,0,R_09_IDA
+R_09,FS,R_09_FS_1,Los Laureles - Terminal Sur,1,R_09_REGRESO
+R_10N,ES,R_10N_ES_0,Centro (Calle Morelos) - Paseos De Aguascalientes,0,R_10N_IDA
+R_10N,ES,R_10N_ES_1,Paseos De Aguascalientes - Centro (Calle Morelos),1,R_10N_REGRESO
+R_10N,FS,R_10N_FS_0,Centro (Calle Morelos) - Paseos De Aguascalientes,0,R_10N_IDA
+R_10N,FS,R_10N_FS_1,Paseos De Aguascalientes - Centro (Calle Morelos),1,R_10N_REGRESO
+R_10S,ES,R_10S_ES_0,Centro (Calle Rivero Y Gtz.) - Uaa Sur,0,R_10S_IDA
+R_10S,ES,R_10S_ES_1,Uaa Sur - Centro (Calle Rivero Y Gtz.),1,R_10S_REGRESO
+R_10S,FS,R_10S_FS_0,Centro (Calle Rivero Y Gtz.) - Uaa Sur,0,R_10S_IDA
+R_10S,FS,R_10S_FS_1,Uaa Sur - Centro (Calle Rivero Y Gtz.),1,R_10S_REGRESO
+R_11,ES,R_11_ES_0,Terminal Sur - Chichimeco,0,R_11_IDA
+R_11,ES,R_11_ES_1,Chichimeco - Terminal Sur,1,R_11_REGRESO
+R_11,FS,R_11_FS_0,Terminal Sur - Chichimeco,0,R_11_IDA
+R_11,FS,R_11_FS_1,Chichimeco - Terminal Sur,1,R_11_REGRESO
+R_12,ES,R_12_ES_0,Lunaria - Vicente Guerrero,0,R_12_IDA
+R_12,ES,R_12_ES_1,Vicente Guerrero - Lunaria,1,R_12_REGRESO
+R_12,FS,R_12_FS_0,Lunaria - Vicente Guerrero,0,R_12_IDA
+R_12,FS,R_12_FS_1,Vicente Guerrero - Lunaria,1,R_12_REGRESO
+R_14,ES,R_14_ES_0,Vistabella - Vicente Guerrero,0,R_14_IDA
+R_14,ES,R_14_ES_1,Vicente Guerrero - Vistabella,1,R_14_REGRESO
+R_14,FS,R_14_FS_0,Vistabella - Vicente Guerrero,0,R_14_IDA
+R_14,FS,R_14_FS_1,Vicente Guerrero - Vistabella,1,R_14_REGRESO
+R_16,ES,R_16_ES_0,Hacienda Nueva - Vistas Del Valle,0,R_16_IDA
+R_16,ES,R_16_ES_1,Vistas Del Valle - Hacienda Nueva,1,R_16_REGRESO
+R_16,FS,R_16_FS_0,Hacienda Nueva - Vistas Del Valle,0,R_16_IDA
+R_16,FS,R_16_FS_1,Vistas Del Valle - Hacienda Nueva,1,R_16_REGRESO
+R_18,ES,R_18_ES_0,Lunaria - Uaa,0,R_18_IDA
+R_18,ES,R_18_ES_1,Uaa - Lunaria,1,R_18_REGRESO
+R_18,FS,R_18_FS_0,Lunaria - Uaa,0,R_18_IDA
+R_18,FS,R_18_FS_1,Uaa - Lunaria,1,R_18_REGRESO
+R_19,ES,R_19_ES_0,Vistas De Oriente - Pocitos,0,R_19_IDA
+R_19,ES,R_19_ES_1,Pocitos - Vistas De Oriente,1,R_19_REGRESO
+R_19,FS,R_19_FS_0,Vistas De Oriente - Pocitos,0,R_19_IDA
+R_19,FS,R_19_FS_1,Pocitos - Vistas De Oriente,1,R_19_REGRESO
+R_20N,ES,R_20N_ES_0,Terminal Oriente Circuito,0,R_20N_IDA
+R_20N,FS,R_20N_FS_0,Terminal Oriente Circuito,0,R_20N_IDA
+R_20S,ES,R_20S_ES_0,Terminal Oriente Circuito,0,R_20S_IDA
+R_20S,FS,R_20S_FS_0,Terminal Oriente Circuito,0,R_20S_IDA
+R_23,ES,R_23_ES_0,Los Arquitos - Villa Montaña,0,R_23_IDA
+R_23,ES,R_23_ES_1,Villa Montaña - Los Arquitos,1,R_23_REGRESO
+R_23,FS,R_23_FS_0,Los Arquitos - Villa Montaña,0,R_23_IDA
+R_23,FS,R_23_FS_1,Villa Montaña - Los Arquitos,1,R_23_REGRESO
+R_24,ES,R_24_ES_0,Vistas De Oriente - Los Negritos,0,R_24_IDA
+R_24,ES,R_24_ES_1,Los Negritos - Vistas De Oriente,1,R_24_REGRESO
+R_24,FS,R_24_FS_0,Vistas De Oriente - Los Negritos,0,R_24_IDA
+R_24,FS,R_24_FS_1,Los Negritos - Vistas De Oriente,1,R_24_REGRESO
+R_25,ES,R_25_ES_0,Las Palmas - Uta,0,R_25_IDA
+R_25,ES,R_25_ES_1,Uta - Las Palmas,1,R_25_REGRESO
+R_25,FS,R_25_FS_0,Las Palmas - Uta,0,R_25_IDA
+R_25,FS,R_25_FS_1,Uta - Las Palmas,1,R_25_REGRESO
+R_27,ES,R_27_ES_0,Terminal Sur Oriente - Vicente Guerrero,0,R_27_IDA
+R_27,ES,R_27_ES_1,Vicente Guerrero - Terminal Sur Oriente,1,R_27_REGRESO
+R_27,FS,R_27_FS_0,Terminal Sur Oriente - Vicente Guerrero,0,R_27_IDA
+R_27,FS,R_27_FS_1,Vicente Guerrero - Terminal Sur Oriente,1,R_27_REGRESO
+R_28,ES,R_28_ES_0,Chichimeco - Terminal Sur,0,R_28_IDA
+R_28,ES,R_28_ES_1,Terminal Sur - Chichimeco,1,R_28_REGRESO
+R_28,FS,R_28_FS_0,Chichimeco - Terminal Sur,0,R_28_IDA
+R_28,FS,R_28_FS_1,Terminal Sur - Chichimeco,1,R_28_REGRESO
+R_29,ES,R_29_ES_0,Lunaria - Centro (Calle Morelos),0,R_29_IDA
+R_29,ES,R_29_ES_1,Centro (Calle Morelos) - Lunaria,1,R_29_REGRESO
+R_29,FS,R_29_FS_0,Lunaria - Centro (Calle Morelos),0,R_29_IDA
+R_29,FS,R_29_FS_1,Centro (Calle Morelos) - Lunaria,1,R_29_REGRESO
+R_30,ES,R_30_ES_0,Villa Montaña - Martínez Domínguez,0,R_30_IDA
+R_30,ES,R_30_ES_1,Martínez Domínguez - Villa Montaña,1,R_30_REGRESO
+R_30,FS,R_30_FS_0,Villa Montaña - Martínez Domínguez,0,R_30_IDA
+R_30,FS,R_30_FS_1,Martínez Domínguez - Villa Montaña,1,R_30_REGRESO
+R_33,ES,R_33_ES_0,Terminal Sur - Jesús María,0,R_33_IDA
+R_33,ES,R_33_ES_1,Jesús María - Terminal Sur,1,R_33_REGRESO
+R_33,FS,R_33_FS_0,Terminal Sur - Jesús María,0,R_33_IDA
+R_33,FS,R_33_FS_1,Jesús María - Terminal Sur,1,R_33_REGRESO
+R_34,ES,R_34_ES_0,Upa - Villa Montaña,0,R_34_IDA
+R_34,ES,R_34_ES_1,Villa Montaña - Upa,1,R_34_REGRESO
+R_34,FS,R_34_FS_0,Upa - Villa Montaña,0,R_34_IDA
+R_34,FS,R_34_FS_1,Villa Montaña - Upa,1,R_34_REGRESO
+R_35,ES,R_35_ES_0,Lunaria - Uaa,0,R_35_IDA
+R_35,ES,R_35_ES_1,Uaa - Lunaria,1,R_35_REGRESO
+R_35,FS,R_35_FS_0,Lunaria - Uaa,0,R_35_IDA
+R_35,FS,R_35_FS_1,Uaa - Lunaria,1,R_35_REGRESO
+R_36,ES,R_36_ES_0,Centro (Mercado Terán) - Lunaria,0,R_36_IDA
+R_36,ES,R_36_ES_1,Lunaria - Centro (Mercado Teran),1,R_36_REGRESO
+R_36,FS,R_36_FS_0,Centro (Mercado Terán) - Lunaria,0,R_36_IDA
+R_36,FS,R_36_FS_1,Lunaria - Centro (Mercado Teran),1,R_36_REGRESO
+R_37,ES,R_37_ES_0,Utma - San Marcos,0,R_37_IDA
+R_37,ES,R_37_ES_1,San Marcos - Utma,1,R_37_REGRESO
+R_37,FS,R_37_FS_0,Utma - San Marcos,0,R_37_IDA
+R_37,FS,R_37_FS_1,San Marcos - Utma,1,R_37_REGRESO
+R_38,ES,R_38_ES_0,Vicente Guerrero - Paso Blanco,0,R_38_IDA
+R_38,ES,R_38_ES_1,Paso Blanco - Vicente Guerrero,1,R_38_REGRESO
+R_38,FS,R_38_FS_0,Vicente Guerrero - Paso Blanco,0,R_38_IDA
+R_38,FS,R_38_FS_1,Paso Blanco - Vicente Guerrero,1,R_38_REGRESO
+R_39,ES,R_39_ES_0,Centro (Calle Morelos) - El Conejal,0,R_39_IDA
+R_39,ES,R_39_ES_1,El Conejal - Centro (Calle Morelos),1,R_39_REGRESO
+R_39,FS,R_39_FS_0,Centro (Calle Morelos) - El Conejal,0,R_39_IDA
+R_39,FS,R_39_FS_1,El Conejal - Centro (Calle Morelos),1,R_39_REGRESO
+R_40N,ES,R_40N_ES_0,Terminal Oriente Circuito,0,R_40N_IDA
+R_40N,FS,R_40N_FS_0,Terminal Oriente Circuito,1,R_40N_IDA
+R_40S,ES,R_40S_ES_0,Terminal Oriente Circuito,0,R_40S_IDA
+R_40S,FS,R_40S_FS_0,Terminal Oriente Circuito,1,R_40S_IDA
+R_41PENAL,ES,R_41PENAL_ES_0,Terminal Oriente Circuito,0,R_41PENAL_IDA
+R_41PENAL,ES,R_41PENAL_ES_1,Terminal Oriente Circuito,1,R_41PENAL_REGRESO
+R_41PENAL,FS,R_41PENAL_FS_0,Terminal Oriente Circuito,0,R_41PENAL_IDA
+R_41PENAL,FS,R_41PENAL_FS_1,Terminal Oriente Circuito,1,R_41PENAL_REGRESO
+R_41ALAMEDA,ES,R_41ALAMEDA_ES_0,Alameda Terminal Oriente Circuito,0,R_41ALAMEDA_IDA
+R_41ALAMEDA,ES,R_41ALAMEDA_ES_1,Alameda Terminal Oriente Circuito,1,R_41ALAMEDA_REGRESO
+R_41ALAMEDA,FS,R_41ALAMEDA_FS_0,Alameda Terminal Oriente Circuito,0,R_41ALAMEDA_IDA
+R_41ALAMEDA,FS,R_41ALAMEDA_FS_1,Alameda Terminal Oriente Circuito,1,R_41ALAMEDA_REGRESO
+R_42,ES,R_42_ES_0,Terminal Sur - Vistas Del Valle,0,R_42_IDA
+R_42,ES,R_42_ES_1,Vistas Del Valle - Terminal Sur,1,R_42_REGRESO
+R_42,FS,R_42_FS_0,Terminal Sur - Vistas Del Valle,0,R_42_IDA
+R_42,FS,R_42_FS_1,Vistas Del Valle - Terminal Sur,1,R_42_REGRESO
+R_43N,ES,R_43N_ES_0,Centro (Calle Morelos) - Utma,0,R_43N_IDA
+R_43N,ES,R_43N_ES_1,Utma - Centro (Calle Morelos),1,R_43N_REGRESO
+R_43N,FS,R_43N_FS_0,Centro (Calle Morelos) - Utma,0,R_43N_IDA
+R_43N,FS,R_43N_FS_1,Utma - Centro (Calle Morelos),1,R_43N_REGRESO
+R_43S,ES,R_43S_ES_0,Centro (Calle Rivero Y Gtz.) - San Antonio,0,R_43S_IDA
+R_43S,ES,R_43S_ES_1,San Antonio - Centro (Calle Rivero Y Gtz.),1,R_43S_REGRESO
+R_43S,FS,R_43S_FS_0,Centro (Calle Rivero Y Gtz.) - San Antonio,0,R_43S_IDA
+R_43S,FS,R_43S_FS_1,San Antonio - Centro (Calle Rivero Y Gtz.),1,R_43S_REGRESO
+R_45,ES,R_45_ES_0,Uaa - Terminal Sur Oriente,0,R_45_IDA
+R_45,ES,R_45_ES_1,Terminal Sur Oriente - Uaa,1,R_45_REGRESO
+R_45,FS,R_45_FS_0,Uaa - Terminal Sur Oriente,0,R_45_IDA
+R_45,FS,R_45_FS_1,Terminal Sur Oriente - Uaa,1,R_45_REGRESO
+R_46,ES,R_46_ES_0,Calvillito - Vicente Guerrero,0,R_46_IDA
+R_46,ES,R_46_ES_1,Vicente Guerrero - Calvillito,1,R_46_REGRESO
+R_46,FS,R_46_FS_0,Calvillito - Vicente Guerrero,0,R_46_IDA
+R_46,FS,R_46_FS_1,Vicente Guerrero - Calvillito,1,R_46_REGRESO
+R_47,ES,R_47_ES_0,Clínica 10 - San Marcos,0,R_47_IDA
+R_47,ES,R_47_ES_1,San Marcos - Clínica 10,1,R_47_REGRESO
+R_47,FS,R_47_FS_0,Clínica 10 - San Marcos,0,R_47_IDA
+R_47,FS,R_47_FS_1,San Marcos - Clínica 10,1,R_47_REGRESO
+R_48,ES,R_48_ES_0,Vistas Del Valle - Centro (Panteón De La Cruz),0,R_48_IDA
+R_48,ES,R_48_ES_1,Centro (Panteón de la Cruz) - Vistas del Valle,1,R_48_REGRESO
+R_48,FS,R_48_FS_0,Vistas Del Valle - Centro (Panteón De La Cruz),0,R_48_IDA
+R_48,FS,R_48_FS_1,Centro (Panteón de la Cruz) - Vistas del Valle,1,R_48_REGRESO
+R_50,ES,R_50_ES_0,Chicahuales - Uta,0,R_50_IDA
+R_50,ES,R_50_ES_1,Uta - Chicahuales,1,R_50_REGRESO
+R_50,FS,R_50_FS_0,Chicahuales - Uta,0,R_50_IDA
+R_50,FS,R_50_FS_1,Uta - Chicahuales,1,R_50_REGRESO
+R_50B,ES,R_50B_ES_0,Jesús María - Uta,0,R_50B_IDA
+R_50B,ES,R_50B_ES_1,Uta - Jesús María,1,R_50B_REGRESO
+R_50B,FS,R_50B_FS_0,Jesús María - Uta,0,R_50B_IDA
+R_50B,FS,R_50B_FS_1,Uta - Jesús María,1,R_50B_REGRESO
+R_51,ES,R_51_ES_0,Casa Blanca - Ex Viñedos Guadalupe,0,R_51_IDA
+R_51,ES,R_51_ES_1,Ex Viñedos Guadalupe - Casa Blanca,1,R_51_REGRESO
+R_51,FS,R_51_FS_0,Casa Blanca - Ex Viñedos Guadalupe,0,R_51_IDA
+R_51,FS,R_51_FS_1,Ex Viñedos Guadalupe - Casa Blanca,1,R_51_REGRESO
+R_52,ES,R_52_ES_0,Palomino - Lomas Del Ajedrez,0,R_52_IDA
+R_52,ES,R_52_ES_1,Lomas Del Ajedrez - Palomino,1,R_52_REGRESO
+R_52,FS,R_52_FS_0,Palomino - Lomas Del Ajedrez,0,R_52_IDA
+R_52,FS,R_52_FS_1,Lomas Del Ajedrez - Palomino,1,R_52_REGRESO
