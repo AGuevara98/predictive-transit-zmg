@@ -1,0 +1,78 @@
+\chapter{Conclusions and Future Work}
+\label{ch:conclusions}
+
+\section{Summary of findings}
+\label{sec:concl-summary}
+
+This thesis set out to break the circularity that undermines data-driven transit
+planning and to build, in its place, a demand-driven pipeline that diagnoses unmet need,
+generates candidate corridors, and transfers to other cities. The four research
+questions can now be answered directly.
+
+\paragraph{RQ1 -- Demand.} \emph{Yes.} Transit demand can be estimated at \ageb
+resolution from Tier-1 data alone. The trip-generation and doubly-constrained gravity
+model of \cref{sec:w1} produce a metropolitan demand surface using only census, economic,
+and network variables, with no transit input, and calibration against the EOD~2022 survey
+(\cref{sec:w2}) fixes the distance-decay parameter at $\betadecay=1.2005$---a value that
+fits the observed flows better than the conventional prior. Demand is therefore never a
+function of current supply, which is the precondition the rest of the framework depends on.
+
+\paragraph{RQ2 -- Diagnosis.} \emph{Yes, and it validates out of sample.} The
+coverage-gap index (\cref{sec:w3}) sets modeled demand against \textsc{gtfs}-measured
+accessibility, yielding a dependent variable constructed independently of supply; the
+supervised retrain learns it from place characteristics with no leakage
+(\cref{tab:retrain}). Its strongest support is the Line~4 natural experiment: a corridor
+the model never saw, later chosen for construction, shows \num{1.6} times the
+metropolitan High-gap rate. This diagnostic is the thesis's firmest and most citable
+contribution.
+
+\paragraph{RQ3 -- Generation.} \emph{Partially, and now characterized.} Once corridors
+are shaped as real paths (a minimum-spanning-tree diameter trunk on the road graph) and
+judged by anchor-directness rather than endpoint detour (\cref{sec:w6}), the generator
+produces at least one substantive, feasible, merit-passing corridor---\code{W6\_G02},
+\SI{12.1}{\kilo\metre}, \SI{56}{\percent} High-gap, non-redundant, \num{73}rd-percentile
+demand efficiency. It also surfaces lower-efficiency connectors alongside it, and it does
+not reconstruct built rail lines---an expected outcome, since reconstruction is a weak
+proxy for merit (\cref{sec:disc-reconstruction}). The generative layer is thus a genuine
+but bounded contribution.
+
+\paragraph{RQ4 -- Transferability.} \emph{Yes, end-to-end.} The full W1--W8 pipeline runs
+without bespoke re-engineering on two contrasting metropolitan areas---Toluca (large,
+sixteen municipalities) and Aguascalientes (compact, three)---re-deriving demand,
+diagnosis, weights, corridors, and audit from each city's own Tier-1 and \textsc{gtfs}
+data (\cref{ch:transferability}). The diagnostic differentiates the three metros
+sensibly by unmet-demand share, and each city's weighting re-derives from its own data
+rather than inheriting \zmg's.
+
+\section{Practical recommendations}
+\label{sec:concl-recommendations}
+
+For a planning agency, the framework is most useful as a \emph{diagnostic screen} rather
+than an autopilot. Three recommendations follow. First, treat the coverage-gap surface
+as the primary product: it ranks where unmet demand is concentrated at a resolution finer
+than any single line, and it can be recomputed cheaply as census and \textsc{gtfs} data
+are updated. Second, use the route audit (\cref{sec:w7}) to flag low-demand, indirect,
+and redundant existing routes for review---in the transfer cities it surfaced substantial
+parallel-service redundancy that is a candidate for rationalization. Third, read the
+generated corridors as \emph{hypotheses to be studied}, not as final alignments: the
+merit-passing corridor is a defensible starting point for a feasibility study, but the
+generator's characterized limitations mean its output should inform, not replace,
+engineering and community process.
+
+\section{Future work}
+\label{sec:concl-future}
+
+Four directions would most strengthen the framework. First, \emph{local calibration for
+the transfer cities}: Toluca and Aguascalientes currently inherit \zmg's distance-decay
+prior, and a survey-calibrated $\betadecay$ per city would tighten their demand surfaces.
+Second, a \emph{network-distance gravity model}: replacing Euclidean impedance with
+travel-time impedance on the road graph would improve absolute demand magnitudes. Third,
+\emph{transferring the supervised layer}: the coverage-gap retrain was run only for \zmg,
+and applying it to the transfer cities would test whether the learned relationship between
+place characteristics and unmet demand is itself portable. Fourth, a \emph{hybrid corridor
+shaper} that switches between diameter-trunk and travelling-salesman routing where the
+latter remains feasible, which the exploratory analysis suggests would marginally improve
+coverage without sacrificing feasibility. Beyond these, the clearest external validation
+would come from observed ridership on any corridor that is eventually built along a
+generated alignment---the counterfactual that, by construction, no purely ex-ante study
+can supply.

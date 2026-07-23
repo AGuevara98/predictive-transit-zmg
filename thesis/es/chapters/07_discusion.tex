@@ -1,0 +1,142 @@
+\chapter{Discusión}
+\label{ch:discusion}
+
+Los resultados sustentan una afirmación deliberadamente acotada. Este capítulo separa
+lo que el marco demuestra con solidez de lo que demuestra solo parcialmente, y
+argumenta que la distinción depende de dos preguntas distintas que el trabajo previo a
+menudo confunde. La tesis central es esta: el marco aporta un \emph{diagnóstico de
+brecha de demanda validado} y un \emph{generador de corredores caracterizado y
+parcialmente exitoso}, y estas dos contribuciones tienen pesos probatorios distintos.
+
+\section{Dos preguntas, dos capas}
+\label{sec:disc-twoquestions}
+
+Conviene distinguir dos preguntas que se le podrían plantear a un marco de planeación
+orientado por datos. Pregunta~A: ¿reproduce el generador \emph{corredores que
+realmente se construyeron}? Pregunta~B: ¿produce el generador \emph{buenos
+corredores}---líneas que atienden demanda real y no atendida de forma eficiente y sin
+redundancia? Buena parte de la literatura sobre ubicación de estaciones con aprendizaje
+automático responde implícitamente una versión de la Pregunta~A, tratando la
+coincidencia con la red existente como validación. Pero A es un proxy débil y
+asimétrico de B, porque las líneas construidas no están garantizadas como óptimas: se
+eligen bajo restricciones políticas, financieras y de disponibilidad de suelo que el
+marco no modela. La coincidencia, por tanto, corrobora; el desacuerdo es evidencia
+débil de error. Las dos capas de la metodología corresponden a estas preguntas ---la
+capa de diagnóstico (W1--W4) se valida contra evidencia de tipo B, mientras que el
+generador (W5--W6) se prueba contra ambas--- y tienen éxito en grados distintos.
+
+\section{La capa de diagnóstico es la contribución sólida}
+\label{sec:disc-diagnostic}
+
+El diagnóstico de brecha de cobertura (\cref{ch:metodologia}, \cref{sec:w3}) es el
+resultado más firme del marco. Su contribución metodológica es romper la circularidad
+que socava los objetivos de ``tiene parada'': al definir la variable dependiente como
+la razón entre la demanda estimada de forma independiente y la oferta medida por
+\textsc{gtfs} (\cref{eq:gap}), el modelo aprende dónde se \emph{necesita} el transporte
+en lugar de dónde \emph{existe}. El reentrenamiento supervisado confirma que este
+objetivo es aprendible solo a partir de características del lugar, sin fuga de
+información de la oferta (\cref{tab:retrain}).
+
+Tres líneas de evidencia sustentan el diagnóstico. Primera, y más importante, se
+corrobora \emph{fuera de muestra}: la instantánea \textsc{gtfs} de 2024 es anterior a
+la Línea~4 de SITEUR, por lo que el corredor se trata como desatendido, y sin embargo
+sus \ageb{}s muestran \num{1.6} veces la tasa metropolitana de brecha alta
+(\cref{sec:res-w8}). Un corredor que los planificadores profesionales decidieron
+construir de forma independiente fue señalado como de alta prioridad por el modelo que
+nunca lo vio. Segunda, el diagnóstico se \emph{transfiere}: produce una lectura
+plausible y diferenciada de la demanda no atendida en dos ciudades adicionales
+(\cref{ch:transferibilidad}), ordenándolas con sensatez por proporción de brecha alta.
+Tercera, es \emph{interpretable}: la atribución SHAP identifica zonas densas, de alta
+necesidad y ricas en empleo pero desatendidas, coincidiendo con el patrón geográfico
+de la \cref{fig:coverage-gap}. Esta capa es el núcleo defendible y citable de la tesis.
+
+\section{La capa generativa es un éxito parcial y caracterizado}
+\label{sec:disc-generative}
+
+El generador de corredores es una contribución más débil pero genuina, y su historia
+es instructiva. En su primera forma el generador era esencialmente negativo: de sus
+corredores factibles, solo un tramo corto y degenerado pasaba las pruebas de mérito, y
+la factibilidad estaba confundida con la escasez de anclas ---el filtro de
+factibilidad seleccionaba por \emph{pocas anclas casi colineales} en lugar de por
+buenos corredores. Esto se rastreó a dos defectos acoplados: un modelador que aplanaba
+un árbol de expansión mínima en una línea con saltos fantasma, y una métrica de rodeo
+medida contra la distancia entre extremos, que penaliza en exceso a un corredor de
+cobertura de demanda que legítimamente se curva.
+
+Rearquitecturar el generador en torno a anclas de frontera, un tronco de
+\emph{diámetro} del árbol de expansión mínima ensamblado de calles reales y una
+compuerta de factibilidad por \emph{rectitud de anclas} (\cref{sec:w6}) cambió el
+veredicto. En sus propios términos el generador ahora produce al menos un corredor
+sustantivo, factible y meritorio: \code{W6\_G02} atiende \SI{12.1}{\kilo\metre} y
+\num{25} \ageb{}s, de los cuales el \SI{56}{\percent} son de brecha alta (frente a la
+línea base de \SI{20.7}{\percent}), no es redundante con la red existente (mejor
+Jaccard \num{0.18}) y se ubica en el percentil \num{73} de demanda por kilómetro. Esta
+es una línea real, no un tramo.
+
+El éxito es parcial, sin embargo, y la tesis no lo exagera. Junto a \code{W6\_G02}, el
+generador también arroja conectores de menor eficiencia (\code{W6\_G00} y
+\code{W6\_G01}) que atienden necesidad real pero puntúan bajo en demanda por
+kilómetro. La limitación residual es arquitectónica ---el número fijo de anclas, el
+agrupamiento espacial y el tronco del árbol de expansión no pueden alcanzar cada
+bolsón de brecha alta--- y ahora se mide en lugar de solo afirmarse.
+
+\section{La reconstrucción es un proxy débil del mérito de un corredor}
+\label{sec:disc-reconstruction}
+
+La ilustración más clara de la distinción Pregunta-A/Pregunta-B es el fracaso del
+generador en reconstruir el ferrocarril construido. En las retro-pruebas enmascaradas
+no re-descubre las líneas premium: enmascarar todo el nivel premium da
+\SI{15}{\percent} de traslape medio de trazado, y enmascarar líneas férreas
+individuales da esencialmente cero (\cref{sec:res-w8}); el corredor de la Línea~4 se
+empareja con apenas \num{0.05} de exhaustividad. Tomado ingenuamente, esto parece un
+fracaso. Leído correctamente, se acerca al resultado esperado y es solo evidencia débil
+en contra del generador.
+
+La razón es mecánica además de epistémica. Enmascarar una sola línea férrea apenas
+mueve la accesibilidad, porque las rutas de autobús paralelas permanecen y la frontera
+servido/no servido apenas se desplaza; no se forma una brecha nueva fuerte en el
+corredor excluido, de modo que el generador de frontera no tiene dónde anclar. Este es
+el mismo mecanismo que hace degenerar la retro-prueba de tronco de demanda en la Toluca
+solo de autobuses (\cref{sec:transf-validation}). Epistémicamente, incluso una
+puntuación de reconstrucción perfecta no establecería el mérito de un corredor, porque
+las líneas construidas codifican restricciones ajenas a la demanda. La comparación en
+las ciudades de transferencia es la imagen especular instructiva: donde la red
+existente ya cubre bien la demanda, el generador se traslapa fuertemente con ella
+(Toluca \SI{75}{\percent}, Aguascalientes \SI{54}{\percent}) ---coincidencia por
+preferencia revelada, no cobertura nueva. El encuadre honesto, por tanto, es que el
+valor del generador reside en la Pregunta~B, donde está parcialmente validado, no en la
+Pregunta~A, donde la coincidencia o el desacuerdo son solo débilmente diagnósticos.
+
+\section{Implicaciones de equidad}
+\label{sec:disc-equity}
+
+La equidad se trata como un término explícito y separable en lugar de como una
+consecuencia implícita. La formulación aditiva (\cref{eq:final}) permite a la tesis
+reportar la priorización con y sin el bono de equidad, y el análisis de sensibilidad
+muestra que el ordenamiento es robusto al peso de equidad ($\alpha$): la estructura
+general es fija, y $\alpha$ solo cambia cuáles \ageb{}s específicos encabezan la lista.
+Sustantivamente, el diagnóstico y el término de equidad apuntan en la misma dirección
+---las zonas de brecha alta son desproporcionadamente periferias densas y de alto
+rezago social---, de modo que priorizar la demanda no atendida y priorizar la
+desventaja están, en \zmg, en gran medida alineados y no en tensión. La corrección del
+signo y la imputación del índice de marginación (documentada en el capítulo de datos)
+importa aquí: un término de equidad que hubiera premiado silenciosamente a las zonas
+menos marginadas habría invertido esta conclusión.
+
+\section{Limitaciones}
+\label{sec:disc-limitations}
+
+Varias limitaciones acotan los resultados más allá de las ya señaladas. La superficie
+de demanda descansa en un parámetro de decaimiento transferido y una impedancia
+euclidiana; un modelo gravitacional de distancia de red calibrado con datos de encuesta
+locales tensaría las magnitudes absolutas. La instantánea \textsc{gtfs} es un único
+punto en el tiempo, por lo que la capa de oferta no capta la variación de frecuencia de
+servicio a lo largo del día. La compuerta de factibilidad del generador es sensible a
+la densidad de paradas del \textsc{gtfs} de origen, que en la auditoría se manifiesta
+como una cuenta de factibles artificialmente baja para redes concesionadas de paradas
+muy próximas. Lo más importante: los corredores \emph{generados} se validan solo de
+forma indirecta ---por necesidad, no redundancia y eficiencia de demanda--- y no contra
+afluencia observada, porque no existe afluencia contrafactual para líneas que nunca se
+construyeron. La capa de diagnóstico, en cambio, tiene un anclaje fuera de muestra en la
+Línea~4. Esta asimetría es el límite honesto de la contribución: un diagnóstico
+validado, y un generador caracterizado cuya efectividad se mide en sus propios términos.

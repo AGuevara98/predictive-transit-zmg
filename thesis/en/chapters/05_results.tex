@@ -1,0 +1,236 @@
+\chapter{Results}
+\label{ch:results}
+
+This chapter reports the outputs of each workstream for the Guadalajara
+Metropolitan Area (\zmg). Section order follows the pipeline: the estimated demand
+surface (\cref{sec:res-w1}), its calibration (\cref{sec:res-w2}), the coverage-gap
+diagnosis and its supervised interpretation (\cref{sec:res-w3}), the
+Node--Place--People prioritization (\cref{sec:res-w4}), the generated corridors
+(\cref{sec:res-w6}), the audit of the existing network (\cref{sec:res-w7}), and the
+validation suite (\cref{sec:res-w8}).
+
+\section{Estimated transit-demand surface (W1)}
+\label{sec:res-w1}
+
+The Tier-1 pipeline produces a transit-demand estimate for all \num{1881} \ageb{}s,
+totalling \num{8471576} daily transit trip-ends. Household vehicle ownership varies
+widely across the metropolis: the mean vehicle rate is \num{0.577}, giving a mean
+transit propensity of \num{0.423}. Because demand is weighted by
+$(1-v_i)$ (\cref{eq:transit-demand}), high-car-ownership \ageb{}s contribute
+proportionally less latent transit demand even where raw trip generation is high.
+\Cref{fig:demand} maps the resulting surface, which concentrates along the dense
+central and eastern corridors of the metropolis.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.82\linewidth]{zmg_demand.pdf}
+  \caption{Estimated transit-demand surface (\ageb trips per day, log scale). Demand
+    concentrates in the dense, lower-car-ownership central and eastern zones.}
+  \label{fig:demand}
+\end{figure}
+
+\section{Gravity-model calibration (W2)}
+\label{sec:res-w2}
+
+Calibrating the distance-decay parameter against the 2022 Origin--Destination survey
+(\cref{eq:calibration}) selects $\beta^\star = \num{1.2005}$, a markedly weaker decay
+than the initial $\beta = \num{2.0}$ prior---\zmg commuters travel farther than the
+prior assumed. Crucially, the calibrated value \emph{improves} fit on the corrected
+\num{1881}-\ageb universe on every metric (\cref{tab:calibration}), reversing the
+provisional conclusion drawn on the earlier, mis-filtered \ageb table. The calibrated
+$\beta$ is adopted for the demand surface and all downstream workstreams.
+
+\begin{table}[htbp]
+\centering
+\caption{Gravity-model calibration against the EOD 2022 survey.}
+\label{tab:calibration}
+\begin{tabular}{lS[table-format=4.1]S[table-format=1.4]}
+\toprule
+Model & {RMSE (trips)} & {$R^2$} \\
+\midrule
+Prior, $\beta = 2.0$        & 5088.2 & {--} \\
+Calibrated, $\beta = 1.2005$ & 4524.9 & 0.2498 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Coverage-gap diagnosis (W3)}
+\label{sec:res-w3}
+
+Cumulative-opportunities accessibility (\cref{eq:accessibility}) combined with the
+demand surface yields the coverage-gap index (\cref{eq:gap}). Classifying \ageb{}s by
+joint demand/accessibility quintiles gives \num{390} High-gap (\SI{20.7}{\percent}),
+\num{1413} Medium-gap, and \num{78} Low-gap areas (\cref{tab:gap}). As
+\cref{fig:coverage-gap} showed, the High-gap areas form a periphery around a
+well-served (Low-gap) core.
+
+\begin{table}[htbp]
+\centering
+\caption{Coverage-gap classification of the \num{1881} \zmg \ageb{}s.}
+\label{tab:gap}
+\begin{tabular}{lS[table-format=4.0]S[table-format=2.1]}
+\toprule
+Category & {\ageb{}s} & {Share (\%)} \\
+\midrule
+High-gap   & 390  & 20.7 \\
+Medium-gap & 1413 & 75.1 \\
+Low-gap    & 78   & 4.1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Training a supervised model on the binary High-gap target (\cref{sec:w3}), with all
+supply-side variables excluded, recovers the gap structure well and without leakage
+(\cref{tab:retrain}). SHAP attribution ranks population, social lag
+(\code{pe\_rezago}), and the employment proxy as the dominant drivers: High-gap areas
+are dense, high-need, employment-rich zones that the current network under-serves.
+
+\begin{table}[htbp]
+\centering
+\caption{Supervised retrain on the coverage-gap target (test fold).}
+\label{tab:retrain}
+\begin{tabular}{lS[table-format=1.3]S[table-format=1.3]}
+\toprule
+Model & {PR-AUC} & {ROC-AUC} \\
+\midrule
+Random Forest & 0.877 & 0.962 \\
+LightGBM      & 0.883 & 0.962 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Node--Place--People prioritization (W4)}
+\label{sec:res-w4}
+
+The CRITIC$\,\times\,$EWM procedure (\cref{eq:critic}) assigns the largest objective
+weights to the employment proxy (\num{0.163}), service density (\num{0.145}), and
+four-way intersection density (\num{0.097}); the full weight vector appears in
+\cref{fig:weights}. Averaged over all \ageb{}s, the place score is
+$\overline{\mathrm{NPP}} = \num{0.4595}$, the equity term
+$\overline{\mathrm{Eq}} = \num{0.2274}$, and the composite
+$\overline{F} = \num{0.4131}$ at $\alpha = \num{0.20}$; the low equity mean is
+expected, since \zmg is predominantly low-marginalization. A sensitivity analysis
+over $\alpha \in \{0.10, 0.20, 0.30\}$ confirms the prioritization is robust: the
+ranking correlates with the $\alpha = \num{0.20}$ baseline at Spearman
+$\ge \num{0.98}$, so the equity weight shifts which specific \ageb{}s top the list
+without disturbing the broad structure.
+
+\section{Generated corridors (W6)}
+\label{sec:res-w6}
+
+The generator produces five candidate corridors, of which four are feasible
+(\cref{tab:corridors}); the fifth (\code{W6\_G05}) is rejected on the
+anchor-directness constraint (\num{1.93} > \num{1.8}). \Cref{fig:corridors} maps the
+four feasible corridors over the coverage-gap surface, and \cref{fig:pareto} places
+all candidates in objective space.
+
+\begin{table}[htbp]
+\centering
+\caption{Generated corridor candidates. \code{W6\_G05} fails the anchor-directness
+  constraint.}
+\label{tab:corridors}
+\begin{tabular}{l S[table-format=2.1] S[table-format=2.0] S[table-format=6.0] l c}
+\toprule
+Corridor & {km} & {\ageb{}s} & {Demand/day} & Mode & Feasible \\
+\midrule
+W6\_G00 & 7.3  & 18 & 66041  & BRT             & Yes \\
+W6\_G01 & 23.0 & 27 & 96839  & Light rail      & Yes \\
+W6\_G02 & 12.1 & 25 & 192357 & Light rail      & Yes \\
+W6\_G03 & 2.4  & 5  & 35784  & BRT             & Yes \\
+W6\_G05 & 5.4  & 14 & 80234  & Light rail      & {--} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.78\linewidth]{w6_pareto.pdf}
+  \caption{Corridor candidates in $(f_2, f_1)$ objective space, colored by
+    feasibility. Feasible corridors span a range of length/gain trade-offs.}
+  \label{fig:pareto}
+\end{figure}
+
+The stand-out result is \code{W6\_G02}: a substantive \SI{12.1}{\kilo\metre},
+\num{25}-\ageb corridor carrying an estimated \num{192357} trips/day. On the merit
+tests introduced for validation (\cref{sec:res-w8}) it is the only feasible corridor
+that passes all three: \SI{56}{\percent} of its served \ageb{}s are High-gap (versus
+the \SI{20.7}{\percent} metropolitan baseline), it is non-redundant with existing
+routes (best Jaccard \num{0.18}), and its demand per kilometre sits at the
+\num{73}rd percentile of the existing network. \code{W6\_G03} also passes but is a
+short \SI{2.4}{\kilo\metre} stub, while \code{W6\_G00} and \code{W6\_G01} serve real
+need yet are lower-efficiency connectors---a mixed but honestly characterized
+outcome discussed in \cref{ch:discussion}.
+
+\section{Existing-route audit (W7)}
+\label{sec:res-w7}
+
+Scoring all \num{247} existing SITEUR routes with the same multi-objective function
+flags \num{229} of them (\cref{tab:audit}): \num{109} as Indirect, \num{80} as Low
+demand, and \num{40} as Redundant, leaving only \num{18} unflagged.
+\Cref{fig:w7audit} plots every route in objective space by flag. Each flagged route
+carries a modification proposal (shortcut, merge, or retire), making the audit
+directly comparable to the generated corridors.
+
+\begin{table}[htbp]
+\centering
+\caption{Audit flags across the \num{247} existing SITEUR routes.}
+\label{tab:audit}
+\begin{tabular}{lS[table-format=3.0]}
+\toprule
+Flag & {Routes} \\
+\midrule
+Indirect   & 109 \\
+Low demand & 80 \\
+Redundant  & 40 \\
+Unflagged  & 18 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.82\linewidth]{w7_audit.pdf}
+  \caption{Existing-route audit: the \num{247} SITEUR routes in $(f_2, f_1)$ space,
+    colored by audit flag.}
+  \label{fig:w7audit}
+\end{figure}
+
+\section{Validation (W8)}
+\label{sec:res-w8}
+
+\paragraph{Hold-out backtest and benchmark.} Masking the premium tier (Mi Macro and
+Mi Tren) and re-running the generator reproduces the masked routes with a mean
+shape overlap of only \SI{15.0}{\percent}; masking individual rail lines yields
+\SI{0}{\percent}. The benchmark against \num{33} existing premium routes gives a
+mean overlap of \SI{10.5}{\percent} for \SI{44.9}{\kilo\metre} of generated
+corridor. Low overlap is the expected and desired outcome: the generator identifies
+genuinely under-served areas rather than replicating existing lines. Reconstruction
+is, in any case, a weak proxy for corridor merit (\cref{ch:discussion}).
+
+\paragraph{Before/after metrics.} Adding the feasible corridors to the existing
+network improves every coverage metric (\cref{tab:beforeafter}): the \ageb coverage
+rate rises by \num{1.1} percentage points, the accessibility Gini falls by
+\num{0.0187}, and \num{47} previously-unserved \ageb{}s---home to \num{120648}
+people---gain service.
+
+\begin{table}[htbp]
+\centering
+\caption{Before/after coverage metrics for the feasible W6 corridors.}
+\label{tab:beforeafter}
+\begin{tabular}{lS[table-format=2.1]S[table-format=2.1]S[table-format=+1.4]}
+\toprule
+Metric & {Before} & {After} & {$\Delta$} \\
+\midrule
+Coverage rate (\%)  & 69.9   & 71.0   & +1.1 \\
+Accessibility Gini  & 0.6333 & 0.6146 & -0.0187 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Out-of-sample corroboration.} The strongest validation is external: the
+2024 \textsc{gtfs} snapshot predates the December~2025 opening of SITEUR Line~4, so
+the diagnostic treats the Line~4 corridor as unserved. Its \ageb{}s show
+\num{1.6} times the metropolitan High-gap rate, confirming out-of-sample that the
+coverage-gap index flags corridors that planners independently chose to build. This
+corroborates the \emph{diagnostic} layer; it does not prove the generator would have
+produced Line~4, a distinction developed in \cref{ch:discussion}.

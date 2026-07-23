@@ -1,0 +1,136 @@
+\chapter{Área de Estudio y Datos}
+\label{ch:datos}
+
+Este capítulo describe el área de estudio, la unidad espacial de análisis y los datos que
+alimentan la metodología. Un tema recurrente es la integridad de los datos: varios de los
+resultados de esta tesis dependen de correcciones a la geografía base y a indicadores
+específicos que se descubrieron durante una reconstrucción completa de reproducibilidad, y
+se documentan aquí para que las cifras de todo el trabajo sean rastreables.
+
+\section{La Zona Metropolitana de Guadalajara}
+\label{sec:datos-zmg}
+
+El área de estudio principal es la Zona Metropolitana de Guadalajara (\zmg), la segunda
+más grande de México. Siguiendo la delimitación oficial, comprende diez municipios del
+estado de Jalisco, que abarcan un núcleo central denso (Guadalajara y Zapopan) y una
+periferia en rápida urbanización (\cref{tab:municipios}). Su movilidad se caracteriza por
+una dependencia del automóvil alta y creciente, un extenso sistema de autobuses
+concesionado y de operación informal y, más recientemente, una pequeña capa prémium de
+autobús de tránsito rápido (Mi Macro) y tren ligero (Mi Tren). Esta capa prémium sigue el
+patrón latinoamericano más amplio en que el autobús de tránsito rápido se ha expandido con
+rapidez como complemento costo-efectivo del ferrocarril
+\parencite{hidalgo2013brt, cervero2013brt}; injertarlo sobre una red base mayormente
+concesionada es justamente el contexto que motiva un enfoque de planeación basado en la
+demanda en lugar de uno que sigue a la oferta.
+
+\begin{table}[htbp]
+\centering
+\caption{Los diez municipios de la \zmg y su número de \ageb{}s.}
+\label{tab:municipios}
+\begin{tabular}{lS[table-format=3.0]}
+\toprule
+Municipio & {\ageb{}s} \\
+\midrule
+Zapopan                       & 481 \\
+Guadalajara                   & 404 \\
+Tlajomulco de Zúñiga          & 341 \\
+San Pedro Tlaquepaque         & 213 \\
+Tonalá                        & 207 \\
+El Salto                      & 115 \\
+Zapotlanejo                   & 41  \\
+Ixtlahuacán de los Membrillos & 34  \\
+Acatlán de Juárez             & 29  \\
+Juanacatlán                   & 16  \\
+\midrule
+\textbf{Total}                & \textbf{1881} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{El \ageb como unidad de análisis}
+\label{sec:datos-ageb}
+
+Todos los indicadores se agregan al \ageb (\emph{área geoestadística básica}), la unidad
+de enumeración censal definida por el INEGI. El \ageb es lo bastante fino para resolver la
+variación intraurbana en demanda y acceso, y a la vez lo bastante grueso para que los
+atributos censales se reporten a su nivel. El universo de análisis se restringe a los
+\ageb{}s urbanos de los diez municipios de la \zmg: se excluyen las celdas cuyo
+\code{CVE\_AGEB} lleva un sufijo alfabético (\ageb{}s rurales), así como todos los
+municipios fuera de la delimitación metropolitana. Tras este filtro el universo es de
+\num{1881} \ageb{}s (\cref{tab:municipios}) ---y no los \num{2068} usados en versiones
+previas de este trabajo, discrepancia que se explica en \cref{sec:datos-integridad}.
+
+\section{Fuentes de datos}
+\label{sec:datos-fuentes}
+
+La metodología separa deliberadamente los datos de \emph{Nivel~1} ---censales, económicos
+y de red, disponibles para cualquier ciudad mexicana--- de los datos de oferta de
+transporte, usados únicamente para medir la brecha de cobertura y auditar las rutas
+existentes. La \cref{tab:fuentes-datos} lista las fuentes principales.
+
+\begin{table}[htbp]
+\centering
+\caption{Principales fuentes de datos y su papel en la metodología.}
+\label{tab:fuentes-datos}
+\begin{tabularx}{\linewidth}{llX}
+\toprule
+Fuente & Nivel & Papel \\
+\midrule
+INEGI CPV2020    & \ageb / manzana & Población, proporción joven, propiedad vehicular \\
+DENUE            & establecimiento & Proxies de empleo y atracción de POI \\
+OpenStreetMap    & red             & Intersecciones, densidad vial, grafo vial \\
+GTFS             & parada / ruta   & Accesibilidad existente y auditoría \\
+EOD 2022         & zona de encuesta & Calibración del modelo gravitacional \\
+CONAPO / CONEVAL & \ageb           & Marginación y rezago social (equidad) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{description}[leftmargin=1.4em, style=nextline]
+  \item[Censo y sociodemografía (INEGI CPV2020).] El Censo de Población y Vivienda 2020
+    \parencite{inegi_cpv2020} aporta la población, la proporción de población joven usada
+    para amplificar la generación de viajes y la propiedad vehicular de los hogares
+    (\code{VPH\_AUTOM} sobre \code{VIVPAR\_HAB}) usada para derivar la propensión al
+    transporte.
+  \item[Actividad económica (DENUE).] El Directorio Estadístico Nacional de Unidades
+    Económicas \parencite{inegi_denue} provee la ubicación de establecimientos, agregada a
+    empleo por \ageb y a densidades de puntos de interés y comercio que impulsan la
+    atracción de viajes y las oportunidades de accesibilidad.
+  \item[Red vial (OpenStreetMap).] El grafo vial y los indicadores de Nodo derivados
+    (densidad de intersecciones y de calles) provienen de \textsc{osm}
+    \parencite{openstreetmap}, extraídos para los diez municipios con \textsc{osmnx}
+    \parencite{boeing2017osmnx}.
+  \item[Oferta de transporte (GTFS).] La fuente \textsc{gtfs} de SITEUR define la red
+    existente usada para la superficie de accesibilidad (\cref{sec:w3}) y la auditoría de
+    rutas (\cref{sec:w7}).
+  \item[Encuesta Origen--Destino (EOD 2022).] La encuesta metropolitana de viajes 2022
+    \parencite{imeplan_eod2022} provee flujos zonales observados para calibrar el
+    decaimiento con la distancia del modelo gravitacional (\cref{sec:w2}).
+  \item[Índices de equidad (CONAPO, CONEVAL).] El índice de marginación
+    \parencite{conapo_marginacion2020} y el índice de rezago social
+    \parencite{coneval_rezago2020} conforman el término de equidad (\cref{eq:equity}).
+\end{description}
+
+\section{Convenciones espaciales e integridad de datos}
+\label{sec:datos-integridad}
+
+Todo el cómputo usa el sistema de referencia proyectado canónico EPSG:6372 (cónico
+equidistante para México); las coordenadas geográficas (EPSG:4326) se usan solo para la
+ingesta. Todas las columnas de geometría están indexadas espacialmente.
+
+Una reconstrucción completa de reproducibilidad, desde cero, sacó a la luz tres defectos de
+integridad silenciosamente presentes en versiones previas, todos ya corregidos. Primero, un
+error de dedo en el código de municipio del filtro de la geografía base había eliminado un
+municipio entero en cada reconstrucción; corregirlo, junto con excluir correctamente los
+\ageb{}s de sufijo alfabético, da el universo de \num{1881} \ageb{}s usado en todo el
+trabajo (las cifras anteriores, computadas contra una tabla de \num{2068} filas nunca
+reproducible, deben leerse como superadas). Segundo, el ráster de elevación digital se había
+cargado bajo una referencia espacial equivocada, produciendo valores de pendiente
+geométricamente sin sentido; el modelo heredado afectado se retiró en lugar de re-ejecutarse.
+Tercero, el índice de marginación entraba al término de equidad con el signo invertido y con
+un relleno de ceros fuera de rango para los \ageb{}s no emparejados, lo que en conjunto había
+permitido que el bono de equidad premiara a las zonas \emph{menos} marginadas; corregir la
+dirección y usar imputación por mediana restaura un término de equidad monótono y con el
+signo correcto. Estas correcciones afectan de manera sustantiva varias cifras principales y
+son la razón por la que los resultados de esta tesis superan cualquier cifra anterior para
+las mismas cantidades.

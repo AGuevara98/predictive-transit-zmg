@@ -1,0 +1,244 @@
+\chapter{Resultados}
+\label{ch:resultados}
+
+Este capítulo reporta las salidas de cada etapa para la Zona Metropolitana de
+Guadalajara (\zmg). El orden de las secciones sigue la metodología: la superficie de
+demanda estimada (\cref{sec:res-w1}), su calibración (\cref{sec:res-w2}), el
+diagnóstico de brecha de cobertura y su interpretación supervisada
+(\cref{sec:res-w3}), la priorización Nodo--Lugar--Personas (\cref{sec:res-w4}), los
+corredores generados (\cref{sec:res-w6}), la auditoría de la red existente
+(\cref{sec:res-w7}) y el conjunto de validación (\cref{sec:res-w8}).
+
+\section{Superficie de demanda de transporte estimada (W1)}
+\label{sec:res-w1}
+
+La metodología de Nivel~1 produce una estimación de demanda de transporte para los
+\num{1881} \ageb{}s, con un total de \num{8471576} extremos de viaje en transporte al
+día. La propiedad vehicular de los hogares varía ampliamente en la metrópoli: la tasa
+vehicular media es \num{0.577}, lo que da una propensión media al transporte de
+\num{0.423}. Como la demanda se pondera por $(1-v_i)$ (\cref{eq:transit-demand}), los
+\ageb{}s con alta propiedad automovilística aportan proporcionalmente menos demanda
+latente aun donde la generación bruta de viajes es alta. La \cref{fig:demand} mapea la
+superficie resultante, que se concentra a lo largo de los densos corredores central y
+oriente de la metrópoli.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.82\linewidth]{zmg_demand.pdf}
+  \caption{Superficie de demanda de transporte estimada (viajes por día por \ageb,
+    escala logarítmica). La demanda se concentra en las zonas densas de menor
+    propiedad vehicular del centro y el oriente.}
+  \label{fig:demand}
+\end{figure}
+
+\section{Calibración del modelo gravitacional (W2)}
+\label{sec:res-w2}
+
+Calibrar el parámetro de decaimiento contra la Encuesta Origen--Destino 2022
+(\cref{eq:calibration}) selecciona $\beta^\star = \num{1.2005}$, un decaimiento
+notablemente más débil que el prior inicial $\beta = \num{2.0}$: los viajeros de \zmg
+recorren distancias mayores de lo que suponía el prior. De manera crucial, el valor
+calibrado \emph{mejora} el ajuste en el universo corregido de \num{1881} \ageb{}s en
+todas las métricas (\cref{tab:calibration}), revirtiendo la conclusión provisional
+obtenida sobre la tabla de \ageb{}s previa, mal filtrada. El $\beta$ calibrado se
+adopta para la superficie de demanda y todas las etapas posteriores.
+
+\begin{table}[htbp]
+\centering
+\caption{Calibración del modelo gravitacional contra la encuesta EOD 2022.}
+\label{tab:calibration}
+\begin{tabular}{lS[table-format=4.1]S[table-format=1.4]}
+\toprule
+Modelo & {RMSE (viajes)} & {$R^2$} \\
+\midrule
+Prior, $\beta = 2.0$        & 5088.2 & {--} \\
+Calibrado, $\beta = 1.2005$ & 4524.9 & 0.2498 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Diagnóstico de brecha de cobertura (W3)}
+\label{sec:res-w3}
+
+La accesibilidad de oportunidades acumuladas (\cref{eq:accessibility}) combinada con
+la superficie de demanda arroja el índice de brecha de cobertura (\cref{eq:gap}).
+Clasificar los \ageb{}s por quintiles conjuntos de demanda/accesibilidad da
+\num{390} de brecha alta (\SI{20.7}{\percent}), \num{1413} de brecha media y \num{78}
+de brecha baja (\cref{tab:gap}). Como mostró la \cref{fig:coverage-gap}, las zonas de
+brecha alta forman una periferia alrededor de un núcleo bien servido (brecha baja).
+
+\begin{table}[htbp]
+\centering
+\caption{Clasificación de brecha de cobertura de los \num{1881} \ageb{}s de \zmg.}
+\label{tab:gap}
+\begin{tabular}{lS[table-format=4.0]S[table-format=2.1]}
+\toprule
+Categoría & {\ageb{}s} & {Proporción (\%)} \\
+\midrule
+Brecha alta  & 390  & 20.7 \\
+Brecha media & 1413 & 75.1 \\
+Brecha baja  & 78   & 4.1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Entrenar un modelo supervisado sobre el objetivo binario de brecha alta
+(\cref{sec:w3}), con todas las variables de oferta excluidas, recupera bien la
+estructura de la brecha y sin fuga de información (\cref{tab:retrain}). La atribución
+SHAP ordena la población, el rezago social (\code{pe\_rezago}) y el proxy de empleo
+como los impulsores dominantes: las zonas de brecha alta son áreas densas, de alta
+necesidad y ricas en empleo que la red actual atiende de forma insuficiente.
+
+\begin{table}[htbp]
+\centering
+\caption{Reentrenamiento supervisado sobre la brecha de cobertura (partición de prueba).}
+\label{tab:retrain}
+\begin{tabular}{lS[table-format=1.3]S[table-format=1.3]}
+\toprule
+Modelo & {PR-AUC} & {ROC-AUC} \\
+\midrule
+Random Forest & 0.877 & 0.962 \\
+LightGBM      & 0.883 & 0.962 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Priorización Nodo--Lugar--Personas (W4)}
+\label{sec:res-w4}
+
+El procedimiento CRITIC$\,\times\,$EWM (\cref{eq:critic}) asigna los mayores pesos
+objetivos al proxy de empleo (\num{0.163}), la densidad de servicios (\num{0.145}) y
+la densidad de intersecciones de cuatro ramales (\num{0.097}); el vector completo de
+pesos aparece en la \cref{fig:weights}. Promediada sobre todos los \ageb{}s, la
+puntuación de lugar es $\overline{\mathrm{NPP}} = \num{0.4595}$, el término de
+equidad $\overline{\mathrm{Eq}} = \num{0.2274}$ y el compuesto
+$\overline{F} = \num{0.4131}$ con $\alpha = \num{0.20}$; la media baja de equidad es
+esperada, ya que \zmg es predominantemente de baja marginación. Un análisis de
+sensibilidad sobre $\alpha \in \{0.10, 0.20, 0.30\}$ confirma que la priorización es
+robusta: el ordenamiento correlaciona con la línea base de $\alpha = \num{0.20}$ en
+Spearman $\ge \num{0.98}$, de modo que el peso de equidad cambia cuáles \ageb{}s
+específicos encabezan la lista sin alterar la estructura general.
+
+\section{Corredores generados (W6)}
+\label{sec:res-w6}
+
+El generador produce cinco corredores candidatos, de los cuales cuatro son factibles
+(\cref{tab:corridors}); el quinto (\code{W6\_G05}) se rechaza por la restricción de
+rectitud por anclas (\num{1.93} > \num{1.8}). La \cref{fig:corridors} mapea los cuatro
+corredores factibles sobre la superficie de brecha, y la \cref{fig:pareto} sitúa a
+todos los candidatos en el espacio de objetivos.
+
+\begin{table}[htbp]
+\centering
+\caption{Corredores candidatos generados. \code{W6\_G05} incumple la restricción de
+  rectitud por anclas.}
+\label{tab:corridors}
+\begin{tabular}{l S[table-format=2.1] S[table-format=2.0] S[table-format=6.0] l c}
+\toprule
+Corredor & {km} & {\ageb{}s} & {Demanda/día} & Modo & Factible \\
+\midrule
+W6\_G00 & 7.3  & 18 & 66041  & BRT         & Sí \\
+W6\_G01 & 23.0 & 27 & 96839  & Tren ligero & Sí \\
+W6\_G02 & 12.1 & 25 & 192357 & Tren ligero & Sí \\
+W6\_G03 & 2.4  & 5  & 35784  & BRT         & Sí \\
+W6\_G05 & 5.4  & 14 & 80234  & Tren ligero & {--} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.78\linewidth]{w6_pareto.pdf}
+  \caption{Corredores candidatos en el espacio de objetivos $(f_2, f_1)$, coloreados
+    por factibilidad. Los corredores factibles cubren un rango de compromisos
+    longitud/ganancia.}
+  \label{fig:pareto}
+\end{figure}
+
+El resultado más destacado es \code{W6\_G02}: un corredor sustantivo de
+\SI{12.1}{\kilo\metre} y \num{25} \ageb{}s que transporta una estimación de
+\num{192357} viajes/día. En las pruebas de mérito introducidas para la validación
+(\cref{sec:res-w8}) es el único corredor factible que pasa las tres: el
+\SI{56}{\percent} de sus \ageb{}s servidos son de brecha alta (frente a la línea base
+metropolitana de \SI{20.7}{\percent}), no es redundante con las rutas existentes
+(mejor Jaccard \num{0.18}) y su demanda por kilómetro se ubica en el percentil
+\num{73} de la red existente. \code{W6\_G03} también pasa, pero es un tramo corto de
+\SI{2.4}{\kilo\metre}, mientras que \code{W6\_G00} y \code{W6\_G01} atienden necesidad
+real pero son conectores de menor eficiencia ---un resultado mixto pero caracterizado
+honestamente que se discute en el \cref{ch:discusion}.
+
+\section{Auditoría de rutas existentes (W7)}
+\label{sec:res-w7}
+
+Evaluar las \num{247} rutas existentes de SITEUR con la misma función multiobjetivo
+marca \num{229} de ellas (\cref{tab:audit}): \num{109} como indirectas, \num{80} como
+de baja demanda y \num{40} como redundantes, dejando solo \num{18} sin marcar. La
+\cref{fig:w7audit} grafica cada ruta en el espacio de objetivos por marca. Cada ruta
+marcada lleva una propuesta de modificación (atajo, fusión o retiro), lo que hace la
+auditoría directamente comparable con los corredores generados.
+
+\begin{table}[htbp]
+\centering
+\caption{Marcas de auditoría en las \num{247} rutas existentes de SITEUR.}
+\label{tab:audit}
+\begin{tabular}{lS[table-format=3.0]}
+\toprule
+Marca & {Rutas} \\
+\midrule
+Indirecta    & 109 \\
+Baja demanda & 80 \\
+Redundante   & 40 \\
+Sin marcar   & 18 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.82\linewidth]{w7_audit.pdf}
+  \caption{Auditoría de rutas existentes: las \num{247} rutas de SITEUR en el espacio
+    $(f_2, f_1)$, coloreadas por marca de auditoría.}
+  \label{fig:w7audit}
+\end{figure}
+
+\section{Validación (W8)}
+\label{sec:res-w8}
+
+\paragraph{Retro-prueba de exclusión y comparación.} Enmascarar el nivel premium (Mi
+Macro y Mi Tren) y volver a ejecutar el generador reproduce las rutas enmascaradas con
+un traslape medio de trazado de apenas \SI{15.0}{\percent}; enmascarar líneas férreas
+individuales da \SI{0}{\percent}. La comparación contra \num{33} rutas premium
+existentes da un traslape medio de \SI{10.5}{\percent} para \SI{44.9}{\kilo\metre} de
+corredor generado. El traslape bajo es el resultado esperado y deseado: el generador
+identifica zonas genuinamente desatendidas en lugar de replicar líneas existentes. La
+reconstrucción es, en todo caso, un proxy débil del mérito de un corredor
+(\cref{ch:discusion}).
+
+\paragraph{Métricas antes/después.} Agregar los corredores factibles a la red
+existente mejora todas las métricas de cobertura (\cref{tab:beforeafter}): la tasa de
+cobertura de \ageb{}s sube \num{1.1} puntos porcentuales, el Gini de accesibilidad cae
+\num{0.0187} y \num{47} \ageb{}s antes desatendidos ---hogar de \num{120648}
+personas--- ganan servicio.
+
+\begin{table}[htbp]
+\centering
+\caption{Métricas de cobertura antes/después para los corredores W6 factibles.}
+\label{tab:beforeafter}
+\begin{tabular}{lS[table-format=2.1]S[table-format=2.1]S[table-format=+1.4]}
+\toprule
+Métrica & {Antes} & {Después} & {$\Delta$} \\
+\midrule
+Tasa de cobertura (\%) & 69.9   & 71.0   & +1.1 \\
+Gini de accesibilidad  & 0.6333 & 0.6146 & -0.0187 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Corroboración fuera de muestra.} La validación más fuerte es externa: la
+instantánea \textsc{gtfs} de 2024 es anterior a la apertura en diciembre de 2025 de la
+Línea~4 de SITEUR, por lo que el diagnóstico trata el corredor de la Línea~4 como
+desatendido. Sus \ageb{}s muestran \num{1.6} veces la tasa metropolitana de brecha
+alta, confirmando fuera de muestra que el índice de brecha de cobertura señala
+corredores que los planificadores decidieron construir de forma independiente. Esto
+corrobora la capa de \emph{diagnóstico}; no prueba que el generador hubiera producido
+la Línea~4, distinción que se desarrolla en el \cref{ch:discusion}.

@@ -1,0 +1,56 @@
+% =============================================================================
+% Tesis de maestría -- versión en ESPAÑOL
+% Compilar:  tectonic main.tex   (o latexmk -pdf main.tex en Overleaf/TeXLive)
+% =============================================================================
+\documentclass[12pt, oneside]{report}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish, es-tabla]{babel}
+
+\input{../common/preamble.tex}
+
+% --- Metadatos de la tesis (editar) -------------------------------------------
+\newcommand{\thesistitle}{Un marco transferible y orientado a la demanda para la
+  priorización y generación de corredores de transporte público}
+\newcommand{\thesissubtitle}{Análisis Nodo--Lugar--Personas de la Zona
+  Metropolitana de Guadalajara}
+\newcommand{\thesisauthor}{Alejandro Guevara}
+\newcommand{\thesisadvisor}{Dr.~Héctor Gálvez}
+\newcommand{\thesisprogram}{Maestría en Ciencias de los Datos}
+\newcommand{\thesisuniversity}{Universidad de Guadalajara}
+\newcommand{\thesisfaculty}{Centro Universitario de Ciencias
+  Económico Administrativas (CUCEA)}
+\newcommand{\thesisyear}{2026}
+
+\begin{document}
+
+% ---- Preliminares (numeración romana) ----
+\pagenumbering{roman}
+\input{frontmatter/portada.tex}
+\input{frontmatter/resumen.tex}
+\input{frontmatter/agradecimientos.tex}
+
+\tableofcontents
+\listoffigures
+\listoftables
+\clearpage
+
+% ---- Cuerpo (numeración arábiga) ----
+\pagenumbering{arabic}
+\input{chapters/01_introduccion.tex}
+\input{chapters/02_marco_teorico.tex}
+\input{chapters/03_area_estudio_datos.tex}
+\input{chapters/04_metodologia.tex}
+\input{chapters/05_resultados.tex}
+\input{chapters/06_transferibilidad.tex}
+\input{chapters/07_discusion.tex}
+\input{chapters/08_conclusiones.tex}
+
+% ---- Material final ----
+\printbibliography[heading=bibintoc]
+
+\appendix
+\input{chapters/apendice_a.tex}
+
+\end{document}

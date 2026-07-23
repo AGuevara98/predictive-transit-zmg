@@ -1,0 +1,131 @@
+\chapter{Study Area and Data}
+\label{ch:data}
+
+This chapter describes the study area, the spatial unit of analysis, and the data
+that feed the pipeline. A recurring theme is data integrity: several of the results in
+this thesis depend on corrections to the base geography and to specific indicators that
+were discovered during a full reproducibility rebuild, and these are documented here so
+that the numbers throughout are traceable.
+
+\section{The Guadalajara Metropolitan Area}
+\label{sec:area-zmg}
+
+The primary study area is the Zona Metropolitana de Guadalajara (\zmg), Mexico's second
+largest metropolitan area. Following the official delimitation, it comprises ten
+municipalities of the state of Jalisco, spanning a dense central core (Guadalajara and
+Zapopan) and a rapidly-urbanizing periphery (\cref{tab:munis}). Its mobility is marked
+by high and rising car dependence, a large informally-operated concessioned bus system,
+and, more recently, a small premium tier of bus rapid transit (Mi Macro) and light rail
+(Mi Tren). This premium tier follows the wider Latin-American pattern in which bus rapid
+transit has expanded rapidly as a cost-effective complement to rail
+\parencite{hidalgo2013brt, cervero2013brt}; grafting it onto a largely concessioned base
+network is precisely the setting that motivates a demand-driven rather than
+supply-following approach to network planning.
+
+\begin{table}[htbp]
+\centering
+\caption{The ten \zmg municipalities and their \ageb counts.}
+\label{tab:munis}
+\begin{tabular}{lS[table-format=3.0]}
+\toprule
+Municipality & {\ageb{}s} \\
+\midrule
+Zapopan                       & 481 \\
+Guadalajara                   & 404 \\
+Tlajomulco de Zúñiga          & 341 \\
+San Pedro Tlaquepaque         & 213 \\
+Tonalá                        & 207 \\
+El Salto                      & 115 \\
+Zapotlanejo                   & 41  \\
+Ixtlahuacán de los Membrillos & 34  \\
+Acatlán de Juárez             & 29  \\
+Juanacatlán                   & 16  \\
+\midrule
+\textbf{Total}                & \textbf{1881} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{The \ageb as unit of analysis}
+\label{sec:area-ageb}
+
+All indicators are aggregated to the \ageb (\emph{área geoestadística básica}), the
+census enumeration area defined by INEGI. The \ageb is fine enough to resolve
+intra-urban variation in demand and access, yet coarse enough that census attributes
+are reported at its level. The analysis universe is restricted to urban \ageb{}s of the
+ten \zmg municipalities: cells whose \code{CVE\_AGEB} carries an alphabetic suffix
+(rural \ageb{}s) are excluded, as are all municipalities outside the metropolitan
+delimitation. After this filter the universe is \num{1881} \ageb{}s
+(\cref{tab:munis})---not the \num{2068} used in earlier drafts of this work, a
+discrepancy explained in \cref{sec:area-integrity}.
+
+\section{Data sources}
+\label{sec:area-sources}
+
+The pipeline deliberately separates \emph{Tier-1} data---census, economic, and
+network variables available for any Mexican city---from the transit-supply data used
+only to measure the coverage gap and to audit existing routes. \Cref{tab:data-sources}
+lists the principal sources.
+
+\begin{table}[htbp]
+\centering
+\caption{Principal data sources and their role in the pipeline.}
+\label{tab:data-sources}
+\begin{tabularx}{\linewidth}{llX}
+\toprule
+Source & Level & Role \\
+\midrule
+INEGI CPV2020    & \ageb / block & Population, youth share, vehicle ownership \\
+DENUE            & establishment & Employment and POI attraction proxies \\
+OpenStreetMap    & network       & Intersections, street density, drive graph \\
+GTFS             & stop / route  & Existing accessibility and route audit \\
+EOD 2022         & survey zone   & Gravity-model calibration \\
+CONAPO / CONEVAL & \ageb         & Marginalization and social-lag (equity) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{description}[leftmargin=1.4em, style=nextline]
+  \item[Census and socio-demographics (INEGI CPV2020).] The 2020 population and
+    housing census \parencite{inegi_cpv2020} supplies population, the youth share used to
+    amplify trip generation, and household vehicle ownership (\code{VPH\_AUTOM} over
+    \code{VIVPAR\_HAB}) used to derive transit propensity.
+  \item[Economic activity (DENUE).] The national economic-unit directory
+    \parencite{inegi_denue} provides establishment locations, aggregated to \ageb
+    employment and point-of-interest and retail densities that drive trip attraction and
+    accessibility opportunities.
+  \item[Street network (OpenStreetMap).] The drive graph and derived Node indicators
+    (intersection and street density) come from \textsc{osm} \parencite{openstreetmap},
+    extracted for the ten municipalities with \textsc{osmnx} \parencite{boeing2017osmnx}.
+  \item[Transit supply (GTFS).] The SITEUR \textsc{gtfs} feed defines the existing
+    network used for the accessibility surface (\cref{sec:w3}) and the route audit
+    (\cref{sec:w7}).
+  \item[Origin--Destination survey (EOD 2022).] The 2022 metropolitan travel survey
+    \parencite{imeplan_eod2022} provides observed zonal flows for calibrating the
+    gravity model's distance decay (\cref{sec:w2}).
+  \item[Equity indices (CONAPO, CONEVAL).] The marginalization index
+    \parencite{conapo_marginacion2020} and the social-lag index
+    \parencite{coneval_rezago2020} form the equity term (\cref{eq:equity}).
+\end{description}
+
+\section{Spatial conventions and data integrity}
+\label{sec:area-integrity}
+
+All computation uses the canonical projected reference system EPSG:6372 (Mexico
+conic-equidistant); geographic coordinates (EPSG:4326) are used only for ingestion.
+All geometry columns are spatially indexed.
+
+A full from-scratch reproducibility rebuild surfaced three integrity defects that had
+been silently present in earlier drafts, all now corrected. First, a municipality-code
+typo in the base-geography filter had dropped an entire municipality on every rebuild;
+fixing it, together with correctly excluding alphabetic-suffix \ageb{}s, gives the
+\num{1881}-\ageb universe used throughout (earlier numbers computed against a
+never-reproducible \num{2068}-row table should be read as superseded). Second, the
+digital-elevation raster had been loaded under the wrong spatial reference, producing
+geometrically meaningless slope values; the affected legacy model was retired rather
+than re-run. Third, the marginalization index entered the equity term with an inverted
+sign and an out-of-range zero-fill for unmatched \ageb{}s, which together had let the
+equity bonus reward the \emph{least}-marginalized areas; correcting the direction and
+using median imputation restores a monotonic, correctly-signed equity term. These
+corrections materially affect several headline numbers and are the reason the results
+in this thesis supersede any earlier figures for the same quantities.

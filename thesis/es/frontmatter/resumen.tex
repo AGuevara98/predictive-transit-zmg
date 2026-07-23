@@ -1,0 +1,41 @@
+\chapter*{Resumen}
+\addcontentsline{toc}{chapter}{Resumen}
+
+Los enfoques convencionales basados en datos para la planeación del transporte
+público con frecuencia predicen dónde el transporte \emph{ya existe} en lugar de
+dónde se \emph{necesita}, produciendo modelos circulares que premian el statu quo.
+Esta tesis desarrolla un marco transferible y orientado a la demanda que, en
+cambio, diagnostica la demanda de transporte \emph{no atendida} y genera corredores
+candidatos para atenderla, aplicado a la Zona Metropolitana de Guadalajara
+(\zmg; \num{1881} áreas geoestadísticas básicas, \ageb, en diez municipios).
+
+El marco se desarrolla en ocho etapas encadenadas: (i)~una superficie de demanda de
+transporte estimada a partir de datos censales, económicos y de la red vial
+mediante un modelo gravitacional doblemente restringido; (ii)~la calibración del
+parámetro de decaimiento por distancia contra la Encuesta Origen--Destino 2022;
+(iii)~una capa de oferta que mide la accesibilidad basada en \textsc{gtfs} y un
+índice independiente de \emph{brecha de cobertura} que se convierte en la variable
+objetivo supervisada, eliminando la circularidad de las etiquetas de ``tiene
+parada''; (iv)~un mapa de priorización Nodo--Lugar--Personas con un término
+explícito de equidad; (v)~una función formal de evaluación multiobjetivo; (vi)~un
+generador de corredores basado en anclas de frontera, un tronco de diámetro sobre
+el árbol de expansión mínima y una compuerta de factibilidad por rectitud;
+(vii)~una auditoría de la red existente; y (viii)~un conjunto de validación que
+combina retro-pruebas de exclusión, comparación y métricas de cobertura antes y
+después.
+
+La capa de diagnóstico es la contribución sólida: el índice de brecha de cobertura
+se corrobora fuera de muestra con la apertura en 2025 de la Línea~4 de \zmg, cuyo
+corredor presenta \num{1.6} veces la tasa metropolitana de brecha alta. La capa
+generativa produce al menos un corredor sustantivo, factible y meritorio, a la vez
+que caracteriza honestamente sus limitaciones. Finalmente, todo el marco se
+transfiere de principio a fin a dos zonas metropolitanas de tamaño contrastante
+---Toluca y Aguascalientes---, demostrando que es genuinamente portable y no un
+desarrollo a la medida de \zmg.
+
+\vspace{1em}
+\noindent\textbf{Palabras clave:} transporte público; demanda de viajes; brecha de
+cobertura; modelo Nodo--Lugar; optimización multiobjetivo; equidad; \textsc{gtfs};
+transferibilidad; Guadalajara.
+
+\clearpage

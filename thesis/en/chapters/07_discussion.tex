@@ -1,0 +1,132 @@
+\chapter{Discussion}
+\label{ch:discussion}
+
+The results support a deliberately bounded claim. This chapter separates what the
+framework demonstrates strongly from what it demonstrates only partially, and argues
+that the distinction turns on two different questions that prior work often conflates.
+The central thesis is this: the framework contributes a \emph{validated demand-gap
+diagnostic} and a \emph{characterized, partially-successful corridor generator}, and
+these two contributions carry different evidential weight.
+
+\section{Two questions, two layers}
+\label{sec:disc-twoquestions}
+
+It is useful to distinguish two questions that a data-driven planning framework might
+be asked to answer. Question~A: does the generator \emph{reproduce corridors that were
+actually built}? Question~B: does the generator \emph{produce good corridors}---lines
+that serve real, unmet demand efficiently and without redundancy? Much of the
+literature on machine-learning station siting implicitly answers a version of
+Question~A, treating agreement with the existing network as validation. But A is a
+weak and asymmetric proxy for B, because built lines are not guaranteed to be optimal:
+they are chosen under political, financial, and land-availability constraints that the
+framework does not model. Agreement therefore corroborates; disagreement is faint
+evidence of error. The two pipeline layers map onto these questions---the diagnostic
+layer (W1--W4) is validated against B-type evidence, while the generator (W5--W6) is
+tested against both---and they succeed to different degrees.
+
+\section{The diagnostic layer is the strong contribution}
+\label{sec:disc-diagnostic}
+
+The coverage-gap diagnosis (\cref{ch:methodology}, \cref{sec:w3}) is the framework's
+firmest result. Its methodological contribution is to break the circularity that
+undermines ``has-a-stop'' targets: by defining the dependent variable as the ratio of
+independently-estimated demand to \textsc{gtfs}-measured supply
+(\cref{eq:gap}), the model learns where transit is \emph{needed} rather than where it
+\emph{exists}. The supervised retrain confirms this target is learnable from
+place characteristics alone, with no supply-side leakage (\cref{tab:retrain}).
+
+Three lines of evidence support the diagnostic. First, and most importantly, it is
+corroborated \emph{out of sample}: the 2024 \textsc{gtfs} snapshot predates SITEUR
+Line~4, so the corridor is treated as unserved, yet its \ageb{}s show \num{1.6} times
+the metropolitan High-gap rate (\cref{sec:res-w8}). A corridor that professional
+planners independently chose to build was flagged as high-priority by the model that
+never saw it. Second, the diagnostic \emph{transfers}: it produces a plausible,
+differentiated reading of unmet demand in two further cities (\cref{ch:transferability}),
+ordering them sensibly by High-gap share. Third, it is \emph{interpretable}: SHAP
+attribution identifies dense, high-need, employment-rich but under-served zones,
+matching the geographic pattern in \cref{fig:coverage-gap}. This layer is the
+defensible, citable core of the thesis.
+
+\section{The generative layer is a characterized, partial success}
+\label{sec:disc-generative}
+
+The corridor generator is a weaker but genuine contribution, and its history is
+instructive. In its first form the generator was essentially negative: of its feasible
+corridors, only a degenerate short stub passed the merit tests, and feasibility was
+confounded with anchor-cluster sparsity---the feasibility filter selected for
+\emph{few, near-collinear anchors} rather than for good corridors. This was traced to
+two coupled defects: a shaper that flattened a minimum spanning tree into a line with
+phantom jumps, and a detour metric measured against the endpoint distance, which
+over-penalizes a demand-coverage corridor that legitimately curves.
+
+Re-architecting the generator around frontier anchors, a minimum-spanning-tree
+\emph{diameter} trunk stitched from real roads, and an \emph{anchor-directness}
+feasibility gate (\cref{sec:w6}) changed the verdict. On its own terms the generator
+now produces at least one substantive, feasible, merit-passing corridor:
+\code{W6\_G02} serves \SI{12.1}{\kilo\metre} and \num{25} \ageb{}s, of which
+\SI{56}{\percent} are High-gap (versus the \SI{20.7}{\percent} baseline), is
+non-redundant with the existing network (best Jaccard \num{0.18}), and sits at the
+\num{73}rd percentile of demand per kilometre. This is a real line, not a stub.
+
+The success is partial, however, and the thesis does not overstate it. Alongside
+\code{W6\_G02}, the generator also surfaces lower-efficiency connectors
+(\code{W6\_G00} and \code{W6\_G01}) that serve real need but rank poorly on demand per
+kilometre. The residual limitation is architectural---the fixed anchor count, spatial
+clustering, and spanning-tree trunk cannot target every high-gap pocket---and it is
+now measured rather than merely asserted.
+
+\section{Reconstruction is a weak proxy for corridor merit}
+\label{sec:disc-reconstruction}
+
+The clearest illustration of the Question-A/Question-B distinction is the generator's
+failure to reconstruct built rail. Across masked backtests it does not re-discover the
+premium lines: masking the whole premium tier yields \SI{15}{\percent} mean shape
+overlap, and masking individual rail lines yields essentially zero
+(\cref{sec:res-w8}); the Line~4 corridor is matched at only \num{0.05} recall. Taken
+naively, this looks like failure. Read correctly, it is close to the expected outcome
+and only weak evidence against the generator.
+
+The reason is mechanical as well as epistemic. Masking a single rail line barely moves
+accessibility, because parallel bus routes remain and the served/unserved seam scarcely
+shifts; no strong new gap forms on the held-out corridor, so the frontier generator has
+nothing to anchor on. This is the same mechanism that makes the demand-trunk backtest
+degenerate in bus-only Toluca (\cref{sec:transf-validation}). Epistemically, even a
+perfect reconstruction score would not establish corridor merit, because the built
+lines encode non-demand constraints. The benchmark in the transfer cities is the
+instructive mirror image: where the existing network already covers demand well, the
+generator overlaps it heavily (Toluca \SI{75}{\percent}, Aguascalientes
+\SI{54}{\percent})---revealed-preference agreement, not new coverage. The honest
+framing, therefore, is that the generator's value lies in Question~B, where it is
+partially validated, not in Question~A, where agreement or disagreement is only weakly
+diagnostic.
+
+\section{Equity implications}
+\label{sec:disc-equity}
+
+Equity is treated as an explicit, separable term rather than an implicit consequence.
+The additive formulation (\cref{eq:final}) lets the thesis report prioritization with
+and without the equity bonus, and the sensitivity analysis shows the ranking is robust
+to the equity weight ($\alpha$): the broad structure is fixed, and $\alpha$ shifts only
+which specific \ageb{}s top the list. Substantively, the diagnostic and the equity term
+point the same way---High-gap areas are disproportionately dense, high-social-lag
+peripheries---so prioritizing unmet demand and prioritizing disadvantage are, in \zmg,
+largely aligned rather than in tension. The correction of the marginalization index's
+sign and imputation (documented in the data chapter) matters here: an equity term that
+had silently rewarded the least-marginalized areas would have inverted this conclusion.
+
+\section{Limitations}
+\label{sec:disc-limitations}
+
+Several limitations bound the results beyond those already noted. The demand surface
+rests on a transferred distance-decay parameter and Euclidean impedance; a
+network-distance gravity model calibrated on local survey data would tighten absolute
+magnitudes. The \textsc{gtfs} snapshot is a single point in time, so the supply layer
+does not capture service-frequency variation through the day. The generator's
+feasibility gate is sensitive to source-\textsc{gtfs} stop density, which in the audit
+manifests as an artifactually low feasible count for finely-spaced concessioned
+networks. Most importantly, the \emph{generated} corridors are validated only
+indirectly---through need, non-redundancy, and demand efficiency---and not against
+observed ridership, because no counterfactual ridership exists for lines that were
+never built. The diagnostic layer, by contrast, has an out-of-sample anchor in Line~4.
+This asymmetry is the honest boundary of the contribution: a validated diagnostic, and
+a characterized generator whose effectiveness is measured on its own terms.

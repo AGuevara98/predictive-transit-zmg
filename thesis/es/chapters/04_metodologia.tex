@@ -1,0 +1,286 @@
+\chapter{Metodología}
+\label{ch:metodologia}
+
+Este capítulo presenta el marco orientado a la demanda en su totalidad. Se
+organiza en ocho etapas encadenadas (\crefrange{sec:w1}{sec:w8}), resumidas en la
+\cref{fig:pipeline}. El principio de diseño rector es una separación estricta entre
+una capa de \emph{diagnóstico} (etapas W1--W4), que estima dónde se necesita el
+transporte con independencia de dónde existe actualmente, y una capa
+\emph{generativa y de validación} (W5--W8), que propone y evalúa corredores
+candidatos. Todo el cómputo espacial se realiza en el sistema de referencia
+proyectado canónico EPSG:6372, y todos los indicadores se agregan al \ageb, el área
+geoestadística básica utilizada como unidad de análisis.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{pipeline.pdf}
+  \caption{El marco orientado a la demanda de ocho etapas. La capa de diagnóstico
+    (W1--W4) está desacoplada de la oferta existente; la capa generativa y de
+    validación (W5--W8) propone corredores y los pone a prueba.}
+  \label{fig:pipeline}
+\end{figure}
+
+\section{Estimación de la demanda de transporte (W1)}
+\label{sec:w1}
+
+El marco inicia estimando una superficie de demanda de transporte a partir de datos
+de \emph{Nivel~1} únicamente ---variables censales, económicas y de la red vial---,
+excluyendo deliberadamente cualquier insumo de transporte existente, de modo que la
+demanda nunca sea función de la oferta actual.
+
+\subsection{Generación de viajes}
+Las producciones diarias $P_i$ del \ageb $i$ se estiman a partir de la población con
+una amplificación por proporción joven, que refleja las mayores tasas de viaje de
+las cohortes jóvenes:
+\begin{equation}
+  P_i = \tau \, \mathrm{pob}_i \,\bigl(1 + \gamma\, s^{\text{joven}}_i\bigr),
+  \label{eq:productions}
+\end{equation}
+con $\tau = \num{2.5}$ viajes por persona por día y $\gamma = \num{0.10}$. Las
+atracciones combinan proxies de empleo y actividad,
+\begin{equation}
+  A_i = w_e\, e_i + w_p\, \rho^{\text{poi}}_i a_i + w_r\, \rho^{\text{comercio}}_i a_i,
+  \label{eq:attractions}
+\end{equation}
+con $e_i$ el proxy de empleo, $\rho^{\text{poi}}_i$ y $\rho^{\text{comercio}}_i$ las
+densidades de puntos de interés y comercio, y $a_i$ el área del \ageb. El vector de
+atracción se escala luego para que $\sum_i A_i = \sum_i P_i$, condición necesaria
+para el modelo doblemente restringido.
+
+\subsection{Modelo gravitacional doblemente restringido}
+Los flujos origen--destino $T_{ij}$ se obtienen de un modelo de interacción espacial
+doblemente restringido \parencite{wilson1971gravity},
+\begin{equation}
+  T_{ij} = a_i\, b_j\, P_i\, A_j\, f(d_{ij}), \qquad
+  f(d) = d^{-\beta},
+  \label{eq:gravity}
+\end{equation}
+donde $f$ es una impedancia de ley de potencia sobre la distancia euclidiana entre
+centroides $d_{ij}$ y $\beta$ es el parámetro de decaimiento por distancia
+(calibrado en la \cref{sec:w2}). Los factores de balanceo $a_i,b_j$ imponen las
+restricciones de producción y atracción,
+\begin{equation}
+  a_i = \Bigl(\textstyle\sum_j b_j A_j f(d_{ij})\Bigr)^{-1}, \qquad
+  b_j = \Bigl(\textstyle\sum_i a_i P_i f(d_{ij})\Bigr)^{-1},
+  \label{eq:furness}
+\end{equation}
+resueltos por ajuste proporcional iterativo (procedimiento de Furness), alternando
+ambas actualizaciones hasta que los marginales convergen (tolerancia $10^{-5}$). Los
+autoflujos se anulan en la diagonal y solo se conservan los pares con
+$T_{ij}\ge\num{0.5}$ en la matriz dispersa de salida.
+
+\subsection{Superficie de demanda de transporte}
+La demanda total del \ageb $D_i = \tfrac12\sum_j (T_{ij}+T_{ji})$ se pondera
+finalmente por un término de propensión al transporte derivado de la propiedad
+vehicular de los hogares. Con
+$v_i = \mathrm{VPH\_AUTOM}_i / \max(\mathrm{VIVPAR\_HAB}_i, 1)$ la tasa vehicular,
+\begin{equation}
+  D^{\text{transp}}_i = D_i \,(1 - v_i),
+  \label{eq:transit-demand}
+\end{equation}
+de modo que las zonas con alta propiedad automovilística aportan proporcionalmente
+menos demanda latente de transporte. La superficie resultante $D^{\text{transp}}$ es
+la cantidad dependiente que impulsa el diagnóstico de brecha en la \cref{sec:w3}.
+
+\section{Calibración con encuesta (W2)}
+\label{sec:w2}
+
+El parámetro de decaimiento $\beta$ se calibra contra la Encuesta Origen--Destino
+2022 \parencite{imeplan_eod2022}. Los \ageb{}s se unen espacialmente a las zonas de
+la encuesta, los flujos modelados se agregan a pares de zonas y se elige $\beta$
+para minimizar la suma de errores al cuadrado en el espacio logarítmico entre los
+flujos modelados y observados,
+\begin{equation}
+  \beta^\star = \arg\min_{\beta}\;
+  \sum_{(z,z')} \Bigl(\log \hat{T}_{zz'}(\beta) - \log T^{\text{obs}}_{zz'}\Bigr)^2 .
+  \label{eq:calibration}
+\end{equation}
+En el universo corregido de \num{1881} \ageb{}s esto arroja
+$\beta^\star = \num{1.2005}$, que supera al prior inicial $\beta = \num{2.0}$ tanto
+en RMSE como en $R^2$; el valor calibrado se adopta en todo el trabajo.
+
+\section{Capa de oferta y brecha de cobertura (W3)}
+\label{sec:w3}
+
+\subsection{Accesibilidad al transporte}
+La oferta existente se mide mediante una superficie de accesibilidad de
+oportunidades acumuladas construida a partir del alimentador \textsc{gtfs}. Se
+construye un grafo de transporte dirigido a partir de pares consecutivos de paradas;
+desde cada \ageb se identifican las paradas de abordaje dentro de \SI{400}{\metre} y
+una búsqueda de ruta más corta asigna a cada destino alcanzable un tiempo de viaje
+generalizado
+\begin{equation}
+  t = t_{\text{cam}} + t_{\text{esp}} + t_{\text{veh}}
+    = \frac{d_{\text{cam}}}{s_{\text{cam}}} + \frac{h}{2} + t_{\text{veh}},
+  \label{eq:traveltime}
+\end{equation}
+con velocidad peatonal $s_{\text{cam}} = \SI{80}{\metre\per\minute}$ e intervalo
+medio $h$. La accesibilidad es el empleo total alcanzable dentro de un presupuesto
+de \SI{45}{\minute},
+\begin{equation}
+  \mathrm{Acc}_i = \sum_{j : t_{ij}\le 45} e_j .
+  \label{eq:accessibility}
+\end{equation}
+
+\subsection{Índice de brecha de cobertura}
+El diagnóstico central combina demanda y oferta en un índice de brecha de cobertura,
+\begin{equation}
+  g_i = \frac{D^{\text{transp}}_i}{\mathrm{Acc}_i + \varepsilon},
+  \qquad \varepsilon = 1,
+  \label{eq:gap}
+\end{equation}
+normalizado por una transformación $\log(1+x)$ seguida de un escalamiento min--máx
+para dar $g^{\,n}_i \in [0,1]$. Los \ageb{}s se clasifican por quintiles conjuntos:
+un \ageb es de \emph{brecha alta} cuando está en los dos quintiles superiores de
+demanda y en los dos inferiores de accesibilidad, de \emph{brecha baja} en el caso
+espejo y de \emph{brecha media} en el resto. La \cref{fig:coverage-gap} mapea el
+resultado para \zmg.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.82\linewidth]{zmg_coverage_gap.pdf}
+  \caption{Diagnóstico de brecha de cobertura para la Zona Metropolitana de
+    Guadalajara. El núcleo bien servido es de brecha baja; los \ageb{}s de brecha
+    alta se concentran en la periferia.}
+  \label{fig:coverage-gap}
+\end{figure}
+
+\subsection{Modelo supervisado sobre la brecha de cobertura}
+Para interpretar los impulsores de la demanda no atendida, un objetivo binario
+$y_i = \mathbb{1}[\text{categoría-}g_i = \text{brecha alta}]$ se regresa sobre los
+\num{14} indicadores Nodo--Lugar--Personas (todas las variables de oferta excluidas
+para evitar circularidad) mediante Random Forest y árboles potenciados por gradiente
+\parencite{niu2023rf,ke2017lightgbm}. El comportamiento del modelo se interpreta con
+valores SHAP \parencite{lundberg2017shap}; población, rezago social y empleo emergen
+como los impulsores dominantes del estatus de brecha alta.
+
+\section{Priorización Nodo--Lugar--Personas (W4)}
+\label{sec:w4}
+
+Con independencia de la demanda y la oferta, se calcula una puntuación de
+priorización basada en el lugar a partir de los \num{14} indicadores normalizados.
+Los pesos objetivos se derivan sin intervención de expertos combinando el método
+CRITIC \parencite{diakoulaki1995critic} con el método de entropía. El peso CRITIC
+del indicador $j$ premia tanto la dispersión como la independencia,
+\begin{equation}
+  w^{\text{c}}_j \propto \sigma_j \sum_{k} \bigl(1 - r_{jk}\bigr),
+  \label{eq:critic}
+\end{equation}
+con $\sigma_j$ la desviación estándar del indicador $j$ y $r_{jk}$ su correlación
+con el indicador $k$; ambas ponderaciones se promedian en un peso de ensamble $w_j$
+(\cref{fig:weights}). La puntuación de lugar, el término de equidad y la puntuación
+final son
+\begin{align}
+  \mathrm{NPP}_i &= \textstyle\sum_j w_j\, x^{\,n}_{ij}, \label{eq:npp}\\
+  \mathrm{Eq}_i  &= \tfrac12\bigl(x^{\,n,\text{marg}}_i + x^{\,n,\text{rezago}}_i\bigr),
+    \label{eq:equity}\\
+  F_i &= (1-\alpha)\,\mathrm{NPP}_i + \alpha\,\mathrm{Eq}_i, \qquad \alpha = 0.20.
+  \label{eq:final}
+\end{align}
+El término de equidad es un bono aditivo explícito y separable, de modo que las
+puntuaciones pueden reportarse con y sin él; un análisis de sensibilidad sobre
+$\alpha \in \{0.10, 0.20, 0.30\}$ confirma que el ordenamiento es robusto
+(Spearman $\ge 0.98$).
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\linewidth]{w4_weights.pdf}
+  \caption{Pesos objetivos de ensamble CRITIC$\,\times\,$EWM para los \num{14}
+    indicadores Nodo--Lugar--Personas, coloreados por dimensión.}
+  \label{fig:weights}
+\end{figure}
+
+\section{Función de evaluación multiobjetivo (W5)}
+\label{sec:w5}
+
+Los corredores candidatos (de W6) y las rutas existentes (en W7) se evalúan contra
+tres objetivos en competencia: ganancia ponderada por demanda $f_1$ (maximizar),
+longitud de ruta $f_2$ (minimizar) y equidad media $f_3$ (maximizar):
+\begin{equation}
+  f_1 = \frac{\sum_{i\in S} D_i\, \kappa\, u_i}{\sum_{i\in S} D_i}, \quad
+  f_2 = \ell, \quad
+  f_3 = \frac{1}{|S|}\sum_{i\in S}\mathrm{Eq}_i,
+  \label{eq:objectives}
+\end{equation}
+donde $S$ es el conjunto de \ageb{}s servidos, $u_i = g^{\,n}_i$ la fracción no
+atendida, $\ell$ la longitud de ruta y $\kappa$ un factor de ganancia ($\num{0.50}$
+si el candidato conecta con la red existente, $\num{0.20}$ en otro caso). Un
+candidato es \emph{factible} solo si satisface todas las restricciones:
+\begin{equation}
+  \frac{\ell}{\ell_{\text{tramo}}} \le 1.8, \quad
+  \frac{\ell\cdot 10^3}{n_{\text{paradas}}-1} \in [300,1000]\,\si{\metre}, \quad
+  \textstyle\sum_{i\in S} D_i \ge 500, \quad \ell \le \SI{30}{\kilo\metre},
+  \label{eq:constraints}
+\end{equation}
+donde $\ell_{\text{tramo}}$ es el tramo en línea recta de las anclas del candidato
+(el denominador de \emph{rectitud por anclas}; véase la \cref{sec:w6}). Los
+candidatos se ordenan por clasificación no dominada (Pareto) minimizando
+$(-f_1, f_2, -f_3)$.
+
+\section{Generación de corredores (W6)}
+\label{sec:w6}
+
+Los corredores nuevos se generan con el \cref{alg:w6}. Los \ageb{}s de brecha alta
+se restringen a la \emph{frontera} servido/no servido ---aquellos dentro de
+\SI{400}{\metre} de la red existente--- para que los corredores generados conecten
+intrínsecamente con ella. Las anclas de frontera se agrupan espacialmente; dentro de
+cada grupo el corredor es la trayectoria hoja-a-hoja más larga (el \emph{tronco de
+diámetro}) del árbol de expansión mínima de las anclas, ensamblada a partir de
+segmentos reales de la red vial. La factibilidad usa la razón de rectitud por anclas
+de la \cref{eq:constraints} en lugar de una razón de rodeo por extremos, porque esta
+última penaliza en exceso a un corredor de cobertura de demanda que legítimamente se
+curva. A cada corredor factible se le asigna un modo por umbral de demanda (tren
+ligero $\ge \num{75000}$, autobús de tránsito rápido $\ge \num{15000}$, autobús
+local en otro caso, viajes por día). La \cref{fig:corridors} muestra los cuatro
+corredores factibles de \zmg.
+
+\begin{algorithm}[htbp]
+\caption{Generación de corredores por anclas de frontera (W6)}
+\label{alg:w6}
+\begin{algorithmic}[1]
+\Require superficie de brecha $g^{\,n}$, demanda $D$, red vial $G$, paradas de la red
+\State $H \gets$ clase Jenks superior de $g^{\,n}$ con $D \ge 500$
+  \Comment{reserva de brecha alta}
+\State $H \gets \{i \in H : \operatorname{dist}(i,\text{red}) \le \SI{400}{\metre}\}$
+  \Comment{frontera}
+\State particionar $H$ en $k$ grupos espaciales por $k$-medias
+\ForAll{grupo $C$}
+  \State $T \gets$ árbol de expansión mínima de $C$ sobre $G$
+  \State $\pi \gets$ trayectoria hoja-a-hoja más larga de $T$ \Comment{tronco de diámetro}
+  \State construir candidato desde $\pi$; evaluar $f_1,f_2,f_3$ y restricciones (W5)
+\EndFor
+\State \Return candidatos factibles, ordenados por Pareto
+\end{algorithmic}
+\end{algorithm}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.82\linewidth]{zmg_corridors.pdf}
+  \caption{Los cuatro corredores factibles generados (G00--G03) superpuestos sobre
+    la superficie de brecha de cobertura.}
+  \label{fig:corridors}
+\end{figure}
+
+\section{Auditoría de rutas existentes (W7)}
+\label{sec:w7}
+
+Cada ruta \textsc{gtfs} existente se evalúa con la misma función W5 y se marca como
+\emph{baja demanda} ($f_1<\num{0.2}$ y puntuación total $<\num{0.3}$),
+\emph{indirecta} (razón de rodeo $>\num{1.5}$) o \emph{redundante} (traslape de
+Jaccard de \ageb{}s servidos $\ge\num{0.60}$ con una ruta de mayor puntuación). Las
+rutas marcadas reciben una propuesta de modificación (atajo, fusión o retiro), lo
+que hace la auditoría directamente comparable con los corredores generados.
+
+\section{Validación (W8)}
+\label{sec:w8}
+
+El marco se valida de tres formas. Una \emph{retro-prueba de exclusión} enmascara el
+nivel premium de transporte del alimentador \textsc{gtfs}, recalcula la accesibilidad
+y la brecha de cobertura sin él, vuelve a ejecutar el generador y mide el traslape de
+trazado entre los corredores re-propuestos y las rutas enmascaradas. Una
+\emph{comparación} contrasta los corredores generados con las rutas premium
+existentes. Finalmente, las \emph{métricas antes/después} ---tasa de cobertura,
+coeficiente de Gini de la accesibilidad y población servida por kilómetro de ruta---
+cuantifican la contribución marginal de los corredores generados. El
+\cref{ch:resultados} reporta las tres para \zmg y el \cref{ch:transferibilidad} las
+repite para las ciudades de transferencia.

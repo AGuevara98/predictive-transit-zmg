@@ -1,0 +1,66 @@
+\chapter{Material Suplementario}
+\label{app:suplementario}
+
+\section{Definición de los indicadores NPP}
+\label{app:indicadores}
+
+La \cref{tab:indicadores} lista los catorce indicadores Nodo--Lugar--Personas usados en la
+ponderación de priorización (\cref{sec:w4}). El proxy de vitalidad se excluye de la
+ponderación por la razón dada en \cref{sec:w4}. Cada indicador se almacena en su forma
+cruda y normalizado a $[0,1]$; la regla de normalización depende de la distribución de la
+variable. Las variables de conteo y económicas con sesgo a la derecha se transforman con
+$\log(1+x)$ antes del escalamiento min--max, para evitar que unos pocos valores grandes
+compriman al resto; las razones acotadas se escalan por min--max directamente. El índice de
+marginación se \emph{invierte} adicionalmente ($1-\text{minmax}$) para que los valores más
+altos denoten mayor necesidad, y sus \ageb{}s faltantes se imputan por mediana en lugar de
+rellenarse con ceros (\cref{sec:datos-integridad}).
+
+\begin{table}[htbp]
+\centering
+\caption{Los catorce indicadores NPP, por dimensión, con su regla de normalización.}
+\label{tab:indicadores}
+\begin{tabularx}{\linewidth}{llX}
+\toprule
+Dimensión & Indicador & Normalización \\
+\midrule
+Nodo     & \code{n\_intersections}         & $\log$+minmax \\
+Nodo     & \code{n\_intersection\_density} & $\log$+minmax \\
+Nodo     & \code{n\_street\_density}       & $\log$+minmax \\
+\midrule
+Lugar    & \code{p\_poi\_density}          & $\log$+minmax \\
+Lugar    & \code{p\_employment\_proxy}     & $\log$+minmax \\
+Lugar    & \code{p\_retail\_density}       & $\log$+minmax \\
+Lugar    & \code{p\_service\_density}      & $\log$+minmax \\
+Lugar    & \code{p\_land\_use\_mix}        & minmax \\
+\midrule
+Personas & \code{pe\_population}           & $\log$+minmax \\
+Personas & \code{pe\_pop\_density}         & $\log$+minmax \\
+Personas & \code{pe\_marginacion}          & minmax, invertido \\
+Personas & \code{pe\_rezago}               & minmax \\
+Personas & \code{pe\_dep\_ratio}           & minmax \\
+Personas & \code{pe\_youth\_share}         & minmax \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Reproducibilidad}
+\label{app:reproducibilidad}
+
+El análisis se organiza como una secuencia de orquestadores de etapa (W1 a W8) que corren
+contra una base de datos PostgreSQL/PostGIS, con un arranque desde cero que construye el
+esquema, carga los insumos versionados y materializa la tabla de características antes de
+ejecutar cualquier etapa. Todo el cómputo usa el sistema de referencia proyectado canónico
+EPSG:6372; todas las credenciales y constantes están centralizadas, de modo que ningún
+valor se duplica entre scripts. Las ciudades de transferencia se ejecutan con los mismos
+módulos mediante una bandera de selección de ciudad, reutilizando sin cambios las funciones
+puras de la \zmg.
+
+Dos notas de reproducibilidad inciden en las cifras de esta tesis. Primera, la tabla de
+características es re-derivable a partir de los insumos censales, económicos y de red
+versionados; una reconstrucción desde cero reproduce casi exactamente las columnas de
+lugar, personas y equidad, mientras que los tres indicadores derivados de la red varían
+ligeramente porque el grafo vial se descarga en vivo y puede cambiar entre reconstrucciones.
+Segunda, todas las cifras principales de esta tesis se computaron contra el universo
+corregido de \num{1881} \ageb{}s y el término de equidad corregido; cualquier cifra anterior
+para las mismas cantidades, computada antes de las correcciones de integridad de
+\cref{sec:datos-integridad}, queda superada.

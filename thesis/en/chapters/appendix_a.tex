@@ -1,0 +1,63 @@
+\chapter{Supplementary Material}
+\label{app:supplementary}
+
+\section{NPP indicator definitions}
+\label{app:indicators}
+
+\Cref{tab:indicators} lists the fourteen Node--Place--People indicators used in the
+prioritization weighting (\cref{sec:w4}). The vitality proxy is excluded from the
+weighting for the reason given in \cref{sec:w4}. Each indicator is stored both raw and
+normalized to $[0,1]$; the normalization rule depends on the variable's distribution.
+Right-skewed count and economic variables are transformed with $\log(1+x)$ before
+min--max scaling to prevent a few large values from compressing the rest; bounded ratios
+are min--max scaled directly. The marginalization index is additionally
+\emph{inverted} ($1-\text{minmax}$) so that higher values denote greater need, and its
+missing \ageb{}s are median-imputed rather than zero-filled (\cref{sec:area-integrity}).
+
+\begin{table}[htbp]
+\centering
+\caption{The fourteen NPP indicators, by dimension, with normalization rule.}
+\label{tab:indicators}
+\begin{tabularx}{\linewidth}{llX}
+\toprule
+Dimension & Indicator & Normalization \\
+\midrule
+Node   & \code{n\_intersections}         & $\log$+minmax \\
+Node   & \code{n\_intersection\_density} & $\log$+minmax \\
+Node   & \code{n\_street\_density}       & $\log$+minmax \\
+\midrule
+Place  & \code{p\_poi\_density}          & $\log$+minmax \\
+Place  & \code{p\_employment\_proxy}     & $\log$+minmax \\
+Place  & \code{p\_retail\_density}       & $\log$+minmax \\
+Place  & \code{p\_service\_density}      & $\log$+minmax \\
+Place  & \code{p\_land\_use\_mix}        & minmax \\
+\midrule
+People & \code{pe\_population}           & $\log$+minmax \\
+People & \code{pe\_pop\_density}         & $\log$+minmax \\
+People & \code{pe\_marginacion}          & minmax, inverted \\
+People & \code{pe\_rezago}               & minmax \\
+People & \code{pe\_dep\_ratio}           & minmax \\
+People & \code{pe\_youth\_share}         & minmax \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Reproducibility}
+\label{app:reproducibility}
+
+The analysis is organized as a sequence of workstream orchestrators (W1 through W8) that
+run against a PostgreSQL/PostGIS database, with a from-scratch bootstrap that builds the
+schema, loads the committed inputs, and materializes the feature table before any
+workstream runs. All computation uses the canonical projected reference system
+EPSG:6372; all credentials and constants are centralized so that no value is duplicated
+across scripts. The transfer cities are driven by the same modules through a
+city-selection flag, reusing the pure \zmg functions unchanged.
+
+Two reproducibility notes bear on the numbers in this thesis. First, the feature table is
+re-derivable from committed census, economic, and network inputs; a from-scratch rebuild
+reproduces the place, people, and equity columns almost exactly, while the three
+network-derived indicators drift slightly because the street graph is pulled live and can
+change between builds. Second, all headline figures in this thesis were computed against
+the corrected \num{1881}-\ageb universe and the corrected equity term; any earlier figures
+for the same quantities, computed before the integrity corrections of
+\cref{sec:area-integrity}, are superseded.
