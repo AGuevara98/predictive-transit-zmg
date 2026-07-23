@@ -1,21 +1,166 @@
 \chapter{Transferability}
 \label{ch:transferability}
 
+A framework that works only for the city it was built on is of limited scientific
+value. This chapter tests research question RQ4 by transferring the entire pipeline
+to two further metropolitan areas through a single parameterized code path, and
+asks whether the diagnostic, generative, and validation layers all survive the move.
+
 \section{Study design}
-% Two contrasting metros: Toluca (large) and Aguascalientes (compact).
-\placeholder
+\label{sec:transf-design}
+
+Two transfer cities were chosen to bracket \zmg in size and structure:
+\textbf{Toluca} (Zona Metropolitana del Valle de Toluca, \num{16} municipalities,
+$\sim$\num{2.3} million inhabitants, \num{538} urban \ageb{}s) as a large metro
+comparable to \zmg, and \textbf{Aguascalientes} (\num{3} municipalities, \num{356}
+urban \ageb{}s) as a compact one. Monterrey was the original target but its
+\textsc{gtfs} feed proved unobtainable, which blocks the supply layer; it is retained
+only as a Tier-1 (demand-only) reference. Both transfer cities have verified,
+downloadable \textsc{gtfs}.
+
+Every stage runs through the same code as \zmg, invoked as
+\code{w9\_run\_*.py -{}-city \{tol,ags\}}, reusing the pure \zmg functions over
+per-city configuration. Tier-1 inputs (census, \textsc{denue}, street network) are
+national and therefore available everywhere; equity indices come from the same
+CONAPO and CONEVAL products. No local Origin--Destination survey exists for either
+city, so the calibrated $\beta = \num{1.2005}$ is transferred from \zmg; because the
+size-comparison metrics below are ratios, they are insensitive to this choice.
 
 \section{Demand and coverage-gap transfer}
-% Car-dependence gradient; High-gap share ZMG 20.7\% > Toluca 14.9\% > Ags 9.6\%.
-\placeholder
+\label{sec:transf-diagnosis}
+
+The demand surface transfers cleanly and, more importantly, \emph{differentiates} the
+three cities in interpretable ways (\cref{tab:transfer-diag}, \cref{fig:transfer}).
+Mean household vehicle ownership follows a clear gradient---Toluca \num{0.529} $<$
+\zmg \num{0.577} $<$ Monterrey \num{0.635} (Tier-1 reference) $<$ Aguascalientes
+\num{0.667}---so the least car-dependent metro is the large, lower-income Toluca and
+the most car-dependent is compact, higher-income Aguascalientes.
+
+\begin{table}[htbp]
+\centering
+\caption{Diagnostic transfer across the three \textsc{gtfs} cities.}
+\label{tab:transfer-diag}
+\begin{tabular}{l S[table-format=4.0] S[table-format=1.3] S[table-format=2.1] S[table-format=2.1]}
+\toprule
+City & {Urban \ageb{}s} & {Vehicle rate} & {Unserved (\%)} & {High-gap (\%)} \\
+\midrule
+Guadalajara    & 1881 & 0.577 & 32.7 & 20.7 \\
+Toluca         & 538  & 0.529 & 19.1 & 14.9 \\
+Aguascalientes & 356  & 0.667 & 19.7 & 9.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The coverage-gap diagnosis likewise transfers and orders the cities sensibly: the
+High-gap share is highest in \zmg (\SI{20.7}{\percent}), lower in Toluca
+(\SI{14.9}{\percent}), and lowest in the compact, well-covered Aguascalientes
+(\SI{9.6}{\percent}). The diagnostic is thus not a \zmg artifact---it produces a
+plausible, differentiated reading of unmet demand in every metro.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\linewidth]{transfer_highgap.pdf}
+  \caption{Diagnostic transfer: High-gap share, unserved share, and mean vehicle
+    rate across the three metropolitan areas.}
+  \label{fig:transfer}
+\end{figure}
 
 \section{Prioritization and corridor generation transfer}
-% Weights re-derive per city; substantive feasible corridors in both.
-\placeholder
+\label{sec:transf-generation}
+
+The Node--Place--People weighting re-derives its own weights per city rather than
+importing \zmg's. Notably, \emph{social lag} (\code{pe\_rezago}) becomes the single
+largest objective weight in both transfer cities (Toluca \num{0.182}, Aguascalientes
+\num{0.247}), whereas in \zmg the employment and population terms led. Because the
+weights are data-driven (CRITIC$\,\times\,$EWM), this shift is a feature: the method
+adapts its emphasis to each city's own indicator structure.
+
+Corridor generation produces substantive, feasible corridors in both cities
+(\cref{tab:transfer-corridors}). Toluca's best feasible corridor, \code{W6\_G01}
+(\SI{12.6}{\kilo\metre}, \num{23} \ageb{}s, \num{133728} trips/day, light rail), is
+the direct transfer analogue of \zmg's merit-passing \code{W6\_G02}. Aguascalientes
+yields \code{W6\_G05} (\SI{5.9}{\kilo\metre}, \num{12} \ageb{}s, \num{107633}
+trips/day). The same feasibility-versus-directness signature seen in \zmg reappears:
+in Aguascalientes a genuinely high-demand corridor (\code{W6\_G03}, \num{22}
+\ageb{}s, \num{115162} trips/day) is rejected for exceeding the directness cap
+(\num{2.03} > \num{1.8})---the identical behaviour documented for \zmg, now observed
+in a different city.
+
+\begin{table}[htbp]
+\centering
+\caption{Best feasible corridor per transfer city, with the notable infeasible case.}
+\label{tab:transfer-corridors}
+\begin{tabular}{ll S[table-format=2.1] S[table-format=2.0] S[table-format=6.0] c}
+\toprule
+City & Corridor & {km} & {\ageb{}s} & {Demand/day} & Feasible \\
+\midrule
+Toluca         & W6\_G01 & 12.6 & 23 & 133728 & Yes \\
+Aguascalientes & W6\_G05 & 5.9  & 12 & 107633 & Yes \\
+Aguascalientes & W6\_G03 & 13.9 & 22 & 115162 & {--} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Validation transfer}
-% W7 audit; W8 benchmark (high overlap = re-identification); seam-collapse backtest.
-\placeholder
+\label{sec:transf-validation}
+
+The audit and validation layers transfer as well, with one honest exception. The W7
+audit runs on both networks (\cref{tab:transfer-audit}). Toluca's \num{622}
+concessioned routes are flagged almost universally---\num{612} of \num{622}, of which
+\num{431} are Redundant---quantifying the parallelism of a system with roughly thirty
+operators. (Its zero feasible count is a source-\textsc{gtfs} artifact: median stop
+spacing is \SI{43}{\metre}, far below the \SI{300}{\metre} constraint, so the
+audit's flags rather than its feasibility gate carry the signal.) Aguascalientes,
+with \num{48} routes at \SI{239}{\metre} spacing, has \num{6} feasible routes and
+\num{47} flagged.
+
+\begin{table}[htbp]
+\centering
+\caption{Existing-route audit (W7) for the transfer cities.}
+\label{tab:transfer-audit}
+\begin{tabular}{l S[table-format=3.0] S[table-format=3.0] S[table-format=3.0] S[table-format=2.0] S[table-format=2.0]}
+\toprule
+City & {Routes} & {Flagged} & {Redundant} & {Indirect} & {Low dem.} \\
+\midrule
+Toluca         & 622 & 612 & 431 & 88 & 93 \\
+Aguascalientes & 48  & 47  & 4   & 33 & 10 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The W8 benchmark reveals a genuine transferability insight. In both transfer cities
+the generated corridors overlap the existing network \emph{heavily}---Toluca
+\SI{75.0}{\percent}, Aguascalientes \SI{54.3}{\percent}---the opposite of \zmg's low
+overlap. In these already well-served networks ($\sim$\SI{80}{\percent} baseline
+coverage) the highest-demand corridors are already served, so the generator
+\emph{re-identifies} them (revealed-preference corroboration) rather than opening new
+coverage; correspondingly, the before/after gains are modest (Toluca coverage
+$+\num{0.4}$~pp, Gini $-\num{0.0031}$; Aguascalientes $+\num{0.3}$~pp,
+$-\num{0.0026}$).
+
+The mask-and-reconstruct backtest, however, does \emph{not} transfer to a bus-only
+network. Neither city has a premium tier to hold out. A demand-trunk proxy applied to
+Toluca (masking the \num{23} busiest routes) collapses: frontier anchors fall from
+\num{14} to \num{6} and no multi-anchor corridor can form, so nothing is re-proposed.
+The mechanism is intrinsic---\zmg's premium rail is a separable overlay redundant with
+parallel buses, so masking it leaves the served/unserved seam intact, whereas a bus
+trunk \emph{is} the local service and masking it erases the seam the generator depends
+on. This is a documented precondition of the backtest, not a defect of the framework;
+the benchmark and before/after metrics remain the operative validation for cities
+without a premium tier.
 
 \section{Transfer error and limitations}
-\placeholder
+\label{sec:transf-limits}
+
+Four caveats bound the transfer claim. First, \textbf{no local calibration}: $\beta$
+is transferred from \zmg, so absolute demand magnitudes carry the prior's error,
+though the ratio-based diagnostics do not. Second, \textbf{a coarser equity input}:
+CONEVAL publishes only a categorical social-lag \emph{grade} at \ageb level for 2020,
+so \code{pe\_rezago} is an ordinal approximation of \zmg's continuous index
+(direction preserved, granularity coarser). Third, \textbf{unit-scale incomparability}:
+the \ageb is much coarser relative to population in semi-rural Toluca, so cross-city
+\ageb counts are not directly comparable and only per-\ageb and per-capita metrics
+are. Fourth, as shown above, \textbf{the hold-out backtest requires a premium tier}
+that bus-only networks lack. None of these undermines the central result: the
+complete framework transfers end-to-end to two metros of very different size through
+one code path, on cities Monterrey's missing feed had made impossible.

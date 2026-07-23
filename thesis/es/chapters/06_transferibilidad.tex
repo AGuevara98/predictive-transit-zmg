@@ -1,23 +1,176 @@
 \chapter{Transferibilidad}
 \label{ch:transferibilidad}
 
+Un marco que solo funciona para la ciudad sobre la que se construyó tiene un valor
+científico limitado. Este capítulo pone a prueba la pregunta de investigación PI4
+transfiriendo toda la metodología a dos zonas metropolitanas adicionales mediante una
+única ruta de código parametrizada, y pregunta si las capas de diagnóstico,
+generación y validación sobreviven al traslado.
+
 \section{Diseño del estudio}
-% Dos metrópolis contrastantes: Toluca (grande) y Aguascalientes (compacta).
-\placeholder
+\label{sec:transf-design}
+
+Se eligieron dos ciudades de transferencia para acotar a \zmg en tamaño y estructura:
+\textbf{Toluca} (Zona Metropolitana del Valle de Toluca, \num{16} municipios,
+$\sim$\num{2.3} millones de habitantes, \num{538} \ageb{}s urbanos) como una metrópoli
+grande comparable con \zmg, y \textbf{Aguascalientes} (\num{3} municipios, \num{356}
+\ageb{}s urbanos) como una compacta. Monterrey era el objetivo original pero su
+alimentador \textsc{gtfs} resultó inobtenible, lo que bloquea la capa de oferta; se
+conserva solo como referencia de Nivel~1 (solo demanda). Ambas ciudades de
+transferencia tienen \textsc{gtfs} verificado y descargable.
+
+Cada etapa corre con el mismo código que \zmg, invocado como
+\code{w9\_run\_*.py -{}-city \{tol,ags\}}, reutilizando las funciones puras de \zmg
+sobre configuración por ciudad. Los insumos de Nivel~1 (censo, \textsc{denue}, red
+vial) son nacionales y por tanto están disponibles en todas partes; los índices de
+equidad provienen de los mismos productos de CONAPO y CONEVAL. No existe encuesta
+Origen--Destino local para ninguna de las dos ciudades, de modo que el
+$\beta = \num{1.2005}$ calibrado se transfiere desde \zmg; como las métricas de
+comparación de tamaño siguientes son razones, son insensibles a esta elección.
 
 \section{Transferencia de demanda y brecha de cobertura}
-% Gradiente de dependencia del automóvil; brecha alta ZMG 20.7\% > Toluca 14.9\%
-% > Ags 9.6\%.
-\placeholder
+\label{sec:transf-diagnosis}
+
+La superficie de demanda se transfiere limpiamente y, más importante,
+\emph{diferencia} a las tres ciudades de manera interpretable (\cref{tab:transfer-diag},
+\cref{fig:transfer}). La propiedad vehicular media de los hogares sigue un gradiente
+claro ---Toluca \num{0.529} $<$ \zmg \num{0.577} $<$ Monterrey \num{0.635}
+(referencia de Nivel~1) $<$ Aguascalientes \num{0.667}---, de modo que la metrópoli
+menos dependiente del automóvil es la grande y de menor ingreso, Toluca, y la más
+dependiente es la compacta y de mayor ingreso, Aguascalientes.
+
+\begin{table}[htbp]
+\centering
+\caption{Transferencia del diagnóstico entre las tres ciudades con \textsc{gtfs}.}
+\label{tab:transfer-diag}
+\begin{tabular}{l S[table-format=4.0] S[table-format=1.3] S[table-format=2.1] S[table-format=2.1]}
+\toprule
+Ciudad & {\ageb{}s urb.} & {Tasa veh.} & {Desatend. (\%)} & {Brecha alta (\%)} \\
+\midrule
+Guadalajara    & 1881 & 0.577 & 32.7 & 20.7 \\
+Toluca         & 538  & 0.529 & 19.1 & 14.9 \\
+Aguascalientes & 356  & 0.667 & 19.7 & 9.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+El diagnóstico de brecha de cobertura también se transfiere y ordena las ciudades con
+sensatez: la proporción de brecha alta es mayor en \zmg (\SI{20.7}{\percent}), menor
+en Toluca (\SI{14.9}{\percent}) y mínima en la compacta y bien cubierta Aguascalientes
+(\SI{9.6}{\percent}). El diagnóstico no es, por tanto, un artefacto de \zmg: produce
+una lectura plausible y diferenciada de la demanda no atendida en cada metrópoli.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\linewidth]{transfer_highgap.pdf}
+  \caption{Transferencia del diagnóstico: proporción de brecha alta, proporción
+    desatendida y tasa vehicular media en las tres zonas metropolitanas.}
+  \label{fig:transfer}
+\end{figure}
 
 \section{Transferencia de priorización y generación de corredores}
-% Los pesos se rederivan por ciudad; corredores factibles sustantivos en ambas.
-\placeholder
+\label{sec:transf-generation}
+
+La ponderación Nodo--Lugar--Personas rederiva sus propios pesos por ciudad en lugar de
+importar los de \zmg. Notablemente, el \emph{rezago social} (\code{pe\_rezago}) se
+convierte en el mayor peso objetivo en ambas ciudades de transferencia (Toluca
+\num{0.182}, Aguascalientes \num{0.247}), mientras que en \zmg lideraban los términos
+de empleo y población. Como los pesos son orientados por datos
+(CRITIC$\,\times\,$EWM), este cambio es una virtud: el método adapta su énfasis a la
+estructura de indicadores propia de cada ciudad.
+
+La generación de corredores produce corredores sustantivos y factibles en ambas
+ciudades (\cref{tab:transfer-corridors}). El mejor corredor factible de Toluca,
+\code{W6\_G01} (\SI{12.6}{\kilo\metre}, \num{23} \ageb{}s, \num{133728} viajes/día,
+tren ligero), es el análogo directo de transferencia del corredor meritorio
+\code{W6\_G02} de \zmg. Aguascalientes arroja \code{W6\_G05} (\SI{5.9}{\kilo\metre},
+\num{12} \ageb{}s, \num{107633} viajes/día). Reaparece la misma firma de
+factibilidad-frente-a-rectitud vista en \zmg: en Aguascalientes un corredor
+genuinamente de alta demanda (\code{W6\_G03}, \num{22} \ageb{}s, \num{115162}
+viajes/día) se rechaza por exceder el tope de rectitud (\num{2.03} > \num{1.8})
+---el comportamiento idéntico documentado para \zmg, ahora observado en otra ciudad.
+
+\begin{table}[htbp]
+\centering
+\caption{Mejor corredor factible por ciudad de transferencia, con el caso infactible
+  destacado.}
+\label{tab:transfer-corridors}
+\begin{tabular}{ll S[table-format=2.1] S[table-format=2.0] S[table-format=6.0] c}
+\toprule
+Ciudad & Corredor & {km} & {\ageb{}s} & {Demanda/día} & Factible \\
+\midrule
+Toluca         & W6\_G01 & 12.6 & 23 & 133728 & Sí \\
+Aguascalientes & W6\_G05 & 5.9  & 12 & 107633 & Sí \\
+Aguascalientes & W6\_G03 & 13.9 & 22 & 115162 & {--} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Transferencia de la validación}
-% Auditoría W7; comparación W8 (traslape alto = re-identificación); retro-prueba de
-% colapso de frontera.
-\placeholder
+\label{sec:transf-validation}
+
+Las capas de auditoría y validación también se transfieren, con una excepción
+honesta. La auditoría W7 corre en ambas redes (\cref{tab:transfer-audit}). Las
+\num{622} rutas concesionadas de Toluca se marcan casi universalmente ---\num{612} de
+\num{622}, de las cuales \num{431} son redundantes---, cuantificando el paralelismo de
+un sistema con alrededor de treinta operadores. (Su cuenta de cero factibles es un
+artefacto del \textsc{gtfs} de origen: el espaciamiento mediano de paradas es
+\SI{43}{\metre}, muy por debajo de la restricción de \SI{300}{\metre}, de modo que las
+marcas de la auditoría ---no su compuerta de factibilidad--- portan la señal.)
+Aguascalientes, con \num{48} rutas a \SI{239}{\metre} de espaciamiento, tiene \num{6}
+rutas factibles y \num{47} marcadas.
+
+\begin{table}[htbp]
+\centering
+\caption{Auditoría de rutas existentes (W7) para las ciudades de transferencia.}
+\label{tab:transfer-audit}
+\begin{tabular}{l S[table-format=3.0] S[table-format=3.0] S[table-format=3.0] S[table-format=2.0] S[table-format=2.0]}
+\toprule
+Ciudad & {Rutas} & {Marcadas} & {Redund.} & {Indir.} & {Baja dem.} \\
+\midrule
+Toluca         & 622 & 612 & 431 & 88 & 93 \\
+Aguascalientes & 48  & 47  & 4   & 33 & 10 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La comparación W8 revela un hallazgo genuino de transferibilidad. En ambas ciudades de
+transferencia los corredores generados se traslapan \emph{fuertemente} con la red
+existente ---Toluca \SI{75.0}{\percent}, Aguascalientes \SI{54.3}{\percent}---, lo
+opuesto al traslape bajo de \zmg. En estas redes ya bien servidas
+($\sim$\SI{80}{\percent} de cobertura base) los corredores de mayor demanda ya están
+servidos, de modo que el generador los \emph{re-identifica} (corroboración por
+preferencia revelada) en lugar de abrir nueva cobertura; en consecuencia, las
+ganancias antes/después son modestas (Toluca cobertura $+\num{0.4}$~pp, Gini
+$-\num{0.0031}$; Aguascalientes $+\num{0.3}$~pp, $-\num{0.0026}$).
+
+La retro-prueba de reconstrucción, sin embargo, \emph{no} se transfiere a una red solo
+de autobuses. Ninguna ciudad tiene un nivel premium que excluir. Un proxy de tronco de
+demanda aplicado a Toluca (enmascarando las \num{23} rutas más concurridas) colapsa:
+las anclas de frontera caen de \num{14} a \num{6} y no puede formarse ningún corredor
+multi-ancla, por lo que nada se re-propone. El mecanismo es intrínseco: el nivel férreo
+premium de \zmg es una capa separable redundante con los autobuses paralelos, así que
+enmascararlo deja intacta la frontera servido/no servido, mientras que un tronco de
+autobús \emph{es} el servicio local y enmascararlo borra la frontera de la que depende
+el generador. Esta es una precondición documentada de la retro-prueba, no un defecto
+del marco; la comparación y las métricas antes/después siguen siendo la validación
+operativa para ciudades sin nivel premium.
 
 \section{Error de transferencia y limitaciones}
-\placeholder
+\label{sec:transf-limits}
+
+Cuatro salvedades acotan la afirmación de transferencia. Primera, \textbf{sin
+calibración local}: $\beta$ se transfiere desde \zmg, por lo que las magnitudes
+absolutas de demanda cargan el error del prior, aunque los diagnósticos basados en
+razones no. Segunda, \textbf{un insumo de equidad más grueso}: CONEVAL publica solo un
+\emph{grado} categórico de rezago social a nivel \ageb para 2020, de modo que
+\code{pe\_rezago} es una aproximación ordinal del índice continuo de \zmg (dirección
+preservada, granularidad más gruesa). Tercera, \textbf{incomparabilidad de escala de
+unidad}: el \ageb es mucho más grueso respecto a la población en la Toluca semirrural,
+así que las cuentas de \ageb{}s entre ciudades no son directamente comparables y solo
+lo son las métricas por \ageb y per cápita. Cuarta, como se mostró, \textbf{la
+retro-prueba de exclusión requiere un nivel premium} del que carecen las redes solo de
+autobuses. Ninguna de estas socava el resultado central: el marco completo se
+transfiere de principio a fin a dos metrópolis de tamaño muy distinto mediante una sola
+ruta de código, sobre ciudades que el alimentador faltante de Monterrey había hecho
+imposibles.
