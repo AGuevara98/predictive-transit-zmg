@@ -177,9 +177,50 @@ def fig_transfer():
     _save(fig, "transfer_highgap.pdf")
 
 
+# --- F7: W1 transit-demand surface map ----------------------------------------
+def fig_demand():
+    import geopandas as gpd
+    from matplotlib.colors import LogNorm
+    from matplotlib.cm import ScalarMappable
+    eng = _engine()
+    with eng.connect() as c:
+        agebs = gpd.read_postgis(
+            "SELECT a.geom, GREATEST(t.transit_demand, 1) AS demand "
+            "FROM base.ageb a JOIN features.ageb_trip_ends t ON t.cve_ageb=a.cvegeo",
+            c, geom_col="geom")
+    fig, ax = plt.subplots(figsize=(6.4, 6.4))
+    norm = LogNorm(vmin=max(agebs["demand"].min(), 1), vmax=agebs["demand"].max())
+    agebs.plot(ax=ax, column="demand", cmap="magma_r", norm=norm,
+               edgecolor="white", linewidth=0.05)
+    ax.set_axis_off()
+    ax.set_title("Estimated transit-demand surface (trips/day, log scale)")
+    sm = ScalarMappable(norm=norm, cmap="magma_r"); sm.set_array([])
+    fig.colorbar(sm, ax=ax, shrink=0.55, label="transit demand (trips/day)")
+    _save(fig, "zmg_demand.pdf")
+
+
+# --- F8: W7 existing-route audit ----------------------------------------------
+def fig_audit():
+    d = pd.read_csv(ROOT / "outputs/w7/route_scorecard.csv")
+    d["flag"] = d["flag"].fillna("Unflagged")
+    fcolor = {"Indirect": "#E69F00", "Low demand": "#D55E00",
+              "Redundant": "#CC79A7", "Unflagged": "#0072B2"}
+    fig, ax = plt.subplots(figsize=(6.4, 4.8))
+    for flag, sub in d.groupby("flag"):
+        ax.scatter(sub["route_km"], sub["f1_demand_gain"], s=28, alpha=0.7,
+                   color=fcolor.get(flag, "#888888"), edgecolor="none", label=flag)
+    ax.set_xlabel("Route length $f_2$ (km)")
+    ax.set_ylabel("Demand-weighted gain $f_1$")
+    ax.set_title("Existing-route audit: 247 SITEUR routes by flag")
+    ax.legend(frameon=False, fontsize=8, title="Flag")
+    ax.grid(alpha=0.25)
+    _save(fig, "w7_audit.pdf")
+
+
 def main():
     print("Generating thesis figures ->", FIGDIR.relative_to(ROOT))
-    for fn in (fig_pipeline, fig_weights, fig_pareto, fig_transfer, fig_maps):
+    for fn in (fig_pipeline, fig_weights, fig_pareto, fig_transfer, fig_audit,
+               fig_demand, fig_maps):
         try:
             fn()
         except Exception as e:
