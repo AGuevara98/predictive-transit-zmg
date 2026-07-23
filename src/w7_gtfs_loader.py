@@ -42,9 +42,16 @@ def load_routes(data_dir: Path = DATA_DIR) -> pd.DataFrame:
 
 
 def load_trips(data_dir: Path = DATA_DIR) -> pd.DataFrame:
-    """Load trips.txt; return route_id, trip_id, shape_id, direction_id."""
-    cols = ["trip_id", "route_id", "shape_id", "direction_id"]
+    """Load trips.txt; return route_id, trip_id, shape_id, direction_id.
+
+    direction_id is optional in the GTFS spec (some feeds, e.g. Toluca, omit it);
+    default it to "0" when absent so downstream shape selection still works.
+    """
+    header = pd.read_csv(data_dir / "trips.txt", nrows=0)
+    cols = [c for c in ["trip_id", "route_id", "shape_id", "direction_id"] if c in header.columns]
     trips = pd.read_csv(data_dir / "trips.txt", dtype=str, usecols=cols)
+    if "direction_id" not in trips.columns:
+        trips["direction_id"] = "0"
     trips["direction_id"] = trips["direction_id"].fillna("0")
     return trips
 
