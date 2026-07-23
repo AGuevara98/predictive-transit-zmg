@@ -2,13 +2,83 @@
 \label{ch:conclusiones}
 
 \section{Síntesis de hallazgos}
-% Respuestas a PI1--PI4.
-\placeholder
+\label{sec:concl-sintesis}
+
+Esta tesis se propuso romper la circularidad que socava la planeación de transporte
+basada en datos y construir, en su lugar, una metodología basada en la demanda que
+diagnostica la necesidad no atendida, genera corredores candidatos y se transfiere a
+otras ciudades. Las cuatro preguntas de investigación pueden responderse ahora de forma
+directa.
+
+\paragraph{PI1 -- Demanda.} \emph{Sí.} La demanda de transporte puede estimarse a
+resolución de \ageb solo a partir de datos de Nivel~1. La generación de viajes y el modelo
+gravitacional doblemente restringido del \cref{sec:w1} producen una superficie de demanda
+metropolitana usando únicamente variables censales, económicas y de red, sin ningún insumo
+de transporte, y la calibración contra la encuesta EOD~2022 (\cref{sec:w2}) fija el
+parámetro de decaimiento en $\betadecay=1.2005$ ---un valor que ajusta los flujos
+observados mejor que el previo convencional. La demanda, por tanto, nunca es función de la
+oferta actual, que es la precondición de la que depende el resto del marco.
+
+\paragraph{PI2 -- Diagnóstico.} \emph{Sí, y se valida fuera de muestra.} El índice de
+brecha de cobertura (\cref{sec:w3}) contrapone la demanda modelada con la accesibilidad
+medida por \textsc{gtfs}, produciendo una variable dependiente construida con independencia
+de la oferta; el reentrenamiento supervisado la aprende de las características de lugar sin
+fuga (\cref{tab:retrain}). Su mayor respaldo es el experimento natural de la Línea~4: un
+corredor que el modelo nunca vio, luego elegido para construcción, muestra \num{1.6} veces
+la tasa metropolitana de brecha alta. Este diagnóstico es la contribución más firme y
+citable de la tesis.
+
+\paragraph{PI3 -- Generación.} \emph{Parcialmente, y ahora caracterizada.} Una vez que los
+corredores se modelan como trayectorias reales (un tronco por diámetro del árbol de
+expansión mínima sobre el grafo vial) y se juzgan por rectitud respecto a las anclas en vez
+de por el rodeo entre extremos (\cref{sec:w6}), el generador produce al menos un corredor
+sustantivo, factible y que aprueba en mérito ---\code{W6\_G02}, \SI{12.1}{\kilo\metre},
+\SI{56}{\percent} de brecha alta, no redundante, eficiencia de demanda en el percentil
+\num{73}. También arroja conectores de menor eficiencia junto a él, y no reconstruye las
+líneas férreas ya construidas ---un resultado esperado, pues la reconstrucción es un proxy
+débil del mérito (\cref{sec:disc-reconstruction}). La capa generativa es así una
+contribución genuina pero acotada.
+
+\paragraph{PI4 -- Transferibilidad.} \emph{Sí, de extremo a extremo.} La metodología
+completa W1--W8 corre sin rediseño a la medida en dos zonas metropolitanas contrastantes
+---Toluca (grande, dieciséis municipios) y Aguascalientes (compacta, tres)---
+re-derivando demanda, diagnóstico, pesos, corredores y auditoría a partir de los datos de
+Nivel~1 y \textsc{gtfs} propios de cada ciudad (\cref{ch:transferibilidad}). El diagnóstico
+diferencia sensatamente a las tres metrópolis por su proporción de demanda no atendida, y
+la ponderación de cada ciudad se re-deriva de sus propios datos en lugar de heredar la de
+la \zmg.
 
 \section{Recomendaciones prácticas}
-\placeholder
+\label{sec:concl-recomendaciones}
+
+Para una agencia de planeación, el marco es más útil como \emph{tamiz diagnóstico} que como
+piloto automático. De ahí se siguen tres recomendaciones. Primera, tratar la superficie de
+brecha de cobertura como el producto principal: ordena dónde se concentra la demanda no
+atendida a una resolución más fina que cualquier línea individual, y puede recalcularse a
+bajo costo conforme se actualizan los datos censales y \textsc{gtfs}. Segunda, usar la
+auditoría de rutas (\cref{sec:w7}) para marcar rutas existentes de baja demanda, indirectas
+y redundantes para su revisión ---en las ciudades de transferencia sacó a la luz una
+redundancia sustancial de servicio paralelo, candidata a racionalización. Tercera, leer los
+corredores generados como \emph{hipótesis a estudiar}, no como trazos finales: el corredor
+que aprueba en mérito es un punto de partida defendible para un estudio de factibilidad,
+pero las limitaciones caracterizadas del generador implican que su salida debe informar, no
+reemplazar, el proceso de ingeniería y comunidad.
 
 \section{Trabajo futuro}
-% Calibración EOD para ciudades de transferencia; transferencia de la capa
-% supervisada; modelador híbrido.
-\placeholder
+\label{sec:concl-futuro}
+
+Cuatro direcciones fortalecerían más el marco. Primera, la \emph{calibración local para las
+ciudades de transferencia}: Toluca y Aguascalientes heredan hoy el previo de decaimiento de
+la \zmg, y un $\betadecay$ calibrado con encuesta por ciudad afinaría sus superficies de
+demanda. Segunda, un \emph{modelo gravitacional con distancia de red}: reemplazar la
+impedancia euclidiana por impedancia de tiempo de viaje sobre el grafo vial mejoraría las
+magnitudes absolutas de demanda. Tercera, \emph{transferir la capa supervisada}: el
+reentrenamiento de brecha de cobertura se corrió solo para la \zmg, y aplicarlo a las
+ciudades de transferencia probaría si la relación aprendida entre características de lugar y
+demanda no atendida es en sí misma portable. Cuarta, un \emph{modelador híbrido de
+corredores} que alterne entre el tronco por diámetro y el ruteo tipo agente viajero donde
+este último siga siendo factible, lo que el análisis exploratorio sugiere que mejoraría
+marginalmente la cobertura sin sacrificar factibilidad. Más allá de estas, la validación
+externa más clara vendría de la afluencia observada en cualquier corredor que llegue a
+construirse a lo largo de un trazo generado ---el contrafactual que, por construcción,
+ningún estudio puramente ex ante puede aportar.

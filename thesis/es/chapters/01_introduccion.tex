@@ -2,30 +2,79 @@
 \label{ch:introduccion}
 
 \section{Motivación}
-% El reto de movilidad de la ZMG; dependencia del automóvil; el costo de una
-% inversión mal asignada en transporte.
-\placeholder
+\label{sec:intro-motivacion}
+
+La Zona Metropolitana de Guadalajara (\zmg) enfrenta el dilema de movilidad común a las
+grandes ciudades latinoamericanas: una periferia dependiente del automóvil, en expansión
+espacial, servida por un sistema de autobuses fragmentado y en su mayoría concesionado,
+sobre el cual se ha injertado recientemente una pequeña capa prémium de autobús de tránsito
+rápido y tren ligero. En este contexto la pregunta central de planeación no es cómo
+describir la red que existe, sino dónde haría más bien un nuevo servicio de transporte
+---qué corredores concentran una demanda latente y no atendida que la oferta actual no
+alcanza a servir. Equivocarse en esta pregunta es costoso: la inversión en transporte es
+grande, está espacialmente fija y es efectivamente irreversible una vez construida.
 
 \section{El problema de circularidad en la planeación basada en datos}
-% Los modelos que predicen dónde ya existe transporte ("tiene parada") premian el
-% statu quo y no pueden identificar la necesidad no atendida.
-\placeholder
+\label{sec:intro-circularidad}
+
+Un cuerpo creciente de trabajo aplica aprendizaje automático a preguntas de red de
+transporte, típicamente entrenando un modelo para predecir dónde ``deberían'' ubicarse
+estaciones o paradas. Un defecto metodológico recurrente lo socava: la variable
+dependiente se deriva, directa o indirectamente, de dónde \emph{ya existe} transporte. Un
+modelo entrenado para predecir una etiqueta de ``tiene parada'', o una clase de idoneidad
+que es a su vez función de la oferta actual, solo puede aprender a reproducir el statu quo.
+Un modelo así puede reportar exactitud casi perfecta siendo, por construcción, incapaz de
+identificar la necesidad no atendida ---premia la red que ya existe en lugar de diagnosticar
+dónde está ausente. Romper esta circularidad es el punto de partida metodológico de esta
+tesis.
 
 \section{Preguntas de investigación}
+\label{sec:intro-preguntas}
+
+La tesis se organiza en torno a cuatro preguntas de investigación:
+
 \begin{description}
   \item[PI1 -- Demanda.] ¿Puede estimarse la demanda de transporte a resolución de
-    \ageb solo a partir de datos de Nivel~1 (no de transporte)?
-  \item[PI2 -- Diagnóstico.] ¿Un índice independiente de brecha de cobertura
-    identifica zonas genuinamente desatendidas, y puede validarse fuera de muestra?
-  \item[PI3 -- Generación.] ¿Pueden generarse y evaluarse corredores candidatos con
-    base en necesidad genuina, no redundancia y eficiencia de demanda?
-  \item[PI4 -- Transferibilidad.] ¿El marco se transfiere a otras zonas
-    metropolitanas sin rediseño a la medida?
+    \ageb solo a partir de datos de Nivel~1 (no de transporte), de modo que la demanda
+    nunca sea función de la oferta actual?
+  \item[PI2 -- Diagnóstico.] ¿Un índice independiente de brecha de cobertura, construido
+    a partir de demanda frente a oferta, identifica zonas genuinamente desatendidas, y
+    puede validarse fuera de muestra?
+  \item[PI3 -- Generación.] ¿Pueden generarse y evaluarse corredores candidatos con base
+    en necesidad genuina, no redundancia y eficiencia de demanda, en lugar de por su
+    acuerdo con la red existente?
+  \item[PI4 -- Transferibilidad.] ¿El marco se transfiere a otras zonas metropolitanas
+    sin rediseño a la medida?
 \end{description}
 
 \section{Contribuciones}
-\placeholder
+\label{sec:intro-contribuciones}
+
+La tesis hace cuatro contribuciones, en correspondencia con las preguntas de
+investigación. Primera, una superficie de demanda de transporte de Nivel~1
+(\cref{sec:w1}) que estima la demanda latente sin ningún insumo de transporte, calibrada
+contra una encuesta metropolitana de viajes. Segunda, y la más significativa, un
+\emph{diagnóstico de brecha de cobertura} (\cref{sec:w3,sec:w4}) que reemplaza el objetivo
+circular de ``tiene parada'' por una brecha independiente de demanda frente a oferta, y que
+se corrobora fuera de muestra con la apertura posterior de la Línea~4 de la \zmg. Tercera,
+un generador de corredores y una evaluación multiobjetivo (\cref{sec:w5,sec:w6}) que puntúa
+líneas candidatas por necesidad, no redundancia y eficiencia de demanda, y que ---una vez
+que los corredores se modelan como trayectorias reales y se juzgan por rectitud respecto a
+las anclas--- produce al menos un corredor sustantivo, factible y que aprueba en mérito.
+Cuarta, una demostración de que el marco completo se \emph{transfiere} de extremo a extremo
+a otras dos zonas metropolitanas de tamaño contrastante (\cref{ch:transferibilidad}). Una
+contribución transversal es la honestidad metodológica: la tesis distingue lo que valida con
+fuerza (el diagnóstico) de lo que valida solo parcialmente (el generador), y argumenta por
+qué ambos tienen distinto peso probatorio (\cref{ch:discusion}).
 
 \section{Estructura de la tesis}
-% Un párrafo que mapea los capítulos a las ocho etapas.
-\placeholder
+\label{sec:intro-estructura}
+
+El resto de la tesis sigue la metodología. El \cref{ch:marco} revisa la tradición
+Nodo--Lugar, el modelado de la demanda, la ponderación multicriterio y la ubicación por
+aprendizaje automático, y ubica el vacío de investigación. El \cref{ch:datos} describe el
+área de estudio, la unidad \ageb y los datos. El \cref{ch:metodologia} presenta el marco de
+ocho etapas en su totalidad. El \cref{ch:resultados} reporta sus resultados para la \zmg, y el
+\cref{ch:transferibilidad} repite el análisis para Toluca y Aguascalientes. El
+\cref{ch:discusion} interpreta los resultados y sus límites, y el \cref{ch:conclusiones}
+responde las preguntas de investigación y traza el trabajo futuro.

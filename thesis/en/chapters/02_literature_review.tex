@@ -1,30 +1,152 @@
 \chapter{Theoretical Framework and Related Work}
 \label{ch:literature}
 
+This chapter situates the thesis within four bodies of work: the Node--Place tradition
+that frames transit stations as points where a transport network and an urban place
+coincide; travel-demand estimation, which supplies the demand signal the framework is
+built on; accessibility and coverage-gap analysis, which turns demand and supply into a
+diagnostic; and the machine-learning and network-design literature from which the
+predictive and generative components are drawn. The chapter closes by locating the
+research gap---a demand-driven, non-circular, transferable pipeline---that the remainder
+of the thesis addresses.
+
 \section{The Node--Place model and its extensions}
-% Bertolini's Node-Place model; NP-RV / NPP-V extensions.
-\placeholder
+\label{sec:lit-nodeplace}
+
+The conceptual anchor of this work is Bertolini's Node--Place model
+\parencite{bertolini1996, bertolini1999}, which characterizes a station area along two
+axes: its \emph{node} value, the position it occupies in the transport network, and its
+\emph{place} value, the intensity and diversity of the urban activities around it. The
+model's central claim is that sustainable transit-oriented development requires the two
+to stay in balance; persistent imbalance signals either an under-used station in a rich
+urban setting or an over-provided node in a weak one. As a diagnostic the model is
+attractive because it is descriptive and low-data---node and place indices can be
+assembled from network and land-use variables alone---but in its original form it is
+static and says nothing about \emph{latent demand} or about where new nodes ought to be
+placed.
+
+Recent extensions add dimensions to the original two. \textcite{liu2024nprv} propose an
+NP--RV formulation that augments node and place with ridership and vitality terms and
+couple it with gradient-boosted trees and \textsc{shap} interpretability, moving the
+tradition from description toward prediction. This thesis adopts a Node--Place--People
+(\nppv) variant: it retains node and place, foregrounds a \emph{people} dimension
+(population, dependency, and equity attributes), and---crucially---removes the vitality
+term from the prioritization weighting because, in the study area, the only available
+vitality proxy is resolved at the municipality level and therefore collapses to a binary
+``has-premium-transit'' flag that reintroduces exactly the supply-following circularity
+the thesis sets out to avoid (\cref{sec:w4}).
 
 \section{Travel demand estimation}
-% Four-step model; gravity / spatial-interaction models; doubly-constrained
-% (Furness) balancing.
-\placeholder
+\label{sec:lit-demand}
+
+The demand layer follows the classical four-step tradition, of which the two steps used
+here are trip generation and trip distribution. Trip distribution is modeled with a
+spatial-interaction (gravity) model, whose modern statistical justification is the
+entropy-maximizing derivation of \textcite{wilson1971gravity}: among all
+origin--destination matrices consistent with the observed marginal totals, the gravity
+form is the most probable, and its distance-decay parameter governs how sharply
+interaction falls with separation. The doubly-constrained variant, balanced by the
+iterative proportional-fitting (Furness) procedure, reproduces both origin and
+destination totals exactly and is the form adopted in \cref{sec:w1}.
+
+Two design choices distinguish the demand layer here from a textbook application. First,
+trip \emph{generation} is built entirely from Tier-1 census and economic variables, with
+no transit input, so that demand is never a function of current supply---the property
+the whole framework depends on. Second, the distance-decay parameter is not assumed but
+\emph{calibrated} against an independent metropolitan travel survey
+\parencite{imeplan_eod2022}, so that the impedance function reflects observed behavior
+rather than a conventional exponent (\cref{sec:w2}). Calibration also yields a documented
+transfer error, which matters when the same prior is carried to other cities
+(\cref{ch:transferability}).
 
 \section{Accessibility and coverage-gap analysis}
-% Cumulative-opportunities accessibility; transit deserts / coverage gaps.
-\placeholder
+\label{sec:lit-accessibility}
+
+Supply is measured with a cumulative-opportunities accessibility surface: for each unit,
+the number of opportunities (here, jobs) reachable within a fixed travel-time budget over
+the existing transit network. Cumulative-opportunities measures are widely used because
+they are transparent and require only a network and an opportunity distribution, at the
+cost of a hard cutoff at the budget boundary. The travel-time budget here combines access
+walk time, expected wait derived from headways, and in-vehicle time (\cref{sec:w3}).
+
+The diagnostic contribution of the thesis lives at the intersection of demand and
+accessibility. Rather than label areas by whether they currently have service---the
+circular target criticized in \cref{sec:intro-circularity}---the framework defines a
+\emph{coverage gap} as modeled demand set against measured accessibility, so that a unit
+scores high only when latent demand is genuinely unmet by current supply. This reframes
+the ``transit desert'' idea as a continuous, demand-weighted quantity and, because demand
+and supply are constructed independently, produces a dependent variable that a supervised
+model can learn without simply memorizing the existing network.
 
 \section{Multi-criteria decision analysis and objective weighting}
-% CRITIC and Entropy Weight Method; equity in transit prioritization.
-\placeholder
+\label{sec:lit-mcda}
+
+Turning a set of indicators into a single priority score requires weights. Expert or
+survey-elicited weights are common in transit multi-criteria analysis but import analyst
+bias and are hard to transfer between cities. This thesis instead uses objective
+weighting, combining the CRITIC method \parencite{diakoulaki1995critic}---which weights a
+criterion by its contrast intensity and its independence from the others---with the
+Entropy Weight Method, which weights by the dispersion of each criterion's values. Both
+are data-driven: they read the weights off the indicator matrix itself, which makes the
+prioritization reproducible and, importantly, re-derivable from scratch in a new city
+without re-eliciting expert judgments. Equity is handled not by manipulating these
+weights but by an explicit, separable additive term built from marginalization and
+social-lag indices \parencite{conapo_marginacion2020, coneval_rezago2020}, so that its
+contribution to the final score is transparent and can be reported with and without
+(\cref{eq:equity}).
 
 \section{Machine learning for station and corridor siting}
-% Random Forest / gradient boosting; SHAP interpretability; circular-target risk.
-\placeholder
+\label{sec:lit-ml}
+
+A substantial literature applies supervised learning to transit siting.
+\textcite{niu2023rf} use random forests to predict station suitability, and the broader
+NP-RV line \parencite{liu2024nprv} pairs gradient boosting with \textsc{shap} values
+\parencite{lundberg2017shap} for interpretability. The framework here uses the same tools
+---random forests and LightGBM \parencite{ke2017lightgbm}, read through \textsc{shap}---but
+departs from much of this literature on the dependent variable. Where a model is trained
+to predict a ``has-a-stop'' label, or a suitability class that is itself a function of
+current supply, it can only learn to reproduce the status quo and will report high
+accuracy for a circular reason. The thesis makes this failure mode explicit: an earlier
+version of its own pipeline trained on a cluster-derived label and reported near-perfect
+recovery accuracy that carried no planning information, and it was retired in favor of a
+model trained on the independent coverage-gap target (\cref{sec:w3}). The methodological
+point---that interpretability tools cannot rescue a circular target, and that the target
+itself must be constructed independently of supply---is a central lesson of this work.
 
 \section{Network design and corridor generation}
-% Steiner-tree heuristics; minimum-spanning-tree approaches.
-\placeholder
+\label{sec:lit-network}
+
+Generating candidate corridors from a set of priority locations is a network-design
+problem. The relevant heuristic tradition is the Steiner tree in graphs---connecting a
+set of required (terminal) nodes at minimum cost, possibly through additional
+intermediate nodes---for which \textcite{takahashi1980} give a classic
+shortest-path-based approximation, and its minimum-spanning-tree relatives. These
+heuristics are attractive for corridor generation because they operate directly on the
+road graph and produce connected, buildable geometry from scattered demand anchors.
+
+Their limitation, which the thesis characterizes in detail, is that a tree built to
+minimize connection cost among anchors is not the same object as a good \emph{corridor}.
+A spanning tree walked into a single line can insert phantom jumps between non-adjacent
+branches, and---more consequentially---a feasibility filter based on endpoint detour will
+select for few, near-collinear anchors regardless of the demand a corridor actually
+serves, confounding feasibility with anchor sparsity. \Cref{sec:w6} re-architects the
+generator around a diameter-trunk shaper and an anchor-directness feasibility metric that
+measure the right thing, and \cref{ch:discussion} reports both what this fixes and the
+residual limitation that remains.
 
 \section{Research gap}
-\placeholder
+\label{sec:lit-gap}
+
+The four literatures above are individually mature but are rarely combined into a single,
+reproducible pipeline that is also \emph{non-circular} and \emph{transferable}. Demand
+models estimate flows but are seldom fed forward into an explicit gap diagnostic; Node--Place
+studies describe stations but do not generate corridors; machine-learning siting work
+frequently trains on supply-derived targets; and corridor-generation heuristics are rarely
+evaluated against genuine unmet need rather than against the network that already exists.
+The gap this thesis addresses is therefore an integrative and methodological one: a
+demand-driven framework that (i) estimates demand from Tier-1 data alone, (ii) diagnoses
+the coverage gap with a target constructed independently of supply and validates it
+out-of-sample, (iii) generates and evaluates candidate corridors on need, non-redundancy,
+and demand efficiency, and (iv) transfers end-to-end to metropolitan areas of contrasting
+size without bespoke re-engineering. The methodology in \cref{ch:methodology} is organized
+to close exactly this gap.

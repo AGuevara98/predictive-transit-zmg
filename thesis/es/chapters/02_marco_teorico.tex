@@ -1,31 +1,160 @@
 \chapter{Marco Teórico y Trabajos Relacionados}
 \label{ch:marco}
 
+Este capítulo ubica la tesis dentro de cuatro cuerpos de literatura: la tradición
+Nodo--Lugar, que concibe las estaciones de transporte como puntos donde coinciden una red
+de transporte y un lugar urbano; la estimación de la demanda de viajes, que aporta la
+señal de demanda sobre la que se construye el marco; el análisis de accesibilidad y de
+brecha de cobertura, que convierte demanda y oferta en un diagnóstico; y la literatura de
+aprendizaje automático y de diseño de redes de la que provienen los componentes
+predictivo y generativo. El capítulo cierra situando el vacío de investigación ---una
+metodología basada en la demanda, no circular y transferible--- que aborda el resto de la
+tesis.
+
 \section{El modelo Nodo--Lugar y sus extensiones}
-% Modelo Nodo-Lugar de Bertolini; extensiones NP-RV / NPP-V.
-\placeholder
+\label{sec:marco-nodolugar}
+
+El ancla conceptual de este trabajo es el modelo Nodo--Lugar de Bertolini
+\parencite{bertolini1996, bertolini1999}, que caracteriza el área de una estación según
+dos ejes: su valor de \emph{nodo}, la posición que ocupa en la red de transporte, y su
+valor de \emph{lugar}, la intensidad y diversidad de las actividades urbanas a su
+alrededor. La tesis central del modelo es que el desarrollo orientado al transporte
+requiere que ambos se mantengan en equilibrio; un desequilibrio persistente señala una
+estación subutilizada en un entorno urbano rico, o un nodo sobredimensionado en uno débil.
+Como diagnóstico resulta atractivo porque es descriptivo y de bajos requerimientos de
+datos ---los índices de nodo y lugar se arman solo con variables de red y de uso de
+suelo---, pero en su forma original es estático y nada dice sobre la \emph{demanda
+latente} ni sobre dónde deberían colocarse nuevos nodos.
+
+Extensiones recientes agregan dimensiones a las dos originales. \textcite{liu2024nprv}
+proponen una formulación NP--RV que añade términos de afluencia y vitalidad, y la acoplan
+con árboles potenciados por gradiente e interpretabilidad \textsc{shap}, moviendo la
+tradición de la descripción hacia la predicción. Esta tesis adopta una variante
+Nodo--Lugar--Personas (\nppv): conserva nodo y lugar, pone en primer plano una dimensión
+de \emph{personas} (población, dependencia y atributos de equidad) y ---de manera
+crucial--- retira el término de vitalidad de la ponderación de priorización porque, en el
+área de estudio, el único proxy de vitalidad disponible está resuelto a nivel municipal y
+por tanto colapsa a una bandera binaria de ``tiene transporte prémium'' que reintroduce
+justo la circularidad de seguir a la oferta que la tesis busca evitar (\cref{sec:w4}).
 
 \section{Estimación de la demanda de viajes}
-% Modelo de cuatro pasos; modelos gravitacionales / de interacción espacial;
-% balanceo doblemente restringido (Furness).
-\placeholder
+\label{sec:marco-demanda}
+
+La capa de demanda sigue la tradición clásica de cuatro pasos, de la cual se usan aquí la
+generación y la distribución de viajes. La distribución se modela con un modelo de
+interacción espacial (gravitacional), cuya justificación estadística moderna es la
+derivación por maximización de entropía de \textcite{wilson1971gravity}: entre todas las
+matrices origen--destino consistentes con los totales marginales observados, la forma
+gravitacional es la más probable, y su parámetro de decaimiento con la distancia gobierna
+cuán abruptamente cae la interacción con la separación. La variante doblemente restringida,
+balanceada por el procedimiento de ajuste proporcional iterativo (Furness), reproduce
+exactamente los totales de origen y destino y es la forma adoptada en \cref{sec:w1}.
+
+Dos decisiones de diseño distinguen esta capa de demanda de una aplicación de libro de
+texto. Primero, la \emph{generación} de viajes se construye por completo con variables
+censales y económicas de Nivel~1, sin ningún insumo de transporte, de modo que la demanda
+nunca es función de la oferta actual ---la propiedad de la que depende todo el marco.
+Segundo, el parámetro de decaimiento no se supone sino que se \emph{calibra} contra una
+encuesta metropolitana independiente \parencite{imeplan_eod2022}, para que la función de
+impedancia refleje el comportamiento observado y no un exponente convencional
+(\cref{sec:w2}). La calibración también arroja un error de transferencia documentado, que
+importa cuando el mismo previo se traslada a otras ciudades (\cref{ch:transferibilidad}).
 
 \section{Accesibilidad y análisis de brecha de cobertura}
-% Accesibilidad de oportunidades acumuladas; desiertos de transporte.
-\placeholder
+\label{sec:marco-accesibilidad}
+
+La oferta se mide con una superficie de accesibilidad de oportunidades acumuladas: para
+cada unidad, el número de oportunidades (aquí, empleos) alcanzables dentro de un
+presupuesto fijo de tiempo de viaje sobre la red de transporte existente. Las medidas de
+oportunidades acumuladas se usan ampliamente por ser transparentes y requerir solo una red
+y una distribución de oportunidades, a costa de un corte abrupto en el límite del
+presupuesto. El presupuesto de tiempo combina aquí el tiempo de caminata de acceso, la
+espera esperada derivada de las frecuencias y el tiempo a bordo (\cref{sec:w3}).
+
+La contribución diagnóstica de la tesis vive en la intersección de demanda y
+accesibilidad. En lugar de etiquetar zonas según si hoy tienen servicio ---el objetivo
+circular criticado en \cref{sec:intro-circularidad}---, el marco define una \emph{brecha de
+cobertura} como la demanda modelada frente a la accesibilidad medida, de modo que una
+unidad puntúa alto solo cuando su demanda latente está genuinamente desatendida por la
+oferta actual. Esto reformula la idea de ``desierto de transporte'' como una cantidad
+continua ponderada por demanda y, dado que demanda y oferta se construyen de forma
+independiente, produce una variable dependiente que un modelo supervisado puede aprender
+sin memorizar simplemente la red existente.
 
 \section{Análisis multicriterio y ponderación objetiva}
-% CRITIC y método de entropía; equidad en la priorización.
-\placeholder
+\label{sec:marco-multicriterio}
+
+Convertir un conjunto de indicadores en una única puntuación de prioridad requiere pesos.
+Los pesos elicitados de expertos o de encuestas son comunes en el análisis multicriterio
+del transporte, pero importan sesgo del analista y son difíciles de transferir entre
+ciudades. Esta tesis usa en cambio ponderación objetiva, combinando el método CRITIC
+\parencite{diakoulaki1995critic} ---que pondera un criterio por su intensidad de contraste
+y su independencia de los demás--- con el método de entropía, que pondera por la dispersión
+de los valores de cada criterio. Ambos son basados en datos: leen los pesos de la propia
+matriz de indicadores, lo que hace la priorización reproducible y, sobre todo,
+re-derivable desde cero en una ciudad nueva sin volver a elicitar juicios de expertos. La
+equidad no se maneja manipulando estos pesos sino con un término aditivo explícito y
+separable, construido a partir de índices de marginación y rezago social
+\parencite{conapo_marginacion2020, coneval_rezago2020}, de modo que su contribución a la
+puntuación final sea transparente y pueda reportarse con y sin él (\cref{eq:equity}).
 
 \section{Aprendizaje automático para ubicación de estaciones y corredores}
-% Random Forest / gradient boosting; interpretabilidad SHAP; riesgo de objetivo
-% circular.
-\placeholder
+\label{sec:marco-aprendizaje}
+
+Una literatura considerable aplica aprendizaje supervisado a la ubicación de transporte.
+\textcite{niu2023rf} usan bosques aleatorios para predecir la idoneidad de estaciones, y
+la línea NP-RV \parencite{liu2024nprv} combina potenciación por gradiente con valores
+\textsc{shap} \parencite{lundberg2017shap} para interpretabilidad. El marco aquí usa las
+mismas herramientas ---bosques aleatorios y LightGBM \parencite{ke2017lightgbm}, leídos a
+través de \textsc{shap}--- pero se aparta de gran parte de esa literatura en la variable
+dependiente. Cuando un modelo se entrena para predecir una etiqueta de ``tiene parada'', o
+una clase de idoneidad que es a su vez función de la oferta actual, solo puede aprender a
+reproducir el statu quo y reportará alta exactitud por una razón circular. La tesis hace
+explícito este modo de falla: una versión anterior de su propia metodología se entrenó
+sobre una etiqueta derivada de un agrupamiento y reportó una exactitud de recuperación casi
+perfecta que no portaba información de planeación, y fue retirada en favor de un modelo
+entrenado sobre el objetivo independiente de brecha de cobertura (\cref{sec:w3}). El punto
+metodológico ---que las herramientas de interpretabilidad no pueden rescatar un objetivo
+circular, y que el objetivo mismo debe construirse con independencia de la oferta--- es una
+lección central de este trabajo.
 
 \section{Diseño de redes y generación de corredores}
-% Heurísticas de árbol de Steiner; enfoques de árbol de expansión mínima.
-\placeholder
+\label{sec:marco-redes}
+
+Generar corredores candidatos a partir de un conjunto de ubicaciones prioritarias es un
+problema de diseño de redes. La tradición heurística relevante es el árbol de Steiner en
+grafos ---conectar un conjunto de nodos requeridos (terminales) a costo mínimo,
+posiblemente a través de nodos intermedios adicionales---, para el que \textcite{takahashi1980}
+dan una aproximación clásica basada en caminos más cortos, y sus parientes de árbol de
+expansión mínima. Estas heurísticas resultan atractivas para la generación de corredores
+porque operan directamente sobre el grafo vial y producen geometría conectada y construible
+a partir de anclas de demanda dispersas.
+
+Su limitación, que la tesis caracteriza en detalle, es que un árbol construido para
+minimizar el costo de conexión entre anclas no es el mismo objeto que un buen
+\emph{corredor}. Un árbol de expansión convertido en una sola línea puede insertar saltos
+fantasma entre ramas no adyacentes y ---más grave--- un filtro de factibilidad basado en el
+rodeo entre extremos seleccionará pocas anclas casi colineales sin importar la demanda que
+un corredor realmente atiende, confundiendo factibilidad con escasez de anclas.
+\Cref{sec:w6} rearquitectura el generador en torno a un modelador de tronco por diámetro y
+una métrica de factibilidad por rectitud respecto a las anclas, que miden lo correcto, y
+\cref{ch:discusion} reporta tanto lo que esto corrige como la limitación residual que
+persiste.
 
 \section{Vacío de investigación}
-\placeholder
+\label{sec:marco-vacio}
+
+Las cuatro literaturas anteriores son individualmente maduras pero rara vez se combinan en
+una única metodología reproducible que sea además \emph{no circular} y \emph{transferible}.
+Los modelos de demanda estiman flujos pero pocas veces se propagan hacia un diagnóstico
+explícito de brecha; los estudios Nodo--Lugar describen estaciones pero no generan
+corredores; el trabajo de ubicación con aprendizaje automático frecuentemente entrena sobre
+objetivos derivados de la oferta; y las heurísticas de generación de corredores rara vez se
+evalúan contra necesidad genuina en lugar de contra la red que ya existe. El vacío que
+aborda esta tesis es, por tanto, integrador y metodológico: un marco basado en la demanda
+que (i) estima la demanda solo con datos de Nivel~1, (ii) diagnostica la brecha de
+cobertura con un objetivo construido con independencia de la oferta y lo valida fuera de
+muestra, (iii) genera y evalúa corredores candidatos por necesidad, no redundancia y
+eficiencia de demanda, y (iv) se transfiere de extremo a extremo a zonas metropolitanas de
+tamaño contrastante sin rediseño a la medida. La metodología del \cref{ch:metodologia} se
+organiza para cerrar exactamente este vacío.
