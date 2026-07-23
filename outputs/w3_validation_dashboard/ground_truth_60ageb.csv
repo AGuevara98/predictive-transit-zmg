@@ -1,0 +1,61 @@
+cve_ageb,Municipio,¿Transporte a <400 m?,Distancia aprox.,Resultado,Observaciones
+1400200020219,Acatlán de Juárez,No,>400 m,Correcto,Sin paradas cercanas.
+1400200020045,Acatlán de Juárez,No,>400 m,Correcto,Sin paradas cercanas.
+1400200020172,Acatlán de Juárez,No,>400 m,Correcto,Sin paradas cercanas.
+1400200020261,Acatlán de Juárez,No,>400 m,Correcto,Sin paradas cercanas.
+1400200020149,Acatlán de Juárez,No,>400 m,Correcto,Sin paradas cercanas.
+1400200020242,Acatlán de Juárez,No,>400 m,Correcto,Sin paradas cercanas.
+1400200020223,Acatlán de Juárez,No,>400 m,Correcto,Sin paradas cercanas.
+1400200020327,Acatlán de Juárez,No,>400 m,Correcto,Sin paradas cercanas.
+1400200020153,Acatlán de Juárez,No,>400 m,Correcto,Sin paradas cercanas.
+1400200020257,Acatlán de Juárez,No,>400 m,Correcto,Sin paradas cercanas.
+1403900010327,Guadalajara,No,>400 m,Correcto,Sin paradas cercanas.
+1403900015525,Guadalajara,No,>400 m,Correcto,Sin paradas cercanas.
+1407000641306,Juanacatlán,No,>400 m,Correcto,Sin paradas cercanas.
+1407000210967,Juanacatlán,No,>400 m,Correcto,Sin paradas cercanas.
+1404400020115,El Salto,No,>400 m,Correcto,Sin paradas cercanas.
+1404400100223,El Salto,No,>400 m,Correcto,Sin paradas cercanas.
+1405100010092,Ixtlahuacán de los Membrillos,No,>400 m,Correcto,Sin paradas cercanas.
+1405100010124,Ixtlahuacán de los Membrillos,No,>400 m,Correcto,Sin paradas cercanas.
+1409700152539,San Pedro Tlaquepaque,No,>400 m,Correcto,Sin paradas cercanas.
+1409700092882,San Pedro Tlaquepaque,No,>400 m,Correcto,Sin paradas cercanas.
+1412000014516,Zapopan,No,>400 m,Correcto,Sin paradas cercanas.
+1409800011877,Tlajomulco de Zúñiga,No,>400 m,Correcto,Sin paradas cercanas.
+1412000017099,Zapopan,No,>400 m,Correcto,Sin paradas cercanas.
+1412000012492,Zapopan,No,>400 m,Correcto,Sin paradas cercanas.
+1409800011171,Tlajomulco de Zúñiga,No,>400 m,Correcto,Sin paradas cercanas.
+1409800011966,Tlajomulco de Zúñiga,No,>400 m,Correcto,Sin paradas cercanas.
+1409800010794,Tlajomulco de Zúñiga,No,>400 m,Correcto,Sin paradas cercanas.
+1409800011720,Tlajomulco de Zúñiga,No,>400 m,Correcto,Sin paradas cercanas.
+1409800012254,Tlajomulco de Zúñiga,No,426 m,Correcto,"Existe una parada, pero está fuera del radio de 400 m."
+1409800143159,Tlajomulco de Zúñiga,No,>400 m,Correcto,Sin paradas cercanas.
+1412000013182,Zapopan,No,>400 m,Correcto,Sin paradas cercanas.
+1412000015748,Zapopan,No,>400 m,Correcto,Sin paradas cercanas.
+1412000016813,Zapopan,No,>400 m,Correcto,Sin paradas cercanas.
+1412000014220,Zapopan,No,>400 m,Correcto,Sin paradas cercanas.
+1412000012917,Zapopan,No,>400 m,Correcto,Sin paradas cercanas.
+1407300010846,Lagos de Moreno,No,>400 m,Correcto,Sin paradas cercanas.
+1407300010912,Lagos de Moreno,No,>400 m,Correcto,Sin paradas cercanas.
+1409700183465,San Pedro Tlaquepaque,No,>400 m,Correcto,Sin paradas cercanas.
+1409700224159,San Pedro Tlaquepaque,No,>400 m,Correcto,Sin paradas cercanas.
+1409700112674,San Pedro Tlaquepaque,No,>400 m,Correcto,Sin paradas cercanas.
+1412000015074,Zapopan,No,>400 m,Correcto,Sin paradas cercanas.
+1412000016369,Zapopan,No,>400 m,Correcto,Sin paradas cercanas.
+1412000017422,Zapopan,No,>400 m,Correcto,Sin paradas cercanas.
+1409800102847,Tlajomulco de Zúñiga,No,>400 m,Correcto,Sin paradas cercanas.
+1409800112913,Tlajomulco de Zúñiga,No,>400 m,Correcto,Sin paradas cercanas.
+1409800030628,Tlajomulco de Zúñiga,No,>400 m,Correcto,Sin paradas cercanas.
+1404400130246,El Salto,No,>400 m,Correcto,Sin paradas cercanas.
+1404400080179,El Salto,Sí,272 m,Falso positivo,Parada sobre C. Arenal.
+1403900016178,Guadalajara,No,>400 m,Correcto,Sin paradas cercanas.
+1403900014386,Guadalajara,No,>400 m,Correcto,Sin paradas cercanas.
+1412000013987,Zapopan,Sí,207 m,Falso positivo,Parada sobre Anillo Periférico Norte Manuel Gómez Morín.
+1412000016545,Zapopan,No,>400 m,Correcto,Sin paradas cercanas.
+1412000014870,Zapopan,Sí,198 m,Falso positivo,Parada sobre Anillo Periférico Poniente.
+1409800082415,Tlajomulco de Zúñiga,No,>400 m,Correcto,Sin paradas cercanas.
+1409800051248,Tlajomulco de Zúñiga,No,>400 m,Correcto,Sin paradas cercanas.
+1404400110187,El Salto,No,>400 m,Correcto,Sin paradas cercanas.
+1409700203812,San Pedro Tlaquepaque,No,>400 m,Correcto,Sin paradas cercanas.
+1409700163278,San Pedro Tlaquepaque,No,>400 m,Correcto,Sin paradas cercanas.
+1403900017243,Guadalajara,No,>400 m,Correcto,Sin paradas cercanas.
+1403900015896,Guadalajara,No,>400 m,Correcto,Sin paradas cercanas.

@@ -1,0 +1,10 @@
+{
+  "n_sample": 60,
+  "correct": 57,
+  "false_pos": 3,
+  "precision": 0.95,
+  "fpr": 0.05,
+  "n_flagged_total": 671,
+  "n_mapped": 31,
+  "n_unmatched": 29
+}

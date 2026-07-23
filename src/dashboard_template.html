@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard de Validación — Brecha de Cobertura ZMG</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<style>
+  :root{
+    --paper:#f6f4ee;
+    --panel:#fffdf8;
+    --ink:#1c1b19;
+    --ink-soft:#5c5952;
+    --hairline:#e2ddd0;
+    --gap-hi:#c0392b;
+    --gap-med:#e8a33d;
+    --gap-lo:#2e8b57;
+    --acc-worst:#7f1d1d;
+    --acc-bad:#c0392b;
+    --acc-mid:#e8a33d;
+    --acc-good:#7fb3d5;
+    --acc-best:#1c5cab;
+    --ok:#2e7d4f;
+    --err:#b23b3b;
+    --mono: "IBM Plex Mono","SF Mono",Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;background:var(--paper);color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;}
+  .app{display:grid;grid-template-columns:340px 1fr;height:100vh;min-height:640px;}
+  @media (max-width:820px){ .app{grid-template-columns:1fr;grid-template-rows:auto 60vh;} }
+
+  .sidebar{background:var(--panel);border-right:1px solid var(--hairline);
+    overflow-y:auto;padding:20px 18px 28px;}
+  .sidebar h1{font-size:15px;letter-spacing:.02em;margin:0 0 2px;font-weight:700;}
+  .sidebar .subtitle{font-family:var(--mono);font-size:11px;color:var(--ink-soft);
+    margin:0 0 18px;line-height:1.5;}
+
+  .section{margin-bottom:22px;}
+  .section h2{font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;
+    color:var(--ink-soft);margin:0 0 10px;font-weight:700;border-bottom:1px solid var(--hairline);
+    padding-bottom:6px;}
+
+  .layer-option{display:flex;align-items:flex-start;gap:9px;padding:8px 9px;
+    border-radius:6px;cursor:pointer;border:1px solid transparent;margin-bottom:5px;}
+  .layer-option:hover{background:#f1eee4;}
+  .layer-option.active{border-color:var(--hairline);background:#f1eee4;}
+  .layer-option input{margin-top:3px;accent-color:var(--ink);}
+  .layer-option .lbl{font-size:12.5px;font-weight:600;}
+  .layer-option .desc{font-size:11px;color:var(--ink-soft);margin-top:1px;line-height:1.35;}
+
+  .legend-row{display:flex;align-items:center;gap:8px;font-size:11.5px;margin:4px 0;
+    font-family:var(--mono);}
+  .swatch{width:12px;height:12px;border-radius:3px;flex:none;border:1px solid rgba(0,0,0,.15);}
+
+  .gt-toggle{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;
+    padding:8px 9px;border-radius:6px;cursor:pointer;}
+  .gt-toggle:hover{background:#f1eee4;}
+  .gt-toggle input{accent-color:var(--ink);}
+
+  .confmatrix{border:1px solid var(--hairline);border-radius:8px;overflow:hidden;
+    background:#fffefb;}
+  .cm-head{background:#efece2;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;
+    padding:7px 10px;font-weight:700;color:var(--ink-soft);}
+  .cm-body{padding:12px 12px 14px;}
+  .cm-stat{display:flex;justify-content:space-between;align-items:baseline;
+    padding:5px 0;border-bottom:1px dashed var(--hairline);font-size:12.5px;}
+  .cm-stat:last-child{border-bottom:none;}
+  .cm-stat .v{font-family:var(--mono);font-weight:700;}
+  .cm-big{text-align:center;padding:10px 0 4px;}
+  .cm-big .num{font-size:34px;font-weight:800;font-family:var(--mono);line-height:1;}
+  .cm-big .cap{font-size:10.5px;color:var(--ink-soft);text-transform:uppercase;
+    letter-spacing:.06em;margin-top:4px;}
+  .note{font-size:10.8px;color:var(--ink-soft);line-height:1.5;margin-top:10px;
+    padding-top:10px;border-top:1px solid var(--hairline);}
+  .note b{color:var(--ink);}
+
+  .map-wrap{position:relative;}
+  #map{width:100%;height:100%;background:#eae7dc;}
+  .leaflet-popup-content{font-size:12.5px;font-family:var(--mono);}
+  .leaflet-popup-content b{font-family:-apple-system,sans-serif;}
+
+  .map-title{position:absolute;top:14px;left:14px;z-index:500;background:rgba(255,253,248,.92);
+    padding:8px 12px;border-radius:8px;border:1px solid var(--hairline);
+    font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.06);}
+  .map-title span{display:block;font-weight:400;font-family:var(--mono);font-size:10.5px;
+    color:var(--ink-soft);margin-top:2px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <h1>Validación de brecha de cobertura</h1>
+    <p class="subtitle">Zona Metropolitana de Guadalajara — 1,881 AGEB · W3 + ground-truth Semanas 2–3</p>
+
+    <div class="section">
+      <h2>Capa del mapa</h2>
+      <label class="layer-option active" data-layer="gap">
+        <input type="radio" name="layer" value="gap" checked>
+        <div><div class="lbl">Brecha de cobertura</div>
+        <div class="desc">Demanda estimada vs. accesibilidad real (W3)</div></div>
+      </label>
+      <div class="legend-row" id="legend-gap">
+        <span class="swatch" style="background:var(--gap-hi)"></span> Alta brecha
+        <span style="width:8px"></span>
+        <span class="swatch" style="background:var(--gap-med)"></span> Media
+        <span style="width:8px"></span>
+        <span class="swatch" style="background:var(--gap-lo)"></span> Baja
+      </div>
+
+      <label class="layer-option" data-layer="acc">
+        <input type="radio" name="layer" value="acc">
+        <div><div class="lbl">Accesibilidad a empleo</div>
+        <div class="desc">Empleos alcanzables en ≤45 min en transporte público</div></div>
+      </label>
+      <div class="legend-row" id="legend-acc" style="display:none">
+        <span class="swatch" style="background:var(--acc-worst)"></span> 0
+        <span class="swatch" style="background:var(--acc-bad)"></span>
+        <span class="swatch" style="background:var(--acc-mid)"></span>
+        <span class="swatch" style="background:var(--acc-good)"></span>
+        <span class="swatch" style="background:var(--acc-best)"></span> alta
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Ground-truth (campo)</h2>
+      <label class="gt-toggle">
+        <input type="checkbox" id="gt-checkbox" checked>
+        Mostrar puntos verificados manualmente
+      </label>
+      <div class="legend-row" style="margin-top:6px">
+        <span class="swatch" style="background:var(--ok)"></span> Confirmado sin transporte
+        <span style="width:8px"></span>
+        <span class="swatch" style="background:var(--err)"></span> Falso positivo
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Resumen de validación</h2>
+      <div class="confmatrix">
+        <div class="cm-head">Muestra manual — 60 AGEB de brecha alta</div>
+        <div class="cm-body">
+          <div class="cm-big">
+            <div class="num" id="precision-big">95%</div>
+            <div class="cap">Precisión observada</div>
+          </div>
+          <div class="cm-stat"><span>AGEB revisados</span><span class="v" id="s-n">60</span></div>
+          <div class="cm-stat"><span>Correctamente clasificados</span><span class="v" id="s-correct">57</span></div>
+          <div class="cm-stat"><span>Falsos positivos</span><span class="v" id="s-fp">3</span></div>
+          <div class="cm-stat"><span>Tasa de falsos positivos</span><span class="v" id="s-fpr">5%</span></div>
+          <div class="cm-stat"><span>Universo con accessibility_score = 0</span><span class="v">671</span></div>
+          <div class="note">
+            <b>Nota metodológica:</b> el mapa solo puede ubicar geográficamente <span id="s-mapped">31</span> de los
+            60 AGEB de la muestra original — el resto quedó con un identificador (<code>cve_ageb</code>) que ya no
+            coincide con la corrida vigente del pipeline, incluidos los 3 falsos positivos. Es el mismo fenómeno de
+            no-comparabilidad de IDs entre corridas documentado en W6. Las cifras de esta tarjeta son las
+            oficialmente reportadas en la validación de campo, no un recálculo sobre el subconjunto graficable.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="map-wrap">
+    <div id="map"></div>
+    <div class="map-title" id="map-title">Brecha de cobertura por AGEB
+      <span>Rojo = alta brecha (demanda alta, sin servicio)</span>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const AGEBS = __AGEBS_DATA__;
+const GT = __GT_DATA__;
+const SUMMARY = __SUMMARY_DATA__;
+
+document.getElementById('s-n').textContent = SUMMARY.n_sample;
+document.getElementById('s-correct').textContent = SUMMARY.correct;
+document.getElementById('s-fp').textContent = SUMMARY.false_pos;
+document.getElementById('s-fpr').textContent = Math.round(SUMMARY.fpr*100) + '%';
+document.getElementById('precision-big').textContent = Math.round(SUMMARY.precision*100) + '%';
+document.getElementById('s-mapped').textContent = SUMMARY.n_mapped;
+
+const map = L.map('map', {zoomControl:true}).setView([20.68, -103.38], 10);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap &copy; CARTO',
+  maxZoom: 18
+}).addTo(map);
+
+let gapLayer, accLayer, gtLayer;
+
+function styleGap(feature){
+  return {
+    fillColor: feature.properties.gap_color || '#cccccc',
+    weight: 0.4,
+    color: 'rgba(28,27,25,0.25)',
+    fillOpacity: 0.75
+  };
+}
+function styleAcc(feature){
+  return {
+    fillColor: feature.properties.acc_color || '#cccccc',
+    weight: 0.4,
+    color: 'rgba(28,27,25,0.25)',
+    fillOpacity: 0.75
+  };
+}
+
+function popupGap(feature, layer){
+  const p = feature.properties;
+  layer.bindPopup(
+    `<b>AGEB ${p.cve_ageb}</b><br>` +
+    `Categoría: <b>${p.gap_category}</b><br>` +
+    `Índice de brecha (norm.): ${(p.coverage_gap_n*100).toFixed(1)}%`
+  );
+}
+function popupAcc(feature, layer){
+  const p = feature.properties;
+  layer.bindPopup(
+    `<b>AGEB ${p.cve_ageb}</b><br>` +
+    `Accesibilidad (norm.): ${(p.accessibility_n*100).toFixed(1)}%`
+  );
+}
+
+gapLayer = L.geoJSON(AGEBS, {style: styleGap, onEachFeature: popupGap}).addTo(map);
+accLayer = L.geoJSON(AGEBS, {style: styleAcc, onEachFeature: popupAcc});
+
+gtLayer = L.geoJSON(GT, {
+  pointToLayer: function(feature, latlng){
+    const ok = feature.properties.resultado === 'Correcto';
+    return L.circleMarker(latlng, {
+      radius: 6,
+      fillColor: ok ? '#2e7d4f' : '#b23b3b',
+      color: '#fffdf8',
+      weight: 1.5,
+      fillOpacity: 0.95
+    });
+  },
+  onEachFeature: function(feature, layer){
+    const p = feature.properties;
+    layer.bindPopup(
+      `<b>AGEB ${p.cve_ageb}</b> — ${p.municipio}<br>` +
+      `¿Transporte a &lt;400m?: <b>${p.transporte_400m}</b> (${p.distancia})<br>` +
+      `Resultado: <b>${p.resultado}</b><br>` +
+      `${p.obs}`
+    );
+  }
+}).addTo(map);
+
+const titles = {
+  gap: ['Brecha de cobertura por AGEB', 'Rojo = alta brecha (demanda alta, sin servicio)'],
+  acc: ['Accesibilidad a empleo por AGEB', 'Azul = alta accesibilidad · rojo oscuro = accesibilidad cero']
+};
+
+document.querySelectorAll('.layer-option').forEach(function(opt){
+  opt.addEventListener('click', function(){
+    document.querySelectorAll('.layer-option').forEach(o=>o.classList.remove('active'));
+    opt.classList.add('active');
+    const val = opt.getAttribute('data-layer');
+    if(val === 'gap'){
+      if(map.hasLayer(accLayer)) map.removeLayer(accLayer);
+      if(!map.hasLayer(gapLayer)) gapLayer.addTo(map);
+      document.getElementById('legend-gap').style.display = 'flex';
+      document.getElementById('legend-acc').style.display = 'none';
+    } else {
+      if(map.hasLayer(gapLayer)) map.removeLayer(gapLayer);
+      if(!map.hasLayer(accLayer)) accLayer.addTo(map);
+      document.getElementById('legend-gap').style.display = 'none';
+      document.getElementById('legend-acc').style.display = 'flex';
+    }
+    if(gtLayer && document.getElementById('gt-checkbox').checked){
+      gtLayer.bringToFront();
+    }
+    const t = titles[val];
+    document.getElementById('map-title').innerHTML = t[0] + '<span>' + t[1] + '</span>';
+  });
+});
+
+document.getElementById('gt-checkbox').addEventListener('change', function(e){
+  if(e.target.checked){
+    gtLayer.addTo(map);
+  } else {
+    map.removeLayer(gtLayer);
+  }
+});
+</script>
+</body>
+</html>
