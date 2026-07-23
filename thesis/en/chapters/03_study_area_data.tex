@@ -16,8 +16,11 @@ municipalities of the state of Jalisco, spanning a dense central core (Guadalaja
 Zapopan) and a rapidly-urbanizing periphery (\cref{tab:munis}). Its mobility is marked
 by high and rising car dependence, a large informally-operated concessioned bus system,
 and, more recently, a small premium tier of bus rapid transit (Mi Macro) and light rail
-(Mi Tren)---the setting that motivates a demand-driven rather than supply-following
-approach to network planning.
+(Mi Tren). This premium tier follows the wider Latin-American pattern in which bus rapid
+transit has expanded rapidly as a cost-effective complement to rail
+\parencite{hidalgo2013brt, cervero2013brt}; grafting it onto a largely concessioned base
+network is precisely the setting that motivates a demand-driven rather than
+supply-following approach to network planning.
 
 \begin{table}[htbp]
 \centering
@@ -84,15 +87,16 @@ CONAPO / CONEVAL & \ageb         & Marginalization and social-lag (equity) \\
 
 \begin{description}[leftmargin=1.4em, style=nextline]
   \item[Census and socio-demographics (INEGI CPV2020).] The 2020 population and
-    housing census supplies population, the youth share used to amplify trip
-    generation, and household vehicle ownership (\code{VPH\_AUTOM} over
+    housing census \parencite{inegi_cpv2020} supplies population, the youth share used to
+    amplify trip generation, and household vehicle ownership (\code{VPH\_AUTOM} over
     \code{VIVPAR\_HAB}) used to derive transit propensity.
-  \item[Economic activity (DENUE).] The national economic-unit directory provides
-    establishment locations, aggregated to \ageb employment and point-of-interest and
-    retail densities that drive trip attraction and accessibility opportunities.
+  \item[Economic activity (DENUE).] The national economic-unit directory
+    \parencite{inegi_denue} provides establishment locations, aggregated to \ageb
+    employment and point-of-interest and retail densities that drive trip attraction and
+    accessibility opportunities.
   \item[Street network (OpenStreetMap).] The drive graph and derived Node indicators
     (intersection and street density) come from \textsc{osm} \parencite{openstreetmap},
-    extracted for the ten municipalities.
+    extracted for the ten municipalities with \textsc{osmnx} \parencite{boeing2017osmnx}.
   \item[Transit supply (GTFS).] The SITEUR \textsc{gtfs} feed defines the existing
     network used for the accessibility surface (\cref{sec:w3}) and the route audit
     (\cref{sec:w7}).

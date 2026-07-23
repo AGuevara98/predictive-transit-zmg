@@ -19,11 +19,14 @@ axes: its \emph{node} value, the position it occupies in the transport network, 
 \emph{place} value, the intensity and diversity of the urban activities around it. The
 model's central claim is that sustainable transit-oriented development requires the two
 to stay in balance; persistent imbalance signals either an under-used station in a rich
-urban setting or an over-provided node in a weak one. As a diagnostic the model is
-attractive because it is descriptive and low-data---node and place indices can be
-assembled from network and land-use variables alone---but in its original form it is
-static and says nothing about \emph{latent demand} or about where new nodes ought to be
-placed.
+urban setting or an over-provided node in a weak one, a reading later operationalized as
+an empirical station classification \parencite{reusser2008, vale2015}. The place axis
+itself draws on a large built-environment literature relating density, land-use
+diversity, and design to travel behavior \parencite{cervero1997threeD, ewing2010meta},
+which motivates the place indicators used here. As a diagnostic the model is attractive
+because it is descriptive and low-data---node and place indices can be assembled from
+network and land-use variables alone---but in its original form it is static and says
+nothing about \emph{latent demand} or about where new nodes ought to be placed.
 
 Recent extensions add dimensions to the original two. \textcite{liu2024nprv} propose an
 NP--RV formulation that augments node and place with ridership and vitality terms and
@@ -39,15 +42,16 @@ the thesis sets out to avoid (\cref{sec:w4}).
 \section{Travel demand estimation}
 \label{sec:lit-demand}
 
-The demand layer follows the classical four-step tradition, of which the two steps used
-here are trip generation and trip distribution. Trip distribution is modeled with a
-spatial-interaction (gravity) model, whose modern statistical justification is the
-entropy-maximizing derivation of \textcite{wilson1971gravity}: among all
-origin--destination matrices consistent with the observed marginal totals, the gravity
-form is the most probable, and its distance-decay parameter governs how sharply
-interaction falls with separation. The doubly-constrained variant, balanced by the
-iterative proportional-fitting (Furness) procedure, reproduces both origin and
-destination totals exactly and is the form adopted in \cref{sec:w1}.
+The demand layer follows the classical four-step tradition
+\parencite{mcnally2000fourstep, ortuzar2011}, of which the two steps used here are trip
+generation and trip distribution. Trip distribution is modeled with a spatial-interaction
+(gravity) model, whose modern statistical justification is the entropy-maximizing
+derivation of \textcite{wilson1971gravity}: among all origin--destination matrices
+consistent with the observed marginal totals, the gravity form is the most probable, and
+its distance-decay parameter governs how sharply interaction falls with separation. The
+doubly-constrained variant, balanced by the iterative proportional-fitting (Furness)
+procedure \parencite{furness1965}, reproduces both origin and destination totals exactly
+and is the form adopted in \cref{sec:w1}.
 
 Two design choices distinguish the demand layer here from a textbook application. First,
 trip \emph{generation} is built entirely from Tier-1 census and economic variables, with
@@ -64,36 +68,46 @@ transfer error, which matters when the same prior is carried to other cities
 
 Supply is measured with a cumulative-opportunities accessibility surface: for each unit,
 the number of opportunities (here, jobs) reachable within a fixed travel-time budget over
-the existing transit network. Cumulative-opportunities measures are widely used because
-they are transparent and require only a network and an opportunity distribution, at the
-cost of a hard cutoff at the budget boundary. The travel-time budget here combines access
-walk time, expected wait derived from headways, and in-vehicle time (\cref{sec:w3}).
+the existing transit network. Accessibility---the ease of reaching valued
+destinations---has a long conceptual and methodological literature
+\parencite{handy1997, geurs2004}; cumulative-opportunities measures are among its most
+widely used forms because they are transparent and require only a network and an
+opportunity distribution, at the cost of a hard cutoff at the budget boundary. The
+travel-time budget here combines access walk time, expected wait derived from headways,
+and in-vehicle time (\cref{sec:w3}).
 
 The diagnostic contribution of the thesis lives at the intersection of demand and
 accessibility. Rather than label areas by whether they currently have service---the
 circular target criticized in \cref{sec:intro-circularity}---the framework defines a
 \emph{coverage gap} as modeled demand set against measured accessibility, so that a unit
-scores high only when latent demand is genuinely unmet by current supply. This reframes
-the ``transit desert'' idea as a continuous, demand-weighted quantity and, because demand
-and supply are constructed independently, produces a dependent variable that a supervised
-model can learn without simply memorizing the existing network.
+scores high only when latent demand is genuinely unmet by current supply. This connects
+to two related strands: the ``transit desert'' literature, which contrasts transit supply
+against demand at fine spatial resolution \parencite{jiao2013deserts}, and the
+social-need gap tradition, which weights under-supply by the social needs of the
+population it affects \parencite{currie2010gaps}. The framework reframes these as a
+continuous, demand-weighted quantity and, because demand and supply are constructed
+independently, produces a dependent variable that a supervised model can learn without
+simply memorizing the existing network.
 
 \section{Multi-criteria decision analysis and objective weighting}
 \label{sec:lit-mcda}
 
-Turning a set of indicators into a single priority score requires weights. Expert or
-survey-elicited weights are common in transit multi-criteria analysis but import analyst
-bias and are hard to transfer between cities. This thesis instead uses objective
-weighting, combining the CRITIC method \parencite{diakoulaki1995critic}---which weights a
-criterion by its contrast intensity and its independence from the others---with the
-Entropy Weight Method, which weights by the dispersion of each criterion's values. Both
-are data-driven: they read the weights off the indicator matrix itself, which makes the
-prioritization reproducible and, importantly, re-derivable from scratch in a new city
-without re-eliciting expert judgments. Equity is handled not by manipulating these
-weights but by an explicit, separable additive term built from marginalization and
-social-lag indices \parencite{conapo_marginacion2020, coneval_rezago2020}, so that its
-contribution to the final score is transparent and can be reported with and without
-(\cref{eq:equity}).
+Turning a set of indicators into a single priority score requires weights. Multi-criteria
+decision analysis is well established in transport-project evaluation
+\parencite{macharis2015}, but expert- or survey-elicited weights import analyst bias and
+are hard to transfer between cities. This thesis instead uses objective weighting,
+combining the CRITIC method \parencite{diakoulaki1995critic}---which weights a criterion
+by its contrast intensity and its independence from the others---with the Entropy Weight
+Method, which weights by the dispersion of each criterion's values as measured by Shannon
+entropy \parencite{shannon1948}. Both are data-driven: they read the weights off the
+indicator matrix itself, which makes the prioritization reproducible and, importantly,
+re-derivable from scratch in a new city without re-eliciting expert judgments. Equity is
+handled not by manipulating these weights but by an explicit, separable additive term
+built from marginalization and social-lag indices
+\parencite{conapo_marginacion2020, coneval_rezago2020}, so that its contribution to the
+final score is transparent and can be reported with and without (\cref{eq:equity}). This
+separable treatment reflects a growing view that transport equity should be an explicit
+objective rather than an implicit by-product \parencite{martens2016, pereira2017justice}.
 
 \section{Machine learning for station and corridor siting}
 \label{sec:lit-ml}
@@ -102,7 +116,8 @@ A substantial literature applies supervised learning to transit siting.
 \textcite{niu2023rf} use random forests to predict station suitability, and the broader
 NP-RV line \parencite{liu2024nprv} pairs gradient boosting with \textsc{shap} values
 \parencite{lundberg2017shap} for interpretability. The framework here uses the same tools
----random forests and LightGBM \parencite{ke2017lightgbm}, read through \textsc{shap}---but
+---random forests \parencite{breiman2001rf} and gradient-boosted trees
+\parencite{chen2016xgboost, ke2017lightgbm}, read through \textsc{shap}---but
 departs from much of this literature on the dependent variable. Where a model is trained
 to predict a ``has-a-stop'' label, or a suitability class that is itself a function of
 current supply, it can only learn to reproduce the status quo and will report high
@@ -117,12 +132,14 @@ itself must be constructed independently of supply---is a central lesson of this
 \label{sec:lit-network}
 
 Generating candidate corridors from a set of priority locations is a network-design
-problem. The relevant heuristic tradition is the Steiner tree in graphs---connecting a
-set of required (terminal) nodes at minimum cost, possibly through additional
-intermediate nodes---for which \textcite{takahashi1980} give a classic
-shortest-path-based approximation, and its minimum-spanning-tree relatives. These
-heuristics are attractive for corridor generation because they operate directly on the
-road graph and produce connected, buildable geometry from scattered demand anchors.
+problem, part of the broad literature on transit-network design
+\parencite{guihaire2008, farahani2013review}. The relevant heuristic tradition is the
+Steiner tree in graphs---connecting a set of required (terminal) nodes at minimum cost,
+possibly through additional intermediate nodes---for which \textcite{takahashi1980} give
+a classic shortest-path-based approximation and \textcite{kmb1981steiner} a fast
+minimum-spanning-tree-based one, the family of relatives used here. These heuristics are
+attractive for corridor generation because they operate directly on the road graph and
+produce connected, buildable geometry from scattered demand anchors.
 
 Their limitation, which the thesis characterizes in detail, is that a tree built to
 minimize connection cost among anchors is not the same object as a good \emph{corridor}.

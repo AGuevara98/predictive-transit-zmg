@@ -16,8 +16,12 @@ estado de Jalisco, que abarcan un núcleo central denso (Guadalajara y Zapopan) 
 periferia en rápida urbanización (\cref{tab:municipios}). Su movilidad se caracteriza por
 una dependencia del automóvil alta y creciente, un extenso sistema de autobuses
 concesionado y de operación informal y, más recientemente, una pequeña capa prémium de
-autobús de tránsito rápido (Mi Macro) y tren ligero (Mi Tren) ---el contexto que motiva un
-enfoque de planeación basado en la demanda en lugar de uno que sigue a la oferta.
+autobús de tránsito rápido (Mi Macro) y tren ligero (Mi Tren). Esta capa prémium sigue el
+patrón latinoamericano más amplio en que el autobús de tránsito rápido se ha expandido con
+rapidez como complemento costo-efectivo del ferrocarril
+\parencite{hidalgo2013brt, cervero2013brt}; injertarlo sobre una red base mayormente
+concesionada es justamente el contexto que motiva un enfoque de planeación basado en la
+demanda en lugar de uno que sigue a la oferta.
 
 \begin{table}[htbp]
 \centering
@@ -84,16 +88,18 @@ CONAPO / CONEVAL & \ageb           & Marginación y rezago social (equidad) \\
 
 \begin{description}[leftmargin=1.4em, style=nextline]
   \item[Censo y sociodemografía (INEGI CPV2020).] El Censo de Población y Vivienda 2020
-    aporta la población, la proporción de población joven usada para amplificar la
-    generación de viajes y la propiedad vehicular de los hogares (\code{VPH\_AUTOM} sobre
-    \code{VIVPAR\_HAB}) usada para derivar la propensión al transporte.
+    \parencite{inegi_cpv2020} aporta la población, la proporción de población joven usada
+    para amplificar la generación de viajes y la propiedad vehicular de los hogares
+    (\code{VPH\_AUTOM} sobre \code{VIVPAR\_HAB}) usada para derivar la propensión al
+    transporte.
   \item[Actividad económica (DENUE).] El Directorio Estadístico Nacional de Unidades
-    Económicas provee la ubicación de establecimientos, agregada a empleo por \ageb y a
-    densidades de puntos de interés y comercio que impulsan la atracción de viajes y las
-    oportunidades de accesibilidad.
+    Económicas \parencite{inegi_denue} provee la ubicación de establecimientos, agregada a
+    empleo por \ageb y a densidades de puntos de interés y comercio que impulsan la
+    atracción de viajes y las oportunidades de accesibilidad.
   \item[Red vial (OpenStreetMap).] El grafo vial y los indicadores de Nodo derivados
     (densidad de intersecciones y de calles) provienen de \textsc{osm}
-    \parencite{openstreetmap}, extraídos para los diez municipios.
+    \parencite{openstreetmap}, extraídos para los diez municipios con \textsc{osmnx}
+    \parencite{boeing2017osmnx}.
   \item[Oferta de transporte (GTFS).] La fuente \textsc{gtfs} de SITEUR define la red
     existente usada para la superficie de accesibilidad (\cref{sec:w3}) y la auditoría de
     rutas (\cref{sec:w7}).

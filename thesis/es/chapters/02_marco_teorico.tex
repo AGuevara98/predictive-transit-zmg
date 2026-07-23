@@ -20,11 +20,15 @@ dos ejes: su valor de \emph{nodo}, la posición que ocupa en la red de transport
 valor de \emph{lugar}, la intensidad y diversidad de las actividades urbanas a su
 alrededor. La tesis central del modelo es que el desarrollo orientado al transporte
 requiere que ambos se mantengan en equilibrio; un desequilibrio persistente señala una
-estación subutilizada en un entorno urbano rico, o un nodo sobredimensionado en uno débil.
-Como diagnóstico resulta atractivo porque es descriptivo y de bajos requerimientos de
-datos ---los índices de nodo y lugar se arman solo con variables de red y de uso de
-suelo---, pero en su forma original es estático y nada dice sobre la \emph{demanda
-latente} ni sobre dónde deberían colocarse nuevos nodos.
+estación subutilizada en un entorno urbano rico, o un nodo sobredimensionado en uno débil,
+lectura que después se operacionaliza como una clasificación empírica de estaciones
+\parencite{reusser2008, vale2015}. El propio eje de lugar se apoya en una amplia literatura
+del entorno construido que relaciona densidad, diversidad de usos de suelo y diseño con el
+comportamiento de viaje \parencite{cervero1997threeD, ewing2010meta}, lo que motiva los
+indicadores de lugar usados aquí. Como diagnóstico resulta atractivo porque es descriptivo
+y de bajos requerimientos de datos ---los índices de nodo y lugar se arman solo con
+variables de red y de uso de suelo---, pero en su forma original es estático y nada dice
+sobre la \emph{demanda latente} ni sobre dónde deberían colocarse nuevos nodos.
 
 Extensiones recientes agregan dimensiones a las dos originales. \textcite{liu2024nprv}
 proponen una formulación NP--RV que añade términos de afluencia y vitalidad, y la acoplan
@@ -40,14 +44,15 @@ justo la circularidad de seguir a la oferta que la tesis busca evitar (\cref{sec
 \section{Estimación de la demanda de viajes}
 \label{sec:marco-demanda}
 
-La capa de demanda sigue la tradición clásica de cuatro pasos, de la cual se usan aquí la
-generación y la distribución de viajes. La distribución se modela con un modelo de
-interacción espacial (gravitacional), cuya justificación estadística moderna es la
-derivación por maximización de entropía de \textcite{wilson1971gravity}: entre todas las
-matrices origen--destino consistentes con los totales marginales observados, la forma
-gravitacional es la más probable, y su parámetro de decaimiento con la distancia gobierna
-cuán abruptamente cae la interacción con la separación. La variante doblemente restringida,
-balanceada por el procedimiento de ajuste proporcional iterativo (Furness), reproduce
+La capa de demanda sigue la tradición clásica de cuatro pasos
+\parencite{mcnally2000fourstep, ortuzar2011}, de la cual se usan aquí la generación y la
+distribución de viajes. La distribución se modela con un modelo de interacción espacial
+(gravitacional), cuya justificación estadística moderna es la derivación por maximización
+de entropía de \textcite{wilson1971gravity}: entre todas las matrices origen--destino
+consistentes con los totales marginales observados, la forma gravitacional es la más
+probable, y su parámetro de decaimiento con la distancia gobierna cuán abruptamente cae la
+interacción con la separación. La variante doblemente restringida, balanceada por el
+procedimiento de ajuste proporcional iterativo (Furness) \parencite{furness1965}, reproduce
 exactamente los totales de origen y destino y es la forma adoptada en \cref{sec:w1}.
 
 Dos decisiones de diseño distinguen esta capa de demanda de una aplicación de libro de
@@ -65,38 +70,48 @@ importa cuando el mismo previo se traslada a otras ciudades (\cref{ch:transferib
 
 La oferta se mide con una superficie de accesibilidad de oportunidades acumuladas: para
 cada unidad, el número de oportunidades (aquí, empleos) alcanzables dentro de un
-presupuesto fijo de tiempo de viaje sobre la red de transporte existente. Las medidas de
-oportunidades acumuladas se usan ampliamente por ser transparentes y requerir solo una red
-y una distribución de oportunidades, a costa de un corte abrupto en el límite del
-presupuesto. El presupuesto de tiempo combina aquí el tiempo de caminata de acceso, la
-espera esperada derivada de las frecuencias y el tiempo a bordo (\cref{sec:w3}).
+presupuesto fijo de tiempo de viaje sobre la red de transporte existente. La accesibilidad
+---la facilidad de alcanzar destinos valiosos--- tiene una larga literatura conceptual y
+metodológica \parencite{handy1997, geurs2004}; las medidas de oportunidades acumuladas
+están entre sus formas más usadas por ser transparentes y requerir solo una red y una
+distribución de oportunidades, a costa de un corte abrupto en el límite del presupuesto. El
+presupuesto de tiempo combina aquí el tiempo de caminata de acceso, la espera esperada
+derivada de las frecuencias y el tiempo a bordo (\cref{sec:w3}).
 
 La contribución diagnóstica de la tesis vive en la intersección de demanda y
 accesibilidad. En lugar de etiquetar zonas según si hoy tienen servicio ---el objetivo
 circular criticado en \cref{sec:intro-circularidad}---, el marco define una \emph{brecha de
 cobertura} como la demanda modelada frente a la accesibilidad medida, de modo que una
 unidad puntúa alto solo cuando su demanda latente está genuinamente desatendida por la
-oferta actual. Esto reformula la idea de ``desierto de transporte'' como una cantidad
-continua ponderada por demanda y, dado que demanda y oferta se construyen de forma
-independiente, produce una variable dependiente que un modelo supervisado puede aprender
-sin memorizar simplemente la red existente.
+oferta actual. Esto conecta con dos vertientes afines: la literatura de ``desiertos de
+transporte'', que contrapone la oferta de transporte a la demanda a resolución espacial
+fina \parencite{jiao2013deserts}, y la tradición de brecha por necesidad social, que
+pondera la subprovisión por las necesidades sociales de la población afectada
+\parencite{currie2010gaps}. El marco las reformula como una cantidad continua ponderada por
+demanda y, dado que demanda y oferta se construyen de forma independiente, produce una
+variable dependiente que un modelo supervisado puede aprender sin memorizar simplemente la
+red existente.
 
 \section{Análisis multicriterio y ponderación objetiva}
 \label{sec:marco-multicriterio}
 
 Convertir un conjunto de indicadores en una única puntuación de prioridad requiere pesos.
-Los pesos elicitados de expertos o de encuestas son comunes en el análisis multicriterio
-del transporte, pero importan sesgo del analista y son difíciles de transferir entre
-ciudades. Esta tesis usa en cambio ponderación objetiva, combinando el método CRITIC
-\parencite{diakoulaki1995critic} ---que pondera un criterio por su intensidad de contraste
-y su independencia de los demás--- con el método de entropía, que pondera por la dispersión
-de los valores de cada criterio. Ambos son basados en datos: leen los pesos de la propia
-matriz de indicadores, lo que hace la priorización reproducible y, sobre todo,
-re-derivable desde cero en una ciudad nueva sin volver a elicitar juicios de expertos. La
-equidad no se maneja manipulando estos pesos sino con un término aditivo explícito y
+El análisis multicriterio está bien establecido en la evaluación de proyectos de transporte
+\parencite{macharis2015}, pero los pesos elicitados de expertos o de encuestas importan
+sesgo del analista y son difíciles de transferir entre ciudades. Esta tesis usa en cambio
+ponderación objetiva, combinando el método CRITIC \parencite{diakoulaki1995critic} ---que
+pondera un criterio por su intensidad de contraste y su independencia de los demás--- con
+el método de entropía, que pondera por la dispersión de los valores de cada criterio medida
+por la entropía de Shannon \parencite{shannon1948}. Ambos son basados en datos: leen los
+pesos de la propia matriz de indicadores, lo que hace la priorización reproducible y, sobre
+todo, re-derivable desde cero en una ciudad nueva sin volver a elicitar juicios de expertos.
+La equidad no se maneja manipulando estos pesos sino con un término aditivo explícito y
 separable, construido a partir de índices de marginación y rezago social
 \parencite{conapo_marginacion2020, coneval_rezago2020}, de modo que su contribución a la
-puntuación final sea transparente y pueda reportarse con y sin él (\cref{eq:equity}).
+puntuación final sea transparente y pueda reportarse con y sin él (\cref{eq:equity}). Este
+tratamiento separable refleja una visión creciente de que la equidad en el transporte debe
+ser un objetivo explícito y no un subproducto implícito
+\parencite{martens2016, pereira2017justice}.
 
 \section{Aprendizaje automático para ubicación de estaciones y corredores}
 \label{sec:marco-aprendizaje}
@@ -105,8 +120,9 @@ Una literatura considerable aplica aprendizaje supervisado a la ubicación de tr
 \textcite{niu2023rf} usan bosques aleatorios para predecir la idoneidad de estaciones, y
 la línea NP-RV \parencite{liu2024nprv} combina potenciación por gradiente con valores
 \textsc{shap} \parencite{lundberg2017shap} para interpretabilidad. El marco aquí usa las
-mismas herramientas ---bosques aleatorios y LightGBM \parencite{ke2017lightgbm}, leídos a
-través de \textsc{shap}--- pero se aparta de gran parte de esa literatura en la variable
+mismas herramientas ---bosques aleatorios \parencite{breiman2001rf} y árboles potenciados
+por gradiente \parencite{chen2016xgboost, ke2017lightgbm}, leídos a través de
+\textsc{shap}--- pero se aparta de gran parte de esa literatura en la variable
 dependiente. Cuando un modelo se entrena para predecir una etiqueta de ``tiene parada'', o
 una clase de idoneidad que es a su vez función de la oferta actual, solo puede aprender a
 reproducir el statu quo y reportará alta exactitud por una razón circular. La tesis hace
@@ -122,11 +138,13 @@ lección central de este trabajo.
 \label{sec:marco-redes}
 
 Generar corredores candidatos a partir de un conjunto de ubicaciones prioritarias es un
-problema de diseño de redes. La tradición heurística relevante es el árbol de Steiner en
-grafos ---conectar un conjunto de nodos requeridos (terminales) a costo mínimo,
-posiblemente a través de nodos intermedios adicionales---, para el que \textcite{takahashi1980}
-dan una aproximación clásica basada en caminos más cortos, y sus parientes de árbol de
-expansión mínima. Estas heurísticas resultan atractivas para la generación de corredores
+problema de diseño de redes, parte de la amplia literatura de diseño de redes de transporte
+\parencite{guihaire2008, farahani2013review}. La tradición heurística relevante es el árbol
+de Steiner en grafos ---conectar un conjunto de nodos requeridos (terminales) a costo
+mínimo, posiblemente a través de nodos intermedios adicionales---, para el que
+\textcite{takahashi1980} dan una aproximación clásica basada en caminos más cortos y
+\textcite{kmb1981steiner} una rápida basada en árbol de expansión mínima, la familia de
+parientes usada aquí. Estas heurísticas resultan atractivas para la generación de corredores
 porque operan directamente sobre el grafo vial y producen geometría conectada y construible
 a partir de anclas de demanda dispersas.
 
