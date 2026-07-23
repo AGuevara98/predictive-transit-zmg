@@ -1,0 +1,39 @@
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+Conventional data-driven approaches to transit planning frequently predict where
+transit \emph{already exists} rather than where it is \emph{needed}, producing
+circular models that reward the status quo. This thesis develops a demand-driven,
+transferable framework that instead diagnoses \emph{unmet} transit demand and
+generates candidate corridors to address it, applied to the Guadalajara
+Metropolitan Area (\zmg; \num{1881} census enumeration areas, \ageb, across ten
+municipalities).
+
+The framework proceeds in eight linked stages: (i)~a Tier-1 transit-demand surface
+estimated from census, economic, and street-network data via a doubly-constrained
+gravity model; (ii)~calibration of the distance-decay parameter against the 2022
+Origin--Destination survey; (iii)~a supply layer measuring \textsc{gtfs}-based
+accessibility and an independent \emph{coverage-gap} index that becomes the
+supervised target, removing the circularity of ``has-a-stop'' labels; (iv)~a
+Node--Place--People prioritization map with an explicit equity term; (v)~a formal
+multi-objective evaluation function; (vi)~a corridor generator based on frontier
+anchors, a minimum-spanning-tree diameter trunk, and an anchor-directness
+feasibility gate; (vii)~an audit of the existing network; and (viii)~a validation
+suite combining hold-out backtests, benchmarking, and before/after coverage
+metrics.
+
+The diagnostic layer is the strong contribution: the coverage-gap index is
+corroborated out-of-sample by the 2025 opening of \zmg Line~4, whose corridor shows
+\num{1.6} times the metropolitan high-gap rate. The generative layer produces at
+least one substantive, feasible, merit-passing corridor while honestly
+characterizing its limitations. Finally, the entire framework is transferred
+end-to-end to two additional metropolitan areas of contrasting size---Toluca and
+Aguascalientes---demonstrating that it is genuinely portable rather than bespoke to
+\zmg.
+
+\vspace{1em}
+\noindent\textbf{Keywords:} public transit; travel demand; coverage gap; Node--Place
+model; multi-objective optimization; equity; \textsc{gtfs}; transferability;
+Guadalajara.
+
+\clearpage

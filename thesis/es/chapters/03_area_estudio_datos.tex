@@ -1,0 +1,42 @@
+\chapter{Área de Estudio y Datos}
+\label{ch:datos}
+
+\section{La Zona Metropolitana de Guadalajara}
+% Diez municipios; el \ageb como unidad de análisis; el universo de 1,881 \ageb.
+\placeholder
+
+\section{El \ageb como unidad de análisis}
+% Definición, reglas de filtrado (CVE\_ENT=14, exclusión de sufijo alfabético),
+% CRS EPSG:6372.
+\placeholder
+
+\section{Fuentes de datos}
+\subsection{Censo y sociodemografía (INEGI CPV2020)}
+\subsection{Actividad económica (DENUE)}
+\subsection{Red vial (OpenStreetMap)}
+\subsection{Oferta de transporte existente (GTFS)}
+\subsection{Encuesta Origen--Destino (EOD 2022)}
+\subsection{Índices de equidad (marginación CONAPO, rezago CONEVAL)}
+\placeholder
+
+\begin{table}[htbp]
+\centering
+\caption{Principales fuentes de datos y su papel en la metodología.}
+\label{tab:fuentes-datos}
+\begin{tabularx}{\linewidth}{llX}
+\toprule
+Fuente & Nivel & Papel \\
+\midrule
+INEGI CPV2020    & \ageb / manzana & Población, proporción joven, propiedad vehicular \\
+DENUE            & establecimiento & Proxies de empleo y atracción de POI \\
+OpenStreetMap    & red             & Intersecciones, densidad vial, grafo vial \\
+GTFS             & parada / ruta   & Accesibilidad existente y auditoría \\
+EOD 2022         & zona de encuesta & Calibración del modelo gravitacional \\
+CONAPO / CONEVAL & \ageb           & Marginación y rezago social (equidad) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Convenciones espaciales e integridad de datos}
+% CRS canónico; correcciones 2026 de base.ageb / DEM (resumen de erratas).
+\placeholder

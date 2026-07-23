@@ -1,0 +1,41 @@
+\chapter{Study Area and Data}
+\label{ch:data}
+
+\section{The Guadalajara Metropolitan Area}
+% Ten municipalities; the AGEB as the unit of analysis; the 1,881-AGEB universe.
+\placeholder
+
+\section{The AGEB as unit of analysis}
+% Definition, filtering rules (CVE\_ENT=14, alpha-suffix exclusion), CRS EPSG:6372.
+\placeholder
+
+\section{Data sources}
+\subsection{Census and socio-demographics (INEGI CPV2020)}
+\subsection{Economic activity (DENUE)}
+\subsection{Street network (OpenStreetMap)}
+\subsection{Existing transit supply (GTFS)}
+\subsection{Origin--Destination survey (EOD 2022)}
+\subsection{Equity indices (CONAPO marginación, CONEVAL rezago)}
+\placeholder
+
+\begin{table}[htbp]
+\centering
+\caption{Principal data sources and their role in the pipeline.}
+\label{tab:data-sources}
+\begin{tabularx}{\linewidth}{llX}
+\toprule
+Source & Level & Role \\
+\midrule
+INEGI CPV2020    & \ageb / block & Population, youth share, vehicle ownership \\
+DENUE            & establishment & Employment and POI attraction proxies \\
+OpenStreetMap    & network       & Intersections, street density, drive graph \\
+GTFS             & stop / route  & Existing accessibility and audit \\
+EOD 2022         & survey zone   & Gravity-model calibration \\
+CONAPO / CONEVAL & \ageb         & Marginalization and social-lag (equity) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Spatial conventions and data integrity}
+% Canonical CRS; the 2026 base.ageb / DEM corrections (errata summary).
+\placeholder

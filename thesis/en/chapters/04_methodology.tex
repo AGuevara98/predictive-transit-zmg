@@ -1,0 +1,275 @@
+\chapter{Methodology}
+\label{ch:methodology}
+
+This chapter presents the demand-driven framework in full. It is organized as
+eight linked workstreams (\crefrange{sec:w1}{sec:w8}), summarized in
+\cref{fig:pipeline}. The guiding design principle is a strict separation between a
+\emph{diagnostic} layer (workstreams W1--W4), which estimates where transit is
+needed independently of where it currently exists, and a \emph{generative and
+validation} layer (W5--W8), which proposes and tests candidate corridors. All
+spatial computation is performed in the canonical projected reference system
+EPSG:6372, and all indicators are aggregated to the \ageb, the census enumeration
+area used throughout as the unit of analysis.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{pipeline.pdf}
+  \caption{The eight-workstream demand-driven framework. The diagnostic layer
+    (W1--W4) is decoupled from existing supply; the generative and validation
+    layer (W5--W8) proposes corridors and tests them.}
+  \label{fig:pipeline}
+\end{figure}
+
+\section{Transit-demand estimation (W1)}
+\label{sec:w1}
+
+The framework begins by estimating a transit-demand surface from \emph{Tier-1}
+data only---census, economic, and street-network variables---deliberately
+excluding any existing-transit input so that demand is never a function of current
+supply.
+
+\subsection{Trip generation}
+Daily trip productions $P_i$ for \ageb $i$ are estimated from population with a
+youth-share amplification, reflecting the higher trip rates of younger cohorts:
+\begin{equation}
+  P_i = \tau \, \mathrm{pop}_i \,\bigl(1 + \gamma\, s^{\text{youth}}_i\bigr),
+  \label{eq:productions}
+\end{equation}
+where $\tau = \num{2.5}$ trips per person per day and $\gamma = \num{0.10}$. Trip
+attractions combine employment and activity proxies,
+\begin{equation}
+  A_i = w_e\, e_i + w_p\, \rho^{\text{poi}}_i a_i + w_r\, \rho^{\text{retail}}_i a_i,
+  \label{eq:attractions}
+\end{equation}
+with $e_i$ the employment proxy, $\rho^{\text{poi}}_i$ and $\rho^{\text{retail}}_i$
+point-of-interest and retail densities, and $a_i$ the \ageb area. The attraction
+vector is then scaled so that $\sum_i A_i = \sum_i P_i$, a necessary condition for
+the doubly-constrained model below.
+
+\subsection{Doubly-constrained gravity model}
+Origin--destination flows $T_{ij}$ are obtained from a doubly-constrained
+spatial-interaction model \parencite{wilson1971gravity},
+\begin{equation}
+  T_{ij} = a_i\, b_j\, P_i\, A_j\, f(d_{ij}), \qquad
+  f(d) = d^{-\beta},
+  \label{eq:gravity}
+\end{equation}
+where $f$ is a power-law impedance on the Euclidean centroid distance $d_{ij}$ and
+$\beta$ is the distance-decay parameter (calibrated in \cref{sec:w2}). The
+balancing factors $a_i,b_j$ enforce the production and attraction constraints,
+\begin{equation}
+  a_i = \Bigl(\textstyle\sum_j b_j A_j f(d_{ij})\Bigr)^{-1}, \qquad
+  b_j = \Bigl(\textstyle\sum_i a_i P_i f(d_{ij})\Bigr)^{-1},
+  \label{eq:furness}
+\end{equation}
+solved by iterative proportional fitting (the Furness procedure), alternating the
+two updates until the marginals converge (tolerance $10^{-5}$). Self-flows are
+zeroed on the diagonal, and only pairs with $T_{ij}\ge\num{0.5}$ are retained in
+the sparse output matrix.
+
+\subsection{Transit-demand surface}
+Total \ageb demand $D_i = \tfrac12\sum_j (T_{ij}+T_{ji})$ is finally weighted by a
+transit-propensity term derived from household vehicle ownership. With
+$v_i = \mathrm{VPH\_AUTOM}_i / \max(\mathrm{VIVPAR\_HAB}_i, 1)$ the vehicle rate,
+\begin{equation}
+  D^{\text{transit}}_i = D_i \,(1 - v_i),
+  \label{eq:transit-demand}
+\end{equation}
+so that areas with high car ownership contribute proportionally less latent transit
+demand. The resulting surface $D^{\text{transit}}$ is the dependent quantity that
+drives the coverage-gap diagnosis in \cref{sec:w3}.
+
+\section{Survey calibration (W2)}
+\label{sec:w2}
+
+The decay parameter $\beta$ is calibrated against the 2022 Origin--Destination
+survey \parencite{imeplan_eod2022}. \ageb{}s are spatially joined to the survey's
+traffic zones, modeled flows are aggregated to zone pairs, and $\beta$ is chosen to
+minimize the sum of squared errors in log space between modeled and observed zonal
+flows,
+\begin{equation}
+  \beta^\star = \arg\min_{\beta}\;
+  \sum_{(z,z')} \Bigl(\log \hat{T}_{zz'}(\beta) - \log T^{\text{obs}}_{zz'}\Bigr)^2 .
+  \label{eq:calibration}
+\end{equation}
+On the corrected \num{1881}-\ageb universe this yields $\beta^\star = \num{1.2005}$,
+which outperforms the initial $\beta = \num{2.0}$ prior on both RMSE and $R^2$; the
+calibrated value is adopted throughout.
+
+\section{Supply and coverage-gap layer (W3)}
+\label{sec:w3}
+
+\subsection{Transit accessibility}
+Existing supply is measured by a cumulative-opportunities accessibility surface
+built from the \textsc{gtfs} feed. A directed transit graph is constructed from
+consecutive stop pairs; from each \ageb, boarding stops within \SI{400}{\metre} are
+identified, and a shortest-path search assigns to each reachable destination a
+generalized travel time
+\begin{equation}
+  t = t_{\text{walk}} + t_{\text{wait}} + t_{\text{ivt}}
+    = \frac{d_{\text{walk}}}{s_{\text{walk}}} + \frac{h}{2} + t_{\text{ivt}},
+  \label{eq:traveltime}
+\end{equation}
+with walking speed $s_{\text{walk}} = \SI{80}{\metre\per\minute}$ and mean headway
+$h$. Accessibility is the total employment reachable within a
+\SI{45}{\minute} budget,
+\begin{equation}
+  \mathrm{Acc}_i = \sum_{j : t_{ij}\le 45} e_j .
+  \label{eq:accessibility}
+\end{equation}
+
+\subsection{Coverage-gap index}
+The core diagnostic combines demand and supply into a coverage-gap index,
+\begin{equation}
+  g_i = \frac{D^{\text{transit}}_i}{\mathrm{Acc}_i + \varepsilon},
+  \qquad \varepsilon = 1,
+  \label{eq:gap}
+\end{equation}
+normalized by a $\log(1+x)$ transform followed by min--max scaling to give
+$g^{\,n}_i \in [0,1]$. \ageb{}s are then classified by joint quintiles: an \ageb is
+\emph{High-gap} when it is in the top two demand quintiles and the bottom two
+accessibility quintiles, \emph{Low-gap} in the mirror case, and \emph{Medium-gap}
+otherwise. \Cref{fig:coverage-gap} maps the result for \zmg.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.82\linewidth]{zmg_coverage_gap.pdf}
+  \caption{Coverage-gap diagnosis for the Guadalajara Metropolitan Area. The
+    well-served core is Low-gap; High-gap \ageb{}s concentrate on the periphery.}
+  \label{fig:coverage-gap}
+\end{figure}
+
+\subsection{Supervised model on the coverage-gap target}
+To interpret the drivers of unmet demand, a binary target
+$y_i = \mathbb{1}[g\text{-category}_i = \text{High-gap}]$ is regressed on the
+\num{14} Node--Place--People indicators (all supply-side variables excluded to
+prevent circularity) using Random Forest and gradient-boosted trees
+\parencite{niu2023rf,ke2017lightgbm}. Model behaviour is interpreted with SHAP
+values \parencite{lundberg2017shap}; population, social lag, and employment emerge
+as the dominant drivers of High-gap status.
+
+\section{Node--Place--People prioritization (W4)}
+\label{sec:w4}
+
+Independently of demand and supply, a place-based prioritization score is computed
+from the \num{14} normalized indicators. Objective weights are derived without
+expert input by combining the CRITIC method \parencite{diakoulaki1995critic} with
+the Entropy Weight Method. The CRITIC weight of indicator $j$ rewards both
+dispersion and independence,
+\begin{equation}
+  w^{\text{c}}_j \propto \sigma_j \sum_{k} \bigl(1 - r_{jk}\bigr),
+  \label{eq:critic}
+\end{equation}
+with $\sigma_j$ the standard deviation of indicator $j$ and $r_{jk}$ its
+correlation with indicator $k$; the two weightings are averaged into an ensemble
+weight $w_j$ (\cref{fig:weights}). The place score, equity term, and final score
+are
+\begin{align}
+  \mathrm{NPP}_i &= \textstyle\sum_j w_j\, x^{\,n}_{ij}, \label{eq:npp}\\
+  \mathrm{Eq}_i  &= \tfrac12\bigl(x^{\,n,\text{marg}}_i + x^{\,n,\text{rezago}}_i\bigr),
+    \label{eq:equity}\\
+  F_i &= (1-\alpha)\,\mathrm{NPP}_i + \alpha\,\mathrm{Eq}_i, \qquad \alpha = 0.20.
+  \label{eq:final}
+\end{align}
+The equity term is an explicit, separable additive bonus so that scores can be
+reported with and without it; a sensitivity analysis over
+$\alpha \in \{0.10, 0.20, 0.30\}$ confirms the ranking is robust
+(Spearman $\ge 0.98$).
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\linewidth]{w4_weights.pdf}
+  \caption{Ensemble CRITIC$\,\times\,$EWM objective weights for the \num{14}
+    Node--Place--People indicators, colored by dimension.}
+  \label{fig:weights}
+\end{figure}
+
+\section{Multi-objective evaluation function (W5)}
+\label{sec:w5}
+
+Corridor candidates (from W6) and existing routes (in W7) are scored against three
+competing objectives: demand-weighted gain $f_1$ (maximize), route length $f_2$
+(minimize), and mean equity $f_3$ (maximize):
+\begin{equation}
+  f_1 = \frac{\sum_{i\in S} D_i\, \kappa\, u_i}{\sum_{i\in S} D_i}, \quad
+  f_2 = \ell, \quad
+  f_3 = \frac{1}{|S|}\sum_{i\in S}\mathrm{Eq}_i,
+  \label{eq:objectives}
+\end{equation}
+where $S$ is the set of served \ageb{}s, $u_i = g^{\,n}_i$ the unserved fraction,
+$\ell$ the route length, and $\kappa$ a gain factor ($\num{0.50}$ if the candidate
+connects to the existing network, else $\num{0.20}$). A candidate is
+\emph{feasible} only if it satisfies all constraints:
+\begin{equation}
+  \frac{\ell}{\ell_{\text{span}}} \le 1.8, \quad
+  \frac{\ell\cdot 10^3}{n_{\text{stops}}-1} \in [300,1000]\,\si{\metre}, \quad
+  \textstyle\sum_{i\in S} D_i \ge 500, \quad \ell \le \SI{30}{\kilo\metre},
+  \label{eq:constraints}
+\end{equation}
+where $\ell_{\text{span}}$ is the straight-line span of the candidate's anchors (the
+\emph{anchor-directness} denominator; see \cref{sec:w6}). Candidates are ranked by
+non-dominated (Pareto) sorting minimizing $(-f_1, f_2, -f_3)$.
+
+\section{Corridor generation (W6)}
+\label{sec:w6}
+
+New corridors are generated by \cref{alg:w6}. High-gap \ageb{}s are restricted to
+the served/unserved \emph{frontier}---those within \SI{400}{\metre} of the existing
+network---so that generated corridors intrinsically connect to it. Frontier anchors
+are clustered spatially; within each cluster the corridor is the longest
+leaf-to-leaf path (the \emph{diameter trunk}) of the anchors' minimum spanning tree,
+stitched from real road segments of the drive graph. Feasibility uses the
+anchor-directness ratio of \cref{eq:constraints} rather than an endpoint-detour
+ratio, because the latter over-penalizes a demand-coverage corridor that
+legitimately curves. Each feasible corridor is assigned a mode by demand threshold
+(light rail $\ge \num{75000}$, bus rapid transit $\ge \num{15000}$, else local bus
+trips per day). \Cref{fig:corridors} shows the four feasible \zmg corridors.
+
+\begin{algorithm}[htbp]
+\caption{Frontier-anchor corridor generation (W6)}
+\label{alg:w6}
+\begin{algorithmic}[1]
+\Require coverage-gap surface $g^{\,n}$, demand $D$, drive graph $G$, network stops
+\State $H \gets$ top Jenks class of $g^{\,n}$ with $D \ge 500$ \Comment{high-gap pool}
+\State $H \gets \{i \in H : \operatorname{dist}(i,\text{network}) \le \SI{400}{\metre}\}$
+  \Comment{frontier}
+\State partition $H$ into $k$ spatial clusters by $k$-means
+\ForAll{cluster $C$}
+  \State $T \gets$ minimum spanning tree of $C$ on $G$
+  \State $\pi \gets$ longest leaf-to-leaf path of $T$ \Comment{diameter trunk}
+  \State build candidate from $\pi$; evaluate $f_1,f_2,f_3$ and constraints (W5)
+\EndFor
+\State \Return feasible candidates, Pareto-ranked
+\end{algorithmic}
+\end{algorithm}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.82\linewidth]{zmg_corridors.pdf}
+  \caption{The four feasible generated corridors (G00--G03) overlaid on the
+    coverage-gap surface.}
+  \label{fig:corridors}
+\end{figure}
+
+\section{Existing-route audit (W7)}
+\label{sec:w7}
+
+Every existing \textsc{gtfs} route is scored with the same W5 function and flagged
+as \emph{Low demand} ($f_1<\num{0.2}$ and total score $<\num{0.3}$),
+\emph{Indirect} (detour ratio $>\num{1.5}$), or \emph{Redundant} (served-\ageb
+Jaccard overlap $\ge\num{0.60}$ with a higher-scoring route). Flagged routes receive
+a modification proposal (shortcut, merge, or retire), making the audit directly
+comparable to the generated corridors.
+
+\section{Validation (W8)}
+\label{sec:w8}
+
+The framework is validated three ways. A \emph{hold-out backtest} masks the premium
+transit tier from the \textsc{gtfs} feed, recomputes accessibility and the coverage
+gap without it, re-runs the generator, and measures the shape overlap between
+re-proposed corridors and the masked routes. A \emph{benchmark} compares the
+generated corridors against existing premium routes. Finally, \emph{before/after
+metrics}---coverage rate, the Gini coefficient of accessibility, and
+population served per route-kilometre---quantify the marginal contribution of the
+generated corridors. \Cref{ch:results} reports all three for \zmg and
+\cref{ch:transferability} repeats them for the transfer cities.

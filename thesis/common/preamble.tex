@@ -1,0 +1,64 @@
+% =============================================================================
+% Shared, language-neutral preamble.
+% Each main.tex loads its documentclass + babel language FIRST, then \input's
+% this file. Do NOT put \documentclass or babel here.
+% =============================================================================
+
+% --- Page geometry & spacing ---------------------------------------------------
+\usepackage{geometry}
+\geometry{a4paper, top=2.5cm, bottom=2.5cm, inner=3cm, outer=2.5cm}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{microtype}
+
+% --- Math ----------------------------------------------------------------------
+\usepackage{amsmath, amssymb, mathtools}
+
+% --- Graphics & figures --------------------------------------------------------
+\usepackage{graphicx}
+\graphicspath{{../common/figures/}{figures/}}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\captionsetup{font=small, labelfont=bf}
+
+% --- Tables --------------------------------------------------------------------
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{siunitx}
+\sisetup{group-separator={,}, group-minimum-digits=4, detect-weight=true, detect-family=true}
+
+% --- Algorithms ----------------------------------------------------------------
+\usepackage{algorithm}
+\usepackage{algpseudocodex}
+
+% --- Lists, color, misc --------------------------------------------------------
+\usepackage{enumitem}
+\usepackage{xcolor}
+\definecolor{linknavy}{RGB}{20,60,110}
+
+% --- Bibliography (biblatex + bibtex backend: compiles under tectonic; switch to
+%     backend=biber on Overleaf for author-year/APA sorting if desired) ---------
+\usepackage[backend=bibtex, style=ieee, sorting=nyt]{biblatex}
+\addbibresource{../common/references.bib}
+
+% --- Hyperlinks (load late) ----------------------------------------------------
+\usepackage[hidelinks, breaklinks=true]{hyperref}
+\hypersetup{colorlinks=true, linkcolor=linknavy, citecolor=linknavy, urlcolor=linknavy}
+\usepackage[nameinlink]{cleveref}
+
+% --- Project-specific shortcuts ------------------------------------------------
+\newcommand{\ageb}{\textsc{ageb}\xspace}
+\usepackage{xspace}
+\renewcommand{\ageb}{\textsc{ageb}\xspace}
+\newcommand{\nppv}{NPP--V\xspace}
+\newcommand{\zmg}{ZMG\xspace}
+\newcommand{\betadecay}{\ensuremath{\beta}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+% Placeholder note for unfinished sections (visible but unobtrusive).
+\newcommand{\todo}[1]{\medskip\noindent{\color{red!70!black}\small[\,TODO: #1\,]}\medskip}
+\newcommand{\placeholder}{\todo{section to be written}}

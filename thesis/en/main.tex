@@ -1,0 +1,54 @@
+% =============================================================================
+% Master's thesis -- ENGLISH version
+% Build:  tectonic main.tex     (or latexmk -pdf main.tex on Overleaf/TeXLive)
+% =============================================================================
+\documentclass[12pt, oneside]{report}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+\input{../common/preamble.tex}
+
+% --- Thesis metadata (edit these) ---------------------------------------------
+\newcommand{\thesistitle}{A Demand-Driven, Transferable Framework for Public
+  Transit Corridor Prioritization and Generation}
+\newcommand{\thesissubtitle}{A Node--Place--People Analysis of the Guadalajara
+  Metropolitan Area}
+\newcommand{\thesisauthor}{Alejandro Guevara}
+\newcommand{\thesisadvisor}{[Advisor name]}
+\newcommand{\thesisprogram}{Master's in [Program]}
+\newcommand{\thesisuniversity}{[University]}
+\newcommand{\thesisyear}{2026}
+
+\begin{document}
+
+% ---- Front matter (roman page numbers) ----
+\pagenumbering{roman}
+\input{frontmatter/titlepage.tex}
+\input{frontmatter/abstract.tex}
+\input{frontmatter/acknowledgements.tex}
+
+\tableofcontents
+\listoffigures
+\listoftables
+\clearpage
+
+% ---- Body (arabic page numbers) ----
+\pagenumbering{arabic}
+\input{chapters/01_introduction.tex}
+\input{chapters/02_literature_review.tex}
+\input{chapters/03_study_area_data.tex}
+\input{chapters/04_methodology.tex}
+\input{chapters/05_results.tex}
+\input{chapters/06_transferability.tex}
+\input{chapters/07_discussion.tex}
+\input{chapters/08_conclusions.tex}
+
+% ---- Back matter ----
+\printbibliography[heading=bibintoc]
+
+\appendix
+\input{chapters/appendix_a.tex}
+
+\end{document}
