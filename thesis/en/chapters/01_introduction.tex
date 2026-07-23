@@ -2,30 +2,76 @@
 \label{ch:introduction}
 
 \section{Motivation}
-% The mobility challenge of the Guadalajara Metropolitan Area; car dependence;
-% the cost of misallocated transit investment.
-\placeholder
+\label{sec:intro-motivation}
+
+The Guadalajara Metropolitan Area (\zmg) faces the mobility predicament common to
+large Latin American cities: a spatially-expanding, car-dependent periphery served by a
+fragmented, largely concessioned bus system, onto which a small premium tier of bus
+rapid transit and light rail has recently been grafted. In this setting the central
+planning question is not how to describe the network that exists, but where new transit
+would do the most good---which corridors carry latent, unmet demand that the current
+supply fails to serve. Getting this question wrong is expensive: transit investment is
+large, spatially fixed, and effectively irreversible once built.
 
 \section{The circularity problem in data-driven transit planning}
-% Models that predict where transit already exists ("has-a-stop" targets) reward
-% the status quo and cannot identify unmet need.
-\placeholder
+\label{sec:intro-circularity}
+
+A growing body of work applies machine learning to transit-network questions, typically
+by training a model to predict where stations or stops ``should'' be. A recurring
+methodological flaw undermines much of it: the dependent variable is derived, directly
+or indirectly, from where transit \emph{already exists}. A model trained to predict a
+``has-a-stop'' label, or a suitability class that is itself a function of current
+supply, can only learn to reproduce the status quo. Such a model may report near-perfect
+accuracy while being, by construction, incapable of identifying unmet need---it rewards
+the network that already exists rather than diagnosing where it is absent. Breaking this
+circularity is the methodological starting point of this thesis.
 
 \section{Research questions}
+\label{sec:intro-rqs}
+
+The thesis is organized around four research questions:
+
 \begin{description}
   \item[RQ1 -- Demand.] Can transit demand be estimated at \ageb resolution from
-    Tier-1 (non-transit) data alone?
-  \item[RQ2 -- Diagnosis.] Does an independent coverage-gap index identify genuinely
-    under-served areas, and can it be validated out-of-sample?
+    Tier-1 (non-transit) data alone, so that demand is never a function of current
+    supply?
+  \item[RQ2 -- Diagnosis.] Does an independent coverage-gap index, built from demand
+    against supply, identify genuinely under-served areas---and can it be validated
+    out-of-sample?
   \item[RQ3 -- Generation.] Can candidate corridors be generated and evaluated on
-    genuine need, non-redundancy, and demand efficiency?
+    genuine need, non-redundancy, and demand efficiency, rather than on agreement with
+    the existing network?
   \item[RQ4 -- Transferability.] Does the framework transfer to other metropolitan
     areas without bespoke re-engineering?
 \end{description}
 
 \section{Contributions}
-\placeholder
+\label{sec:intro-contributions}
+
+The thesis makes four contributions, matched to the research questions. First, a
+Tier-1 transit-demand surface (\cref{sec:w1}) that estimates latent demand without any
+transit input, calibrated against a metropolitan travel survey. Second, and most
+significantly, a \emph{coverage-gap diagnostic} (\cref{sec:w3,sec:w4}) that replaces the
+circular ``has-a-stop'' target with an independent demand-versus-supply gap, and that is
+corroborated out-of-sample by the subsequent opening of \zmg Line~4. Third, a corridor
+generator and multi-objective evaluation (\cref{sec:w5,sec:w6}) that scores candidate
+lines on need, non-redundancy, and demand efficiency, and that---once corridors are
+shaped as real paths and judged by anchor-directness---produces at least one
+substantive, feasible, merit-passing corridor. Fourth, a demonstration that the entire
+framework \emph{transfers} end-to-end to two further metropolitan areas of contrasting
+size (\cref{ch:transferability}). A cross-cutting contribution is methodological
+honesty: the thesis distinguishes what it validates strongly (the diagnostic) from what
+it validates only partially (the generator), and argues why the two carry different
+evidential weight (\cref{ch:discussion}).
 
 \section{Thesis structure}
-% One paragraph mapping chapters to the eight workstreams.
-\placeholder
+\label{sec:intro-structure}
+
+The remainder of the thesis follows the pipeline. \Cref{ch:literature} reviews the
+Node--Place tradition, demand modeling, multi-criteria weighting, and machine-learning
+siting, and locates the research gap. \Cref{ch:data} describes the study area, the
+\ageb unit, and the data. \Cref{ch:methodology} presents the eight-workstream
+framework in full. \Cref{ch:results} reports its outputs for \zmg, and
+\cref{ch:transferability} repeats the analysis for Toluca and Aguascalientes.
+\Cref{ch:discussion} interprets the results and their limits, and
+\cref{ch:conclusions} answers the research questions and outlines future work.
