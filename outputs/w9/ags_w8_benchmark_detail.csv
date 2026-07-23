@@ -1,0 +1,4 @@
+candidate_id,best_matching_route,max_overlap_fraction,route_km
+W6_G00,R_04,0.34,4.762
+W6_G01,R_48,0.695,1.367
+W6_G05,R_29,0.595,5.897

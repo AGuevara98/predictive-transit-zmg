@@ -909,22 +909,23 @@ gate, so it does not affect which corridors are re-proposed.
 
 ---
 
-## W9 — Transferability (full W1→W6 transfer complete 2026-07-17)
+## W9 — Transferability (full W1→W8 transfer complete; validation added 2026-07-22)
 
-**Current state:** the complete demand-driven pipeline (W1→W6) runs end-to-end for **Toluca**
-(large, 16 munis) and **Aguascalientes** (compact, 3 munis) via `src/w9_*.py --city {tol,ags}`.
-Monterrey was the original target but its GTFS is unavailable (blocks W3), so it was kept as a
-Tier-1 reference and replaced by two GTFS-available metros. **Full writeup:
-`outputs/w9/w9_transferability_report.md` + `docs/w9_onboarding_tol_ags.md`.** The Monterrey detail
-below is retained as historical record.
+**Current state:** the complete demand-driven pipeline (W1→W6) **plus the W7 audit and W8
+validation** run end-to-end for **Toluca** (large, 16 munis) and **Aguascalientes** (compact,
+3 munis) via `src/w9_*.py --city {tol,ags}`. Monterrey was the original target but its GTFS is
+unavailable (blocks W3), so it was kept as a Tier-1 reference and replaced by two GTFS-available
+metros. **Full writeup: `outputs/w9/w9_transferability_report.md` + `docs/w9_onboarding_tol_ags.md`.**
+The Monterrey detail below is retained as historical record.
 
 **Transfer-city modules (all CSV-based, `--city {mty,tol,ags}`):**
 - `src/w9_city_config_tol.py`, `src/w9_city_config_ags.py` — identity, CONAPO municipio codes, bbox,
   GTFS source, β=1.2005 prior.
 - `src/w9_run_tier1.py` (W1 demand), `src/w9_run_w3.py` (GTFS accessibility + coverage-gap),
   `src/w9_build_nppv.py` (14-feature NPP), `src/w9_run_w4.py` (CRITIC/EWM + equity),
-  `src/w9_run_w6.py` (frontier/MST-diameter/directness corridor generation). All reuse the pure ZMG
-  functions (import-safe; engines are lazy).
+  `src/w9_run_w6.py` (frontier/MST-diameter/directness corridor generation),
+  `src/w9_run_w7.py` (existing-route audit), `src/w9_run_w8.py` (benchmark + before/after +
+  Toluca backtest). All reuse the pure ZMG functions (import-safe; engines are lazy).
 - Data-prep: `scripts/data_prep/make_city_{census,denue,indicators}_extract.py`.
 
 **Key transfer results (2026-07-17):**
@@ -939,8 +940,38 @@ below is retained as historical record.
 - Data plumbing notes: INEGI blocks scripted census/shapefile download (browser only); DENUE masiva
   works (Edomex split `denue_15_1/2`); equity from CONAPO IMU_2020 + CONEVAL GRS (AGEB grade→ordinal
   IRS proxy); OSM via osmnx. Large raw sources gitignored; slim per-city extracts committed.
-- Not run for transfer cities: W7 audit, W8 backtests, W3.3 retrain (inputs in place; not needed for
-  the transfer claim).
+- W3.3 retrain not run for transfer cities (inputs in place; not needed for the transfer claim).
+
+**W7 + W8 validation transfer (added 2026-07-22, `w9_run_w7.py` / `w9_run_w8.py --city {tol,ags}`):**
+- **W7 route audit.** Toluca: 622 routes, **612 flagged (431 Redundant, 88 Indirect, 93 Low-demand)**,
+  0 W5-feasible; Aguascalientes: 48 routes, 47 flagged (33 Indirect, 10 Low, 4 Redundant), 6 feasible.
+  The 431/622 Toluca redundancy is a real finding (≈30 concessioned operators running parallel routes).
+  **"0 feasible" for Toluca is a source-GTFS artifact, not a route-quality verdict:** median stop
+  spacing is 43m (100% below the W5 300m floor), so every route fails the stop-spacing constraint;
+  the flags/scores (independent of the feasibility gate) are the operative signal. Aguascalientes
+  spacing is 239m (77% below 300m). Files: `outputs/w9/{key}_route_scorecard.csv`,
+  `_route_modifications.csv`, `_route_audit.geojson`, `_w7_report.md`.
+- **W8 benchmark (both).** Feasible W6 corridors vs the existing network: Toluca **75.0%** overlap
+  (4 corridors vs 622 routes), Aguascalientes **54.3%** (3 vs 48) — both HIGH, the OPPOSITE of ZMG's
+  low overlap. In these already-well-served networks (~80% baseline coverage) W6 re-identifies
+  existing high-demand corridors (revealed-preference corroboration) rather than finding new coverage.
+- **W8 before/after (both).** Modest, as expected for saturated networks: Toluca coverage +0.4%
+  (80.9→81.2%), Gini 0.4164→0.4133, 9,444 pop / 2 AGEBs newly served; Aguascalientes +0.3%
+  (80.3→80.6%), Gini 0.2681→0.2655, 1,940 pop / 1 AGEB.
+- **W8 backtest (Toluca only, demand-trunk proxy).** Neither city has a premium tier to hold out
+  (all route_type=3 bus; `frequencies.txt` is a uniform-300s placeholder so frequency can't define
+  trunk), so "trunk" = the 23 routes serving the most modeled demand (12.4% of stops). **Result:
+  degenerate seam-collapse — 0 corridors re-proposed.** Masking the busiest *bus* corridors drops
+  frontier anchors 14→6, and KMeans splits those 6 into 6 singleton groups (no ≥2-anchor group → no
+  diameter-trunk corridor). Mechanism is intrinsic to a bus-only network: unlike ZMG rail (a
+  separable overlay redundant with parallel buses, so masking it leaves the served/unserved seam
+  intact), the demand-trunk *is* the local service, so masking it erases the seam the frontier
+  generator anchors on. Confirms the ZMG precondition that the mask-and-reconstruct backtest needs a
+  premium tier redundant with base coverage — which neither transfer city has. Aguascalientes
+  documented N/A (48 routes, single operator — too small for a meaningful hold-out). Files:
+  `outputs/w9/{key}_w8_report.md`, `{key}_w8_benchmark_detail.csv`, `tol_w8_backtest_per_route.csv`.
+- Shared-code touch: `w7_gtfs_loader.load_trips` made tolerant of a missing optional `direction_id`
+  (Toluca omits it); ZMG/AGS behavior unchanged (13/13 W7 loader tests pass).
 
 ---
 
@@ -994,12 +1025,17 @@ A. ✅ **DONE 2026-07-17 — aligned the W8 backtest + Line 4 anchor probe to th
    held and in fact strengthened (lower overlap = less premium-line replication). `outputs/w8/`
    regenerated; 6 new tests. See "W8 backtest alignment (RESOLVED 2026-07-17)" above.
 
-B. ✅ **DONE 2026-07-17 — W9 transferability re-targeted and completed.** Monterrey dropped as a
-   live target (GTFS unavailable) and replaced by **Toluca (large) + Aguascalientes (compact)**,
-   both scouted with verified downloadable GTFS. The **full W1→W6 pipeline now runs end-to-end for
-   both** via `src/w9_*.py --city {tol,ags}` (see the W9 section current-state block +
-   `outputs/w9/w9_transferability_report.md`). Optional deepening for the transfer cities (not
-   required for the claim): W7 audit, W8 backtests, W3.3 retrain — inputs are all in place.
+B. ✅ **DONE 2026-07-17 — W9 transferability re-targeted and completed; W7+W8 validation added
+   2026-07-22.** Monterrey dropped as a live target (GTFS unavailable) and replaced by **Toluca
+   (large) + Aguascalientes (compact)**, both scouted with verified downloadable GTFS. The **full
+   W1→W6 pipeline** runs end-to-end for both via `src/w9_*.py --city {tol,ags}`, and the **W7 route
+   audit + W8 validation** (benchmark + before/after for both; demand-trunk backtest for Toluca) are
+   now done too (`w9_run_w7.py` / `w9_run_w8.py`; see the "W7 + W8 validation transfer" block in the
+   W9 section + `outputs/w9/{key}_w7_report.md` / `{key}_w8_report.md`). Headline findings: Toluca
+   W7 612/622 flagged (431 Redundant); W8 benchmark overlap HIGH in both cities (Toluca 75%, Ags 54%
+   — W6 re-identifies existing corridors, opposite of ZMG); Toluca backtest degenerates to
+   seam-collapse (0 re-proposed) because a bus-only network has no premium tier to hold out. Only
+   W3.3 retrain remains optional/undone for the transfer cities (not required for the claim).
 
 C. **Optional: TSP-where-feasible hybrid shaper.** #5 showed a pure TSP swap loses G01; a hybrid
    that uses TSP only where it stays feasible would marginally improve G00 (+2 AGEBs/+9.5k demand).

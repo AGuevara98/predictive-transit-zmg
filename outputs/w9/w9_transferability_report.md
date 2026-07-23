@@ -130,6 +130,54 @@ cap (Toluca G02 at 8.76, Aguascalientes G03 at 2.03) — the documented ZMG beha
 
 ---
 
+### 3.5 Validation (W7 audit + W8) — transferred 2026-07-22
+
+`w9_run_w7.py` / `w9_run_w8.py --city {tol,ags}` (CSV-based, reusing the pure ZMG W5/W7/W8 functions).
+
+**W7 existing-route audit.**
+
+| City | Routes | Flagged (Redundant / Indirect / Low) | W5-feasible | Median stop spacing |
+|------|--------|--------------------------------------|-------------|---------------------|
+| **Toluca** | 622 | **612** (431 / 88 / 93) | 0 | 43 m |
+| **Aguascalientes** | 48 | 47 (4 / 33 / 10) | 6 | 239 m |
+
+Toluca's **431/622 Redundant** quantifies the well-known inefficiency of a concessioned system with
+~30 operators running parallel routes. The **0 W5-feasible** count is a *source-GTFS artifact, not a
+route-quality verdict*: median stop spacing is 43 m (100% below the W5 300 m floor), so every route
+fails the stop-spacing constraint; the flags and W5 scores — independent of the feasibility gate —
+are the operative audit signal.
+
+**W8 benchmark (feasible W6 corridors vs the existing network).**
+
+| City | Feasible corridors vs routes | Mean overlap | Reading |
+|------|------------------------------|--------------|---------|
+| **Toluca** | 4 vs 622 | **75.0%** | W6 re-identifies existing high-demand corridors |
+| **Aguascalientes** | 3 vs 48 | **54.3%** | same |
+
+This is the **opposite of ZMG** (where W6 overlap with existing premium lines is low = new coverage).
+In these already-well-served networks (~80% baseline coverage), the highest-demand corridors are
+*already* served, so W6 corroborates them (revealed preference) rather than opening new coverage.
+
+**W8 before/after (feasible W6 corridors added on top of the existing network).** Modest, as expected
+for saturated ~80%-coverage networks: Toluca coverage +0.4% (80.9→81.2%), accessibility Gini
+0.4164→0.4133, 9,444 pop / 2 AGEBs newly served; Aguascalientes +0.3% (80.3→80.6%), Gini
+0.2681→0.2655, 1,940 pop / 1 AGEB.
+
+**W8 backtest (mask-and-reconstruct) — Toluca demand-trunk proxy; N/A for Aguascalientes.** Neither
+city has a premium BRT/rail tier to hold out the ZMG way (all route_type=3 bus; `frequencies.txt` is
+a uniform-300 s placeholder, so real frequency cannot define "trunk"). The Toluca proxy masks the 23
+routes serving the most modeled demand (12.4% of stops) and re-runs the generator. **Result:
+degenerate seam-collapse — 0 corridors re-proposed.** Masking the busiest *bus* corridors drops
+frontier anchors 14→6, which KMeans splits into 6 singleton groups (no ≥2-anchor group → no
+diameter-trunk corridor forms). The mechanism is intrinsic to a bus-only network: ZMG's rail is a
+*separable overlay redundant with parallel buses*, so masking it leaves the served/unserved seam
+intact; a demand-trunk in a bus-only city *is* the local service, so masking it erases the seam the
+frontier generator depends on. This confirms — rather than contradicts — the ZMG-documented
+precondition for the reconstruction backtest, and re-establishes that the **benchmark + before/after
+metrics are the operative validation** for cities without a premium overlay.
+
+---
+
 ## 4. Transfer error / limitations
 
 - **No local EOD calibration** — β=1.2005 is transferred from ZMG. The size-comparison metrics
@@ -141,17 +189,24 @@ cap (Toluca G02 at 8.76, Aguascalientes G03 at 2.03) — the documented ZMG beha
 - **Population-independent unit scaling** — the AGEB unit is much coarser relative to population in
   ZM Toluca (semi-rural spread), so cross-city AGEB counts are not directly comparable; per-AGEB and
   per-capita metrics are.
-- **Not run for transfer cities:** W7 (existing-route audit), W8 (masked backtests), W3.3 supervised
-  retrain. Inputs for all three are in place per city; none are required for the transfer claim.
+- **Backtest not transferable to bus-only networks** — the mask-and-reconstruct hold-out needs a
+  premium tier redundant with base coverage (ZMG rail). Neither transfer city has one, so the Toluca
+  demand-trunk proxy degenerates to seam-collapse (§3.5); benchmark + before/after are the operative
+  validation there. Not a defect of the framework — a documented precondition of that one test.
+- **W3.3 supervised retrain not run for transfer cities.** Inputs are in place per city; not required
+  for the transfer claim.
 
 ---
 
 ## 5. Conclusion
 
-The **complete demand-driven framework transfers end-to-end to two metros of very different size**
-using a single parameterized code path, on cities Monterrey's missing GTFS made impossible. The
-diagnostic layer (W1→W4) differentiates cities interpretably and re-derives its own objective
-weights; the generative layer (W6) produces substantive feasible corridors in both. This is a
+The **complete demand-driven framework — W1→W6 generation plus W7 audit and W8 validation —
+transfers end-to-end to two metros of very different size** using a single parameterized code path,
+on cities Monterrey's missing GTFS made impossible. The diagnostic layer (W1→W4) differentiates
+cities interpretably and re-derives its own objective weights; the generative layer (W6) produces
+substantive feasible corridors in both; the audit (W7) surfaces concessioned-network redundancy
+(Toluca 431/622 routes); and validation (W8) both corroborates W6 against the existing network and
+honestly characterises where the ZMG hold-out backtest does not apply (bus-only networks). This is a
 strong, defensible transferability result for the thesis.
 
 **Reproduce:** see `docs/w9_onboarding_tol_ags.md` (exact data downloads + one command per stage).
