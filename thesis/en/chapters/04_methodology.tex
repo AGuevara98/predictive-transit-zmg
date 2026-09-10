@@ -42,9 +42,12 @@ attractions combine employment and activity proxies,
   \label{eq:attractions}
 \end{equation}
 with $e_i$ the employment proxy, $\rho^{\text{poi}}_i$ and $\rho^{\text{retail}}_i$
-point-of-interest and retail densities, and $a_i$ the \ageb area. The attraction
+point-of-interest and retail densities, and $a_i$ the \ageb area, at weights
+$(w_e, w_p, w_r) = (\num{1.8}, \num{0.5}, \num{0.8})$. The attraction
 vector is then scaled so that $\sum_i A_i = \sum_i P_i$, a necessary condition for
-the doubly-constrained model below.
+the doubly-constrained model below; because of this rescaling, only the weights'
+\emph{relative} magnitudes (employment weighted roughly $2$--$4\times$ POI/retail
+density) affect the resulting attraction surface, not their absolute values.
 
 \subsection{Doubly-constrained gravity model}
 Origin--destination flows $T_{ij}$ are obtained from a doubly-constrained
@@ -93,8 +96,20 @@ flows,
   \label{eq:calibration}
 \end{equation}
 On the corrected \num{1881}-\ageb universe this yields $\beta^\star = \num{1.2005}$,
-which outperforms the initial $\beta = \num{2.0}$ prior on both RMSE and $R^2$; the
-calibrated value is adopted throughout.
+which outperforms the initial $\beta = \num{2.0}$ prior on RMSE (\cref{tab:calibration});
+the calibrated value is adopted throughout. The absolute fit is modest
+($R^2 = \num{0.2498}$ on $n=\num{1993}$ zone pairs): roughly three-quarters of log-space
+variance in observed zonal flows is unexplained, a limitation every downstream layer
+(demand surface, coverage gap, corridor generation) inherits. This is not unusual for an
+aggregate zonal gravity-model calibration, but it means the demand surface should be read
+as a directionally-informative estimate rather than a precisely-fit one.\footnote{An $R^2$
+for the $\beta=2.0$ baseline, to place alongside the calibrated value in
+\cref{tab:calibration}, was planned for this revision but could not be produced from a
+verified re-run in time: attempting to reproduce it against the live database surfaced an
+unexplained discrepancy (the calibration no longer reproduces $\beta^\star=1.2005$ from the
+same code path, despite an unchanged \ageb-to-zone match count and OD-matrix row count),
+which is itself now a documented open issue rather than a resolved one -- see
+\cref{sec:disc-limitations}.}
 
 \section{Supply and coverage-gap layer (W3)}
 \label{sec:w3}
@@ -144,9 +159,35 @@ To interpret the drivers of unmet demand, a binary target
 $y_i = \mathbb{1}[g\text{-category}_i = \text{High-gap}]$ is regressed on the
 \num{14} Node--Place--People indicators (all supply-side variables excluded to
 prevent circularity) using Random Forest and gradient-boosted trees
-\parencite{niu2023rf,ke2017lightgbm}. Model behaviour is interpreted with SHAP
+\parencite{niu2023rf,ke2017lightgbm}. The train/test split is a random, stratified
+70/30 split (not a spatially-blocked one); because both demand and accessibility are
+spatially autocorrelated, a spatial hold-out would give a more conservative estimate
+of out-of-sample performance and is noted as a limitation
+(\cref{sec:disc-limitations}). Model behaviour is interpreted with SHAP
 values \parencite{lundberg2017shap}; population, social lag, and employment emerge
-as the dominant drivers of High-gap status.
+as the dominant drivers of High-gap status. ``No leakage'' here refers specifically to
+the exclusion of direct transit-supply columns (route and stop counts) from the predictor
+set; it does not rule out a subtler, indirect channel by which population --- the top
+SHAP driver and a direct input to trip generation (\cref{eq:productions}), which in turn
+constructs the demand numerator of the target being predicted (\cref{eq:gap}) --- could
+inflate the reported metrics through this mechanical link rather than through independently
+learnable multivariate structure. Both a feature-ablation and a spatially-blocked
+re-evaluation were run to bound this concern (2026-09-09, RandomForest, comparable
+configuration to the production model): removing the two population features
+(\code{pe\_population\_n}, \code{pe\_pop\_density\_n}) drops test PR-AUC from
+\num{0.876} to \num{0.711} (a \num{0.165}-point fall), confirming population carries
+substantial, non-redundant predictive weight rather than being incidental to the
+ensemble; holding out two entire municipalities (\SI{47}{\percent} of \ageb{}s) instead
+of a random 30\% split drops PR-AUC further, to \num{0.629}, while ROC-AUC is
+comparatively stable (\num{0.909} versus \num{0.961} random-split). Neither result
+proves circularity---population legitimately drives transit need through channels
+independent of its role in constructing the target, and a lower spatially-blocked score
+is the expected, not anomalous, behavior of any model trained on autocorrelated spatial
+data---but both confirm the specific risk was real rather than hypothetical: the
+production PR-AUC of \num{0.877}--\num{0.883} (\cref{sec:res-w3}) should be read as an
+upper bound under optimistic (random-split, full-feature) conditions, not as the
+model's guaranteed performance on a genuinely novel city or a population-blind
+re-specification (\cref{sec:disc-limitations}).
 
 \section{Node--Place--People prioritization (W4)}
 \label{sec:w4}
@@ -210,6 +251,47 @@ where $\ell_{\text{span}}$ is the straight-line span of the candidate's anchors 
 \emph{anchor-directness} denominator; see \cref{sec:w6}). Candidates are ranked by
 non-dominated (Pareto) sorting minimizing $(-f_1, f_2, -f_3)$.
 
+$f_1$ as defined above is a demand-weighted \emph{average} unserved fraction (a rate,
+bounded in $[0,\kappa]$, needed so it stays commensurable with $f_2$ and $f_3$ inside the
+composite score, \cref{eq:final-w5} below) rather than a total. This has a consequence,
+diagnosed empirically in \cref{sec:res-w6}: $f_1$ mechanically favors small,
+geographically homogeneous candidates over larger ones that necessarily span more varied
+territory, independent of which serves more real unmet demand. An absolute companion
+quantity,
+\begin{equation}
+  f_1^{\text{tot}} = \sum_{i\in S} D_i\, \kappa\, u_i,
+  \label{eq:f1-total}
+\end{equation}
+the same numerator without the normalizing division, is reported alongside $f_1$ for
+this reason wherever the two disagree; $f_1^{\text{tot}}$ is not itself bounded to
+$[0,\kappa]$ and is not incorporated into the composite score, but is a valid, directly
+comparable quantity for Pareto ranking since Pareto dominance requires only a consistent
+preference direction, not a common scale. The composite score used for reporting a
+single actionable number remains
+\begin{equation}
+  \text{composite} = w_1 \tfrac{f_1}{\kappa} + w_2\Bigl(1 - \tfrac{f_2}{\ell_{\max}}\Bigr)
+    + w_3 f_3, \qquad (w_1,w_2,w_3) = (0.50,\,0.25,\,0.25),
+  \label{eq:final-w5}
+\end{equation}
+
+The $\kappa$ gain factor and the frontier restriction in \cref{sec:w6} answer two
+deliberately different questions and should not be conflated. \emph{Connectivity}
+(rewarded by $\kappa$, and required of frontier anchors by construction) asks whether a
+candidate has a physical boarding or transfer point into the existing network --- an
+engineering requirement for a corridor to function as part of the system, independent of
+where its demand comes from. \emph{Redundancy} (screened separately, by the served-\ageb
+Jaccard overlap test used in \cref{sec:w7} and applied to generated corridors in
+\cref{sec:res-w6}) asks whether a candidate spatially duplicates an existing route. A
+corridor can, and the feasible \zmg corridors do, connect to the network at an endpoint
+while serving an entirely new alignment along its length; the two properties are
+independent, and only the second is a threat to the ``evaluated on genuine need... rather
+than on agreement with the existing network'' claim of \cref{sec:intro-rqs}. In the current
+candidate set this distinction is not load-bearing for the reported rankings: every
+feasible \zmg corridor already connects to the existing network (\cref{sec:res-w6}), so all
+four receive the same $\kappa=0.50$ and the connectivity term does not differentiate among
+them. It would matter only when a disconnected candidate is compared against a connected
+one, a case not exercised in the reported results.
+
 \section{Corridor generation (W6)}
 \label{sec:w6}
 
@@ -221,9 +303,25 @@ leaf-to-leaf path (the \emph{diameter trunk}) of the anchors' minimum spanning t
 stitched from real road segments of the drive graph. Feasibility uses the
 anchor-directness ratio of \cref{eq:constraints} rather than an endpoint-detour
 ratio, because the latter over-penalizes a demand-coverage corridor that
-legitimately curves. Each feasible corridor is assigned a mode by demand threshold
+legitimately curves. This substitution was originally motivated by one corridor
+(\code{W6\_G02}, \cref{sec:res-w6}); \cref{tab:directness-comparison} reports both
+metrics for the complete candidate set to show the substitution's effect is not
+confined to that single case. Each feasible corridor is assigned a mode by demand threshold
 (light rail $\ge \num{75000}$, bus rapid transit $\ge \num{15000}$, else local bus
 trips per day). \Cref{fig:corridors} shows the four feasible \zmg corridors.
+
+Two of the fixed constants in \cref{eq:constraints,eq:objectives} are sensitivity-tested
+elsewhere and two are not, and the difference is disclosed here rather than left implicit.
+The \num{1.8} anchor-directness cap was swept over $[1.6, 1.9]$ and the feasible set is
+invariant across that range, confirming it sits on a stable plateau rather than an
+arbitrary cliff edge; the mode-assignment thresholds (\num{75000}/\num{15000}) are
+reported with a two-way sensitivity table (BRT fixed while the light-rail threshold
+varies over $\{50000, 75000, 100000\}$, and the reverse) in the accompanying technical
+report. The joint-quintile gap-category cutoff (\cref{eq:gap}) and the remaining W5
+constraint constants (the \num{500} trips/day demand floor, the \SIrange{300}{1000}{
+\metre} stop-spacing band, the \SI{30}{\kilo\metre} length cap) have not been individually
+swept; they are carried over from conventional transit-planning practice rather than
+derived from \zmg's own data, and their sensitivity remains an open item for future work.
 
 \begin{algorithm}[htbp]
 \caption{Frontier-anchor corridor generation (W6)}

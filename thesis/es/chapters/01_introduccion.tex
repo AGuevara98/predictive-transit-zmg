@@ -25,8 +25,33 @@ modelo entrenado para predecir una etiqueta de ``tiene parada'', o una clase de 
 que es a su vez función de la oferta actual, solo puede aprender a reproducir el statu quo.
 Un modelo así puede reportar exactitud casi perfecta siendo, por construcción, incapaz de
 identificar la necesidad no atendida ---premia la red que ya existe en lugar de diagnosticar
-dónde está ausente. Romper esta circularidad es el punto de partida metodológico de esta
-tesis.
+dónde está ausente.
+
+Esto no es solo una inquietud intuitiva; tiene un nombre preciso y un tratamiento formal en
+tres literaturas afines. En términos de minería de datos es una instancia de \emph{fuga}
+(\emph{leakage})---el uso de ``información sobre el objetivo [de predicción] que no debería
+estar legítimamente disponible''---el fenómeno general que formalizan
+\textcite{kaufman2012leakage} y que catalogan entre las clases de error de modelado más
+consecuentes y difíciles de detectar. En el lenguaje de la toma de decisiones algorítmica es
+un caso particular del \emph{problema de las etiquetas selectivas}: \textcite{lakkaraju2017selectivelabels}
+muestran que cuando un resultado solo se observa condicionado a una decisión humana o
+institucional previa ---en su contexto, si un juez concede la libertad bajo fianza antes de
+que pueda siquiera registrarse un resultado de reincidencia--- entrenar ingenuamente sobre
+ese resultado no puede recuperar la cantidad de interés subyacente, porque la etiqueta misma
+es función de la decisión que se pretende evaluar. Un objetivo de ``tiene parada'' es
+exactamente este tipo de resultado con etiquetado selectivo: se observa como ``servido''
+solo donde ya se tomó una decisión de ubicación de transporte, de modo que no puede medir la
+necesidad con independencia de esa decisión. Finalmente, en el trabajo aplicado de equidad
+algorítmica el mismo mecanismo aparece como un \emph{bucle de retroalimentación}: los
+sistemas de vigilancia predictiva entrenados sobre dónde se desplegó previamente la
+autoridad reproducen y pueden amplificar ese patrón histórico en lugar de detectar dónde se
+concentra genuinamente la necesidad subyacente \parencite{lum2016predict, ensign2018runaway},
+y el mismo riesgo se ha planteado específicamente para la asignación espacial de
+infraestructura, donde patrones históricos de servicio (p. ej., redlining, despliegue de
+banda ancha) pueden re-codificarse silenciosamente como si fueran predictores neutrales de
+necesidad \parencite{flynn2022spacetime}. Romper esta circularidad ---construyendo un
+objetivo que no dependa, ni siquiera indirectamente, de dónde ya existe transporte--- es el
+punto de partida metodológico de esta tesis.
 
 \section{Preguntas de investigación}
 \label{sec:intro-preguntas}
@@ -49,6 +74,17 @@ La tesis se organiza en torno a cuatro preguntas de investigación:
 
 \section{Contribuciones}
 \label{sec:intro-contribuciones}
+
+Ninguna de las técnicas individuales usadas aquí ---el modelo gravitacional doblemente
+restringido, la accesibilidad de oportunidades acumuladas, la ponderación objetiva
+CRITIC/EWM, los bosques aleatorios y árboles potenciados por gradiente con \textsc{shap}, o
+las heurísticas de árbol de expansión mínima--- es en sí misma nueva; cada una proviene de
+las literaturas revisadas en el \cref{ch:marco}. Las cuatro contribuciones siguientes son,
+por tanto, contribuciones de \emph{construcción y combinación}: un objetivo de brecha
+construido de forma independiente y no circular (nuevo), una métrica de factibilidad por
+rectitud respecto a las anclas (nueva), y la demostración de que es la cadena resultante
+---y no ningún componente aislado--- la que cierra el vacío integrador identificado en
+\cref{sec:marco-vacio}.
 
 La tesis hace cuatro contribuciones, en correspondencia con las preguntas de
 investigación. Primera, una superficie de demanda de transporte de Nivel~1

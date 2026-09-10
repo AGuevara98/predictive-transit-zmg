@@ -956,8 +956,10 @@ The Monterrey detail below is retained as historical record.
   low overlap. In these already-well-served networks (~80% baseline coverage) W6 re-identifies
   existing high-demand corridors (revealed-preference corroboration) rather than finding new coverage.
 - **W8 before/after (both).** Modest, as expected for saturated networks: Toluca coverage +0.4%
-  (80.9→81.2%), Gini 0.4164→0.4133, 9,444 pop / 2 AGEBs newly served; Aguascalientes +0.3%
-  (80.3→80.6%), Gini 0.2681→0.2655, 1,940 pop / 1 AGEB.
+  (80.9→81.2%), Gini 0.4164→0.4133 (full-precision Δ −0.0031), 9,444 pop / 2 AGEBs newly served;
+  Aguascalientes +0.3% (80.3→80.6%), Gini 0.2681→0.2655 (full-precision Δ −0.0027; note the
+  4-dp pair subtracts to −0.0026, but the report computes −0.0027 from unrounded values), 1,940
+  pop / 1 AGEB.
 - **W8 backtest (Toluca only, demand-trunk proxy).** Neither city has a premium tier to hold out
   (all route_type=3 bus; `frequencies.txt` is a uniform-300s placeholder so frequency can't define
   trunk), so "trunk" = the 23 routes serving the most modeled demand (12.4% of stops). **Result:

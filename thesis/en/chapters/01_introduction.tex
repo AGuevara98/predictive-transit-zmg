@@ -23,8 +23,31 @@ or indirectly, from where transit \emph{already exists}. A model trained to pred
 ``has-a-stop'' label, or a suitability class that is itself a function of current
 supply, can only learn to reproduce the status quo. Such a model may report near-perfect
 accuracy while being, by construction, incapable of identifying unmet need---it rewards
-the network that already exists rather than diagnosing where it is absent. Breaking this
-circularity is the methodological starting point of this thesis.
+the network that already exists rather than diagnosing where it is absent.
+
+This is not merely an intuitive worry; it has a precise name and formal treatment in three
+adjacent literatures. In data-mining terms it is an instance of \emph{leakage}---using
+``information about the [prediction] target that should not be legitimately
+available''---the general phenomenon \textcite{kaufman2012leakage} formalize and rank among
+the most consequential and hardest-to-detect classes of modeling error. In the language of
+algorithmic decision-making, it is a special case of the \emph{selective labels problem}:
+\textcite{lakkaraju2017selectivelabels} show that when an outcome is only observed
+conditional on a prior human or institutional decision---in their setting, whether a judge
+grants bail before a recidivism outcome can even be recorded---na\"ively training on that
+outcome cannot recover the underlying quantity of interest, because the label itself is a
+function of the decision being evaluated. A ``has-a-stop'' target is exactly this kind of
+selectively-labeled outcome: it is observed as ``served'' only where a transit-siting
+decision was already made, so it cannot measure need independently of that decision.
+Finally, in applied algorithmic-fairness work the same mechanism appears as a
+\emph{feedback loop}: predictive-policing systems trained on where enforcement was
+previously deployed reproduce and can amplify that historical pattern rather than
+detecting where the underlying need genuinely concentrates
+\parencite{lum2016predict, ensign2018runaway}, and the same risk has been raised
+specifically for spatial infrastructure allocation, where historical service patterns
+(e.g., redlining, broadband build-out) can be silently re-encoded as if they were neutral
+predictors of need \parencite{flynn2022spacetime}. Breaking this circularity---by
+constructing a target that does not depend, even indirectly, on where transit already
+exists---is the methodological starting point of this thesis.
 
 \section{Research questions}
 \label{sec:intro-rqs}
@@ -47,6 +70,16 @@ The thesis is organized around four research questions:
 
 \section{Contributions}
 \label{sec:intro-contributions}
+
+None of the individual techniques used here---the doubly-constrained gravity model,
+cumulative-opportunities accessibility, CRITIC/EWM objective weighting, Random
+Forest/gradient-boosted trees with \textsc{shap}, or minimum-spanning-tree corridor
+heuristics---is itself new; each is drawn from the literatures reviewed in
+\cref{ch:literature}. The four contributions below are accordingly contributions of
+\emph{construction and combination}: an independently-constructed, non-circular gap
+target (new), an anchor-directness feasibility metric (new), and the demonstration that
+the resulting chain, and not any single component in isolation, closes the integrative
+gap identified in \cref{sec:lit-gap}.
 
 The thesis makes four contributions, matched to the research questions. First, a
 Tier-1 transit-demand surface (\cref{sec:w1}) that estimates latent demand without any

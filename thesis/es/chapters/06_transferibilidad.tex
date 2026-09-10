@@ -22,11 +22,21 @@ transferencia tienen \textsc{gtfs} verificado y descargable.
 Cada etapa corre con el mismo código que \zmg, invocado como
 \code{w9\_run\_*.py -{}-city \{tol,ags\}}, reutilizando las funciones puras de \zmg
 sobre configuración por ciudad. Los insumos de Nivel~1 (censo, \textsc{denue}, red
-vial) son nacionales y por tanto están disponibles en todas partes; los índices de
-equidad provienen de los mismos productos de CONAPO y CONEVAL. No existe encuesta
+vial) son nacionales ---disponibles para cualquier ciudad mexicana a través de las
+mismas agencias estadísticas federales (INEGI, DENUE, CONAPO, CONEVAL)--- y no
+generales en el sentido de funcionar en cualquier país; la afirmación de transferencia
+más abajo debe leerse en consecuencia como transferencia \emph{dentro del ecosistema de
+datos nacional de México}, no todavía como transferencia entre infraestructuras
+estadísticas de distintos países. No existe encuesta
 Origen--Destino local para ninguna de las dos ciudades, de modo que el
 $\beta = \num{1.2005}$ calibrado se transfiere desde \zmg; como las métricas de
-comparación de tamaño siguientes son razones, son insensibles a esta elección.
+comparación de tamaño siguientes son razones, son insensibles a esta elección para el
+\emph{ordenamiento} entre ciudades, aunque esta es una afirmación más débil que decir
+que las magnitudes absolutas de demanda son insensibles a ella ---y dentro de la propia
+\zmg, recalibrar $\beta$ de \num{2.0} a \num{1.2005} resultó reconfigurar de forma
+material dónde se concentra la demanda (\cref{sec:res-w2}), de modo que aquí se lleva
+adelante, sin demostrarse, el supuesto no probado de que un prior no calibrado solo
+desplaza la magnitud, no la estructura relativa, en una ciudad nueva.
 
 \section{Transferencia de demanda y brecha de cobertura}
 \label{sec:transf-diagnosis}
@@ -78,6 +88,35 @@ convierte en el mayor peso objetivo en ambas ciudades de transferencia (Toluca
 de empleo y población. Como los pesos son orientados por datos
 (CRITIC$\,\times\,$EWM), este cambio es una virtud: el método adapta su énfasis a la
 estructura de indicadores propia de cada ciudad.
+
+Una pregunta relacionada, no reportada previamente, es si el hallazgo de que la
+prioridad diagnóstica y la prioridad de equidad están ``en gran medida alineadas'' en
+\zmg (\cref{sec:disc-equity}) sobrevive a la transferencia, dado que el insumo de
+equidad de las ciudades de transferencia es un proxy ordinal más grueso
+(\cref{sec:transf-limits}). La \cref{tab:equity-transfer} responde esto directamente: la
+correlación de Spearman entre el índice de brecha de cobertura y la puntuación de
+equidad es positiva y de magnitud similar en las tres ciudades, y los \ageb{}s de
+brecha alta tienen una puntuación media de equidad sustancialmente mayor que los demás
+\ageb{}s en todos los casos. El hallazgo de alineación no es, por tanto, un artefacto
+específico de \zmg de los insumos continuos de marginación/rezago social; se replica
+bajo el proxy ordinal más grueso usado en las ciudades de transferencia.
+
+\begin{table}[htbp]
+\centering
+\caption{Alineación entre brecha de cobertura y puntuación de equidad en las tres
+  ciudades (calculado el 2026-09-09 a partir de las tablas/CSV de brecha de cobertura
+  y priorización en vivo).}
+\label{tab:equity-transfer}
+\begin{tabular}{l S[table-format=4.0] S[table-format=1.3] S[table-format=1.3] S[table-format=1.3]}
+\toprule
+Ciudad & {$n$} & {Spearman $\rho$} & {Equidad media, brecha alta} & {Equidad media, otros} \\
+\midrule
+\zmg           & 1881 & 0.518 & 0.288 & 0.211 \\
+Toluca         & 538  & 0.475 & 0.409 & 0.260 \\
+Aguascalientes & 356  & 0.506 & 0.426 & 0.250 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 La generación de corredores produce corredores sustantivos y factibles en ambas
 ciudades (\cref{tab:transfer-corridors}). El mejor corredor factible de Toluca,

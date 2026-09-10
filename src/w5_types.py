@@ -44,12 +44,19 @@ class AgebContext:
 @dataclass
 class ObjectiveResult:
     candidate_id: str
-    f1_demand_gain: float      # demand-weighted accessibility gain [0, gain_factor]
+    f1_demand_gain: float      # demand-weighted accessibility gain [0, gain_factor] -- a RATE
     f2_route_km: float         # raw route length in km
     f3_equity: float           # mean equity score [0, 1]
     transfer_penalty: float    # flat deduction
     composite_score: float     # weighted sum of normalized objectives
     total_score: float         # composite - transfer_penalty
+    # Exploratory (2026-09-09): f1_demand_gain is a demand-weighted AVERAGE unserved
+    # fraction, which mechanically favors small, homogeneous candidates over large ones
+    # spanning heterogeneous territory (see thesis sec:res-w6 / sec:disc-generative).
+    # f1_total is the un-normalized absolute version (weighted_gain, no division by
+    # total_demand) -- additive field, default 0.0, does not change f1_demand_gain,
+    # composite_score, W7 thresholds, or any existing caller's behavior.
+    f1_total: float = 0.0
 
 
 @dataclass

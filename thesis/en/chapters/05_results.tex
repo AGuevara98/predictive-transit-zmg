@@ -112,8 +112,14 @@ $\overline{F} = \num{0.4131}$ at $\alpha = \num{0.20}$; the low equity mean is
 expected, since \zmg is predominantly low-marginalization. A sensitivity analysis
 over $\alpha \in \{0.10, 0.20, 0.30\}$ confirms the prioritization is robust: the
 ranking correlates with the $\alpha = \num{0.20}$ baseline at Spearman
-$\ge \num{0.98}$, so the equity weight shifts which specific \ageb{}s top the list
-without disturbing the broad structure.
+$\ge \num{0.98}$. This aggregate-correlation robustness, however, understates how much
+$\alpha$ moves specific AGEBs in and out of the top of the list: the top-50 overlaps
+the $\alpha=0.20$ baseline's top-50 at only \num{36}--\num{37} of \num{50} AGEBs across
+the two off-baseline values, the top-100 at \num{78}--\num{82} of \num{100}, and
+quintile membership changes for \SI{14}{\percent}--\SI{16}{\percent} of all AGEBs. The
+equity weight therefore shifts which specific \ageb{}s top the list --- a
+decision-relevant amount for a planning agency reading off a ranked shortlist --- even
+though it does not disturb the broad structure the aggregate correlation reports.
 
 \section{Generated corridors (W6)}
 \label{sec:res-w6}
@@ -150,16 +156,120 @@ W6\_G05 & 5.4  & 14 & 80234  & Light rail      & {--} \\
   \label{fig:pareto}
 \end{figure}
 
-The stand-out result is \code{W6\_G02}: a substantive \SI{12.1}{\kilo\metre},
-\num{25}-\ageb corridor carrying an estimated \num{192357} trips/day. On the merit
-tests introduced for validation (\cref{sec:res-w8}) it is the only feasible corridor
-that passes all three: \SI{56}{\percent} of its served \ageb{}s are High-gap (versus
-the \SI{20.7}{\percent} metropolitan baseline), it is non-redundant with existing
-routes (best Jaccard \num{0.18}), and its demand per kilometre sits at the
-\num{73}rd percentile of the existing network. \code{W6\_G03} also passes but is a
-short \SI{2.4}{\kilo\metre} stub, while \code{W6\_G00} and \code{W6\_G01} serve real
-need yet are lower-efficiency connectors---a mixed but honestly characterized
-outcome discussed in \cref{ch:discussion}.
+On the three-axis merit tests introduced for validation (\cref{sec:res-w8}), \code{W6\_G02}
+is the only feasible corridor that passes all three: \SI{56}{\percent} of its served
+\ageb{}s are High-gap (versus the \SI{20.7}{\percent} metropolitan baseline), it is
+non-redundant on the served-\ageb Jaccard measure (best Jaccard \num{0.18}), and its demand
+per kilometre sits at the \num{73}rd percentile of the existing network. A second,
+shape-based overlap measure computed in the same validation pass is less clean:
+\code{W6\_G02}'s alignment passes within \SI{400}{\metre} of the existing premium
+route MP-C03 for \SI{42}{\percent} of its sampled length---a materially higher figure
+than the AGEB-set Jaccard overlap, and read here as read-across corroboration that a
+planner-drawn alignment traces similar ground, at the cost of a caveat on how
+\emph{unique} the corridor's path actually is; both figures should be reported
+together rather than the Jaccard figure alone.
+
+This merit-test result should not, however, be read in isolation from the framework's own
+formal evaluation function. \Cref{tab:pareto-w5} reports the raw W5 objective values and
+non-dominated (Pareto) rank for every candidate. Under strict Pareto dominance,
+\code{W6\_G03} is the sole rank-1 (non-dominated) feasible corridor: it strictly dominates
+\emph{every other candidate, feasible or not}, on all three objectives simultaneously
+(higher demand gain $f_1$, shorter length, higher mean equity $f_3$).
+\code{W6\_G02}---the corridor the merit tests single out---is dominated twice over,
+by both \code{W6\_G00} and \code{W6\_G03}, and ranks \emph{last} (Pareto rank 3) among the
+four feasible corridors. This is not an artifact of the specific composite-score weights
+(\num{0.50}/\num{0.25}/\num{0.25}, \cref{eq:objectives}): a full sweep of \num{231}
+alternative non-negative weight combinations on a \num{0.05} simplex grid finds
+\code{W6\_G03} top-scoring under \emph{every} combination tested, which follows directly
+from strict Pareto dominance and would hold for any weighting.
+
+\begin{table}[htbp]
+\centering
+\caption{W5 objective values and Pareto rank for all five candidates (2026-09-09,
+  recomputed from and cross-checked against \code{features.route\_candidates}).
+  Rank 1 = non-dominated. $f_1$ and $f_3$ are maximized, $f_2$ is minimized.}
+\label{tab:pareto-w5}
+\begin{tabular}{l S[table-format=1.3] S[table-format=2.2] S[table-format=1.3] c c}
+\toprule
+Corridor & {$f_1$ (demand gain)} & {$f_2$ (km)} & {$f_3$ (equity)} & Pareto rank & Feasible \\
+\midrule
+W6\_G00 & 0.301 & 7.32  & 0.338 & 2 & Yes \\
+W6\_G01 & 0.270 & 23.00 & 0.347 & 2 & Yes \\
+W6\_G02 & 0.164 & 12.13 & 0.265 & 3 & Yes \\
+W6\_G03 & 0.357 & 2.44  & 0.349 & 1 & Yes \\
+W6\_G05 & 0.125 & 5.40  & 0.271 & 2 & No  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The two evaluation lenses disagree because they measure different things.
+The merit tests reward absolute demand, absolute High-gap share, and demand efficiency
+relative to the \emph{existing network}; the W5 objective $f_1$ is a demand-weighted
+\emph{average} unserved fraction over the corridor's own served \ageb{}s---a rate, not a
+total. \code{W6\_G03}'s five anchors are apparently uniformly high-gap, so its average is
+high despite carrying a fraction of \code{W6\_G02}'s absolute demand (\num{35784} versus
+\num{192357} trips/day); \code{W6\_G02} serves a demand-weighted \emph{mix} of gap levels
+across its \num{25} \ageb{}s, which pulls its average down even though it addresses far
+more total unmet demand in absolute terms.
+
+This is testable rather than merely asserted. Define $f_1^{\text{tot}} = \sum_{i\in S} D_i\,
+\kappa\, u_i$, the same numerator as \cref{eq:objectives} without dividing by
+$\sum_{i\in S} D_i$---an absolute, not per-unit, demand-weighted gain. Recomputing Pareto
+dominance on $(f_1^{\text{tot}}, f_2, f_3)$ for the four feasible corridors (2026-09-09,
+via the production \code{evaluate\_objective} code path, not a re-implementation) gives
+$f_1^{\text{tot}} = \num{19873}$, \num{26100}, \num{31608}, \num{12791} for
+\code{W6\_G00}--\code{W6\_G03} respectively, and \emph{all four become mutually
+non-dominated}---\code{W6\_G03} no longer dominates the set. This is the more telling
+result: under the rate formulation, \code{W6\_G03} wins regardless of objective weights
+not because it is unambiguously best, but because ``small'' and ``short'' move together
+for it, leaving no real trade-off for the other objectives to break; a genuinely
+competing multi-objective problem should not produce one candidate that dominates
+outright under every possible weighting, and the fact that it did here was itself a sign
+that $f_1$'s rate formulation was mismeasuring the trade-off, not that \code{W6\_G03}
+was secretly the strongest candidate.
+
+Correcting for this reframes the choice rather than resolving it to a single winner:
+\code{W6\_G02} and \code{W6\_G01} address substantially more absolute unmet demand per
+kilometre (\num{2606} and \num{1135} demand-units/km) than \code{W6\_G03}
+(\num{12791}/2.44 = \num{5242}/km is highest, but on a corridor an order of magnitude
+smaller), so the real, previously undisclosed choice is between a smaller number of
+larger, more consequential corridors and a highly-targeted but minor one---a genuine
+scale-versus-targeting-purity trade-off for a planning agency to make explicitly, not an
+error the thesis needs to resolve on the reader's behalf. \Cref{sec:disc-generative}
+returns to this with the recommendation that follows from it.
+
+The anchor-directness substitution for endpoint-detour (\cref{sec:w6}) was motivated
+by \code{W6\_G02}'s specific geometry, so it is worth asking whether its effect is
+confined to that one case. \Cref{tab:directness-comparison} reports both metrics for
+the full candidate set: it is not. Endpoint-detour would pass only \code{W6\_G03} (a
+near-collinear, two-anchor stub) and reject \code{W6\_G00}, \code{W6\_G01}, and
+\code{W6\_G02} alike, each exceeding the \num{1.8} cap by a wide margin
+(\num{2.84}, \num{2.02}, and \num{2.09} respectively). Anchor-directness passes all
+three. The substitution therefore has a broad, systematic effect across the
+multi-anchor candidates---rescuing three corridors, not narrowly tuning one---which
+is a materially different, and more defensible, story than a single worked example
+can tell on its own.
+
+\begin{table}[htbp]
+\centering
+\caption{Anchor-directness versus endpoint-detour for the full candidate set
+  (route\_km unchanged between metrics; only the denominator differs).
+  Recomputed 2026-09-09 by re-running the generator against the live database;
+  the anchor-directness column and route lengths reproduce
+  \cref{tab:corridors} exactly.}
+\label{tab:directness-comparison}
+\begin{tabular}{l S[table-format=2.2] S[table-format=1.2] S[table-format=1.2] c c}
+\toprule
+Corridor & {km} & {Anchor-directness} & {Endpoint-detour} & Anchor pass? & Endpoint pass? \\
+\midrule
+W6\_G00 & 7.32  & 1.44 & 2.84 & Yes & No \\
+W6\_G01 & 23.00 & 1.16 & 2.02 & Yes & No \\
+W6\_G02 & 12.13 & 1.54 & 2.09 & Yes & No \\
+W6\_G03 & 2.44  & 1.25 & 1.36 & Yes & Yes \\
+W6\_G05 & 5.40  & 1.93 & 2.69 & No  & No \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Existing-route audit (W7)}
 \label{sec:res-w7}
@@ -232,5 +342,11 @@ Accessibility Gini  & 0.6333 & 0.6146 & -0.0187 \\
 the diagnostic treats the Line~4 corridor as unserved. Its \ageb{}s show
 \num{1.6} times the metropolitan High-gap rate, confirming out-of-sample that the
 coverage-gap index flags corridors that planners independently chose to build. This
-corroborates the \emph{diagnostic} layer; it does not prove the generator would have
-produced Line~4, a distinction developed in \cref{ch:discussion}.
+is a single natural experiment ($n=1$), reported here as a bare ratio with no
+confidence interval or significance test against the base rate of a model that
+already flags \SI{20.7}{\percent} of the metropolis as High-gap; it should be read
+as directional corroboration, not as a statistically quantified test, and further
+out-of-sample cases (as future lines open, or via the multi-line backtests of
+\cref{ch:transferability}) would strengthen the claim considerably. It corroborates
+the \emph{diagnostic} layer; it does not prove the generator would have produced
+Line~4, a distinction developed in \cref{ch:discussion}.

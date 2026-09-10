@@ -61,19 +61,57 @@ over-penalizes a demand-coverage corridor that legitimately curves.
 
 Re-architecting the generator around frontier anchors, a minimum-spanning-tree
 \emph{diameter} trunk stitched from real roads, and an \emph{anchor-directness}
-feasibility gate (\cref{sec:w6}) changed the verdict. On its own terms the generator
-now produces at least one substantive, feasible, merit-passing corridor:
+feasibility gate (\cref{sec:w6}) changed the verdict. On the three-axis merit tests, the
+generator now produces at least one substantive, feasible, merit-passing corridor:
 \code{W6\_G02} serves \SI{12.1}{\kilo\metre} and \num{25} \ageb{}s, of which
 \SI{56}{\percent} are High-gap (versus the \SI{20.7}{\percent} baseline), is
 non-redundant with the existing network (best Jaccard \num{0.18}), and sits at the
 \num{73}rd percentile of demand per kilometre. This is a real line, not a stub.
 
-The success is partial, however, and the thesis does not overstate it. Alongside
-\code{W6\_G02}, the generator also surfaces lower-efficiency connectors
-(\code{W6\_G00} and \code{W6\_G01}) that serve real need but rank poorly on demand per
-kilometre. The residual limitation is architectural---the fixed anchor count, spatial
-clustering, and spanning-tree trunk cannot target every high-gap pocket---and it is
-now measured rather than merely asserted.
+The success is partial, and in a more specific way than earlier drafts of this chapter
+characterized it: the merit-test verdict and the framework's own W5 multi-objective
+function disagree about which corridor is best. \Cref{tab:pareto-w5} shows that under
+strict Pareto dominance---not sensitive to any choice of objective weights---
+\code{W6\_G03}, not \code{W6\_G02}, is the sole non-dominated feasible corridor;
+\code{W6\_G02} is dominated on all three objectives by both \code{W6\_G00} and
+\code{W6\_G03}. This is not a contradiction so much as a previously unstated tension
+between two different notions of a ``good'' corridor: the merit tests (and the reader's
+intuition) favor \code{W6\_G02} because it addresses the most absolute unmet demand at a
+scale that looks like a real transit line; the W5 objective favors \code{W6\_G03} because
+its small, uniformly high-gap anchor set gives it the best demand-weighted \emph{average}
+targeting rate. A framework that reports a formal multi-objective function should not
+selectively report only the evaluation lens that favors its preferred narrative example;
+this asymmetry is corrected here rather than in a future revision.
+
+Testing an absolute-coverage variant of $f_1$ (\cref{sec:res-w6}) resolves this in a more
+useful way than simply picking one lens over the other: it is not that \code{W6\_G03} is
+secretly the strongest candidate under a ``fairer'' weighting, but that $f_1$'s rate
+formulation was structurally biased toward small, geographically compact candidates,
+since a short corridor can stay entirely within a homogeneous high-need pocket while a
+longer one necessarily averages in some lower-need pass-through territory to remain a
+connected, buildable path. The fact that \code{W6\_G03} won under \emph{every} tested
+objective weighting (\cref{sec:res-w6}) was itself the tell: a genuine multi-objective
+trade-off should not produce one candidate that dominates outright regardless of
+weights. Correcting $f_1$ to an absolute, demand-weighted total removes the artifact and
+returns a genuine four-way Pareto front---\code{W6\_G02} and \code{W6\_G01} address
+substantially more total unmet demand, \code{W6\_G03} remains the most demand-efficient
+per kilometre, and none dominates the others. The choice this thesis's generator
+actually presents a planner is therefore a real one: fund fewer, larger corridors that
+address more absolute unmet need, or a smaller, highly-targeted connector that is
+efficient per kilometre but modest in scale. Recommending \code{W6\_G02} as the
+headline result is defensible on these terms---for a single flagship capital
+investment, absolute impact is the more decision-relevant criterion---but the thesis
+should say so explicitly rather than let an uninspected rate metric imply the two
+lenses were simply measuring the same thing differently. Alongside both,
+the generator also surfaces lower-efficiency connectors (\code{W6\_G00} and
+\code{W6\_G01}) that serve real need but rank poorly on demand per kilometre. The residual
+limitation is architectural---the fixed anchor count, spatial clustering, and
+spanning-tree trunk cannot target every high-gap pocket---and it is now measured rather
+than merely asserted. A second, independent limitation, now also measured rather than
+asserted, is that the objective function's rate-based $f_1$ needs the absolute-coverage
+companion above to be read correctly; the production pipeline still reports the rate
+version by default (\cref{sec:w5}), so any future re-run of this evaluation should
+compute and report both.
 
 \section{Reconstruction is a weak proxy for corridor merit}
 \label{sec:disc-reconstruction}
@@ -113,6 +151,12 @@ peripheries---so prioritizing unmet demand and prioritizing disadvantage are, in
 largely aligned rather than in tension. The correction of the marginalization index's
 sign and imputation (documented in the data chapter) matters here: an equity term that
 had silently rewarded the least-marginalized areas would have inverted this conclusion.
+This alignment is not merely a within-\zmg coincidence of one city's demographic
+geography: \cref{tab:equity-transfer} shows the same positive coverage-gap/equity-score
+correlation, of similar magnitude, in both transfer cities under their coarser ordinal
+equity proxy, which is some evidence the alignment reflects a more general regularity
+of unmet transit demand and social disadvantage co-locating in peripheral, growing
+Mexican metropolitan areas, rather than an artifact specific to \zmg's own indicators.
 
 \section{Limitations}
 \label{sec:disc-limitations}
@@ -127,6 +171,47 @@ manifests as an artifactually low feasible count for finely-spaced concessioned
 networks. Most importantly, the \emph{generated} corridors are validated only
 indirectly---through need, non-redundancy, and demand efficiency---and not against
 observed ridership, because no counterfactual ridership exists for lines that were
-never built. The diagnostic layer, by contrast, has an out-of-sample anchor in Line~4.
-This asymmetry is the honest boundary of the contribution: a validated diagnostic, and
-a characterized generator whose effectiveness is measured on its own terms.
+never built. The diagnostic layer, by contrast, has an out-of-sample anchor in Line~4,
+though that anchor is itself a single case reported without a confidence interval
+(\cref{sec:res-w8}) and should be read as directional corroboration rather than a
+statistically quantified test. This asymmetry is the honest boundary of the
+contribution: a validated diagnostic, and a characterized generator whose
+effectiveness is measured on its own terms.
+
+Two further limitations, surfaced during a 2026-09-09 review pass, are documented here.
+First, the supervised retrain's ``no leakage'' claim (\cref{sec:w3}) had been verified
+only against the direct exclusion of transit-supply columns; a follow-up feature-ablation
+and spatially-blocked re-evaluation (\cref{sec:w3}) confirmed the concern was real rather
+than hypothetical: removing the population features costs \num{0.165} points of test
+PR-AUC, and a municipality-level spatial hold-out costs \num{0.247} points relative to the
+production random-split configuration. The production PR-AUC of \num{0.877}--\num{0.883}
+should accordingly be read as an upper bound under optimistic evaluation conditions.
+Second, an attempt during this review to reproduce the W2 baseline-versus-calibrated
+$R^2$ comparison surfaced a non-reproducibility that a follow-up investigation narrowed
+but did not fully close. Re-running the identical calibration code against the live
+database returned $\beta^\star = \num{1.0025}$ and $n=2140$ zone pairs, rather than the
+$\beta^\star = \num{1.2005}$, $n=\num{1993}$ reported throughout this thesis and in three
+prior historical calibration runs logged in \code{features.w2\_calibration}. The
+follow-up investigation ruled out several candidate causes rather than confirming one:
+(i) \code{features.ageb\_trip\_ends}'s aggregate productions, transit demand, and mean
+vehicle rate match the values reported in \cref{sec:res-w1} exactly; (ii) the W1 gravity
+model (\cref{sec:w1}) was re-run fresh and reproduced the same \textsc{od}-matrix
+row count and total flow (net of the documented $\ge\num{0.5}$ sparse-storage cutoff,
+which by design excludes a long tail of very small flows and is not itself a defect);
+(iii) \code{src/w2\_gravity\_calibration.py} has not been modified since before the
+\num{1.2005} result was produced; yet recalibrating against the freshly-confirmed W1
+output still returns $\beta^\star=\num{1.0025}$, not \num{1.2005}. With the \textsc{od}
+matrix and trip-generation layers now independently confirmed reproducible and the
+calibration script unchanged, the remaining candidate is the \textsc{eod} survey-side
+data path (the \ageb-to-zone spatial join or the underlying zone geometries) at a finer
+grain than the AGEB-to-zone \emph{match count} (which is stable at 1,822/63) can reveal;
+no snapshot of the live database from the date of the original \num{1.2005} run survives
+to diff against directly, which is the reason this could be narrowed but not closed.
+Given the scale of re-deriving every downstream workstream (W1, W3, W4, W6, W7, W8) under
+a different $\beta$, the currently-reproducible \num{1.0025} figure was \emph{not}
+adopted into this thesis; the reported \num{1.2005} figure is retained, consistent with
+three prior historical runs, pending either recovery of the original computational
+environment or an explicit decision to re-derive the thesis's results under the new
+figure. This is flagged rather than quietly resolved because it bears on exactly the
+kind of reproducibility claim \cref{sec:area-integrity} otherwise takes care to
+document.

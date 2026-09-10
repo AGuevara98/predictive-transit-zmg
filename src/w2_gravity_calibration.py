@@ -330,12 +330,14 @@ def calibrate_beta(
     rmse_cal = float(np.sqrt(np.mean((t_cal_s - obs_pos) ** 2)))
     rmse_w1  = float(np.sqrt(np.mean((t_w1_s  - obs_pos) ** 2)))
 
-    ss_res = np.sum((obs_pos - t_cal_s) ** 2)
-    ss_tot = np.sum((obs_pos - obs_pos.mean()) ** 2)
+    ss_res    = np.sum((obs_pos - t_cal_s) ** 2)
+    ss_res_w1 = np.sum((obs_pos - t_w1_s) ** 2)
+    ss_tot    = np.sum((obs_pos - obs_pos.mean()) ** 2)
     r2     = float(1.0 - ss_res / ss_tot) if ss_tot > 0 else 0.0
+    r2_w1  = float(1.0 - ss_res_w1 / ss_tot) if ss_tot > 0 else 0.0
 
     print(f"  Calibrated: RMSE={rmse_cal:,.1f}  R²={r2:.4f}  n_pairs={n_pairs}")
-    print(f"  W1 (beta=2.0): RMSE={rmse_w1:,.1f}")
+    print(f"  W1 (beta=2.0): RMSE={rmse_w1:,.1f}  R²={r2_w1:.4f}")
 
     comparison = combined[mask_pos][
         ["origin_zone", "dest_zone", "dist_km", "observed_flow"]
@@ -351,6 +353,7 @@ def calibrate_beta(
         "rmse_cal"        : rmse_cal,
         "rmse_w1"         : rmse_w1,
         "r2"              : r2,
+        "r2_w1"           : r2_w1,
         "comparison_df"   : comparison,
     }
 
@@ -380,7 +383,8 @@ def write_calibration_to_db(metrics: dict):
                     f"calibrated against {metrics['n_pairs']} EOD 2022 zone OD pairs "
                     f"(flow >= {MIN_OBSERVED_FLOW} trips); "
                     f"RMSE (scaled) cal={metrics['rmse_cal']:.1f} "
-                    f"vs W1={metrics['rmse_w1']:.1f}"
+                    f"vs W1={metrics['rmse_w1']:.1f}; "
+                    f"R2 cal={metrics['r2']:.4f} vs W1={metrics['r2_w1']:.4f}"
                 ),
             }
         )
@@ -426,6 +430,7 @@ def write_calibration_report(metrics: dict, n_zones: int, n_desire_pairs: int, o
 | RMSE (scaled, calibrated) | {metrics['rmse_cal']:,.1f} trips |
 | RMSE (scaled, W1 beta=2.0) | {metrics['rmse_w1']:,.1f} trips |
 | R² (calibrated) | {metrics['r2']:.4f} |
+| R² (W1 beta=2.0) | {metrics['r2_w1']:.4f} |
 
 ## Verdict
 
