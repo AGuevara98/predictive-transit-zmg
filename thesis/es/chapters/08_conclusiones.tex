@@ -33,20 +33,55 @@ corredores se modelan como trayectorias reales (un tronco por diámetro del árb
 expansión mínima sobre el grafo vial) y se juzgan por rectitud respecto a las anclas en vez
 de por el rodeo entre extremos (\cref{sec:w6}), el generador produce al menos un corredor
 sustantivo, factible y que aprueba en mérito ---\code{W6\_G02}, \SI{12.1}{\kilo\metre},
-\SI{56}{\percent} de brecha alta, no redundante, eficiencia de demanda en el percentil
-\num{73}. También arroja conectores de menor eficiencia junto a él, y no reconstruye las
+\SI{56}{\percent} de brecha alta, mejor no-redundancia Jaccard de \ageb{}s servidos
+\num{0.18} (aunque una medida de traslape por forma con una ruta prémium existente es
+menos limpia, \SI{42}{\percent}, \cref{sec:res-w6}), eficiencia de demanda en el
+percentil \num{73}. La sustitución de rectitud por anclas en lugar de rodeo por
+extremos no está ajustada estrechamente a este único corredor: reportada lado a lado
+para el conjunto completo de candidatos (\cref{tab:directness-comparison}), rescata a
+tres de los cuatro corredores factibles de \zmg de lo que de otro modo sería un rechazo
+casi uniforme bajo rodeo por extremos. El generador también arroja conectores de menor
+eficiencia junto a \code{W6\_G02}, y no reconstruye las
 líneas férreas ya construidas ---un resultado esperado, pues la reconstrucción es un proxy
-débil del mérito (\cref{sec:disc-reconstruction}). La capa generativa es así una
-contribución genuina pero acotada.
+débil del mérito (\cref{sec:disc-reconstruction}). Una calificación adicional es
+necesaria y no se relega a una nota al pie: las pruebas de mérito y la propia
+clasificación de Pareto W5 de la metodología, tal como se definió originalmente,
+discreparon sobre cuál corredor es el mejor ---\code{W6\_G03}, no \code{W6\_G02}, era el
+único corredor factible no dominado por Pareto bajo cualquier ponderación objetivo
+probada (\cref{sec:res-w6,sec:disc-generative}). Diagnosticar por qué resolvió la
+discrepancia en lugar de solo señalarla: la formulación de tasa de $f_1$ favorecía
+mecánicamente a candidatos pequeños y homogéneos, y un complemento de cobertura
+absoluta ($f_1^{\text{tot}}$, \cref{eq:f1-total}) recupera un frente de Pareto genuino
+de cuatro vías en el cual \emph{ninguno} de los cuatro corredores factibles domina a
+los demás. La elección real que presenta el generador es, por tanto, una compensación
+entre escala y pureza de focalización ---financiar menos corredores más grandes que
+atienden más demanda absoluta no satisfecha (\code{W6\_G02}, \code{W6\_G01}) o un
+conector pequeño y muy focalizado (\code{W6\_G03})--- no una contradicción interna sin
+resolver. La capa generativa es así una
+contribución genuina pero acotada cuyos criterios internos de evaluación ahora están
+conciliados, y su corredor principal, \code{W6\_G02}, debe seguir leyéndose como una
+hipótesis para un estudio de factibilidad, no como una especificación de modo,
+alineación o costo (\cref{sec:concl-recomendaciones}).
 
-\paragraph{PI4 -- Transferibilidad.} \emph{Sí, de extremo a extremo.} La metodología
-completa W1--W8 corre sin rediseño a la medida en dos zonas metropolitanas contrastantes
+\paragraph{PI4 -- Transferibilidad.} \emph{Sí, dentro del ecosistema de datos nacional
+de México, de extremo a extremo.} La metodología
+completa W1--W8 corre en dos zonas metropolitanas contrastantes
 ---Toluca (grande, dieciséis municipios) y Aguascalientes (compacta, tres)---
 re-derivando demanda, diagnóstico, pesos, corredores y auditoría a partir de los datos de
 Nivel~1 y \textsc{gtfs} propios de cada ciudad (\cref{ch:transferibilidad}). El diagnóstico
-diferencia sensatamente a las tres metrópolis por su proporción de demanda no atendida, y
-la ponderación de cada ciudad se re-deriva de sus propios datos en lugar de heredar la de
-la \zmg.
+diferencia sensatamente a las tres metrópolis por su proporción de demanda no atendida, la
+ponderación de cada ciudad se re-deriva de sus propios datos en lugar de heredar la de
+la \zmg, y el hallazgo de alineación demanda/equidad de \cref{sec:disc-equity} se replica
+en ambas ciudades de transferencia (\cref{tab:equity-transfer}). ``Sin rediseño a la
+medida'' requiere una calificación: varias constantes fijas (el tope de rectitud por
+anclas de \num{1.8}, el piso de espaciamiento de paradas de \SI{300}{\metre}, los
+umbrales de demanda) se trasladan sin cambios en lugar de re-derivarse, y una de
+ellas ---el piso de espaciamiento de paradas--- es la causa directa y demostrada de que
+la auditoría W7 de Toluca arroje cero rutas factibles contra su red de espaciamiento
+mediano de \SI{43}{\metre}. Esto se lee aquí como un artefacto de esa constante
+específica y no de la lógica diagnóstica o generativa, pero es un límite real, no solo
+teórico, a ``sin rediseño'', y las dos ciudades de transferencia comparten la
+infraestructura de datos nacional de \zmg en lugar de poner a prueba la de otro país.
 
 \section{Recomendaciones prácticas}
 \label{sec:concl-recomendaciones}
@@ -58,11 +93,21 @@ atendida a una resolución más fina que cualquier línea individual, y puede re
 bajo costo conforme se actualizan los datos censales y \textsc{gtfs}. Segunda, usar la
 auditoría de rutas (\cref{sec:w7}) para marcar rutas existentes de baja demanda, indirectas
 y redundantes para su revisión ---en las ciudades de transferencia sacó a la luz una
-redundancia sustancial de servicio paralelo, candidata a racionalización. Tercera, leer los
-corredores generados como \emph{hipótesis a estudiar}, no como trazos finales: el corredor
-que aprueba en mérito es un punto de partida defendible para un estudio de factibilidad,
-pero las limitaciones caracterizadas del generador implican que su salida debe informar, no
-reemplazar, el proceso de ingeniería y comunidad.
+redundancia sustancial de servicio paralelo, candidata a racionalización--- aunque en
+sistemas concesionados como el de Toluca, donde alrededor de treinta operadores
+independientes corren las rutas marcadas, ``revisión'' en la práctica significa un
+proceso de negociación y formalización de varios años, no un ejercicio interno de
+programación, y el valor práctico de la auditoría ahí radica en cuantificar la escala
+del problema de paralelismo para una agencia negociadora, más que en especificar
+directamente qué rutas recortar. Tercera, y repetido aquí deliberadamente en lugar de
+confinarlo a este párrafo, leer \emph{todo} corredor generado ---incluido
+\code{W6\_G02}--- como una \emph{hipótesis a estudiar}, no como un trazo final: la
+función multiobjetivo no tiene término de costo de capital ni de derecho de vía, de
+modo que un corredor que aprueba en mérito es a lo sumo un punto de partida defendible
+para un estudio de factibilidad que debe establecer de forma independiente el modo, la
+alineación y el costo; no es en sí mismo ese estudio de factibilidad, y las limitaciones
+caracterizadas del generador implican que su salida debe informar, no reemplazar, el
+proceso de ingeniería y comunidad.
 
 \section{Trabajo futuro}
 \label{sec:concl-futuro}
@@ -77,8 +122,18 @@ reentrenamiento de brecha de cobertura se corrió solo para la \zmg, y aplicarlo
 ciudades de transferencia probaría si la relación aprendida entre características de lugar y
 demanda no atendida es en sí misma portable. Cuarta, un \emph{modelador híbrido de
 corredores} que alterne entre el tronco por diámetro y el ruteo tipo agente viajero donde
-este último siga siendo factible, lo que el análisis exploratorio sugiere que mejoraría
-marginalmente la cobertura sin sacrificar factibilidad. Más allá de estas, la validación
+este último siga siendo factible. Las pruebas exploratorias cuantifican esto en lugar de
+solo afirmarlo: para \code{W6\_G00} una trayectoria TSP de terminales completos es una
+ganancia pequeña y aún factible (+2 \ageb{}s, +9{,}500 viajes/día, rectitud por anclas de
+1.76 frente al tope de 1.8); para \code{W6\_G01}, el grupo con la mayor brecha entre
+ambos modeladores, TSP capturaría aproximadamente el doble de la demanda (+12 \ageb{}s,
++89{,}000 viajes/día) pero llevaría la ruta a 31.8~km, superando el tope de 30~km, lo
+que la vuelve infactible. La demanda descartada por el tronco de diámetro es, por tanto,
+el precio de la factibilidad para los candidatos más grandes, no una deficiencia sin
+examinar, y la ganancia esperada de un modelador híbrido está acotada por la única
+ganancia pequeña que recuperaría (\code{W6\_G00}) frente a la ganancia mayor que
+perdería por infactibilidad (\code{W6\_G01}) bajo el tope de longitud actual. Más allá
+de estas, la validación
 externa más clara vendría de la afluencia observada en cualquier corredor que llegue a
 construirse a lo largo de un trazo generado ---el contrafactual que, por construcción,
 ningún estudio puramente ex ante puede aportar.

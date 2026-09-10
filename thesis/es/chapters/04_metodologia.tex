@@ -43,9 +43,13 @@ atracciones combinan proxies de empleo y actividad,
   \label{eq:attractions}
 \end{equation}
 con $e_i$ el proxy de empleo, $\rho^{\text{poi}}_i$ y $\rho^{\text{comercio}}_i$ las
-densidades de puntos de interés y comercio, y $a_i$ el área del \ageb. El vector de
+densidades de puntos de interés y comercio, y $a_i$ el área del \ageb, con pesos
+$(w_e, w_p, w_r) = (\num{1.8}, \num{0.5}, \num{0.8})$. El vector de
 atracción se escala luego para que $\sum_i A_i = \sum_i P_i$, condición necesaria
-para el modelo doblemente restringido.
+para el modelo doblemente restringido; debido a este reescalamiento, solo las
+magnitudes \emph{relativas} de los pesos (el empleo ponderado aproximadamente
+$2$--$4\times$ más que la densidad de POI/comercio) afectan la superficie de
+atracción resultante, no sus valores absolutos.
 
 \subsection{Modelo gravitacional doblemente restringido}
 Los flujos origen--destino $T_{ij}$ se obtienen de un modelo de interacción espacial
@@ -96,8 +100,22 @@ flujos modelados y observados,
   \label{eq:calibration}
 \end{equation}
 En el universo corregido de \num{1881} \ageb{}s esto arroja
-$\beta^\star = \num{1.2005}$, que supera al prior inicial $\beta = \num{2.0}$ tanto
-en RMSE como en $R^2$; el valor calibrado se adopta en todo el trabajo.
+$\beta^\star = \num{1.2005}$, que supera al prior inicial $\beta = \num{2.0}$ en RMSE
+(\cref{tab:calibration}); el valor calibrado se adopta en todo el trabajo. El ajuste
+absoluto es modesto ($R^2 = \num{0.2498}$ sobre $n=\num{1993}$ pares de zonas):
+aproximadamente tres cuartas partes de la varianza en espacio logarítmico de los flujos
+zonales observados queda sin explicar, una limitación que hereda cada capa posterior
+(superficie de demanda, brecha de cobertura, generación de corredores). Esto no es
+inusual para una calibración agregada de modelo gravitacional zonal, pero significa que
+la superficie de demanda debe leerse como una estimación direccionalmente informativa,
+no como un ajuste preciso.\footnote{Se planeó, para esta revisión, un $R^2$ del prior
+$\beta=2.0$ para colocarlo junto al valor calibrado en \cref{tab:calibration}, pero no
+pudo producirse a partir de una re-ejecución verificada a tiempo: al intentar
+reproducirlo contra la base de datos en vivo surgió una discrepancia no explicada (la
+calibración ya no reproduce $\beta^\star=1.2005$ desde la misma ruta de código, pese a un
+conteo de coincidencias \ageb-a-zona y un conteo de filas de la matriz OD sin cambios),
+la cual es ahora un asunto abierto documentado en lugar de uno resuelto ---véase
+\cref{sec:disc-limitations}.}
 
 \section{Capa de oferta y brecha de cobertura (W3)}
 \label{sec:w3}
@@ -150,9 +168,38 @@ Para interpretar los impulsores de la demanda no atendida, un objetivo binario
 $y_i = \mathbb{1}[\text{categoría-}g_i = \text{brecha alta}]$ se regresa sobre los
 \num{14} indicadores Nodo--Lugar--Personas (todas las variables de oferta excluidas
 para evitar circularidad) mediante Random Forest y árboles potenciados por gradiente
-\parencite{niu2023rf,ke2017lightgbm}. El comportamiento del modelo se interpreta con
+\parencite{niu2023rf,ke2017lightgbm}. La división entrenamiento/prueba es aleatoria y
+estratificada, 70/30 (no bloqueada espacialmente); dado que tanto la demanda como la
+accesibilidad están autocorrelacionadas espacialmente, una retención espacial daría una
+estimación más conservadora del desempeño fuera de muestra, lo cual se señala como
+limitación (\cref{sec:disc-limitations}). El comportamiento del modelo se interpreta con
 valores SHAP \parencite{lundberg2017shap}; población, rezago social y empleo emergen
-como los impulsores dominantes del estatus de brecha alta.
+como los impulsores dominantes del estatus de brecha alta. ``Sin fuga'' aquí se refiere
+específicamente a la exclusión de columnas directas de oferta de transporte (conteos de
+rutas y paradas) del conjunto de predictores; no descarta un canal más sutil e
+indirecto por el cual la población ---el impulsor SHAP principal y un insumo directo de
+la generación de viajes (\cref{eq:productions}), que a su vez construye el numerador de
+demanda del objetivo que se predice (\cref{eq:gap})--- pudiera inflar las métricas
+reportadas mediante este vínculo mecánico en lugar de mediante estructura multivariante
+aprendida de forma independiente. Se ejecutaron tanto una ablación de características como
+una reevaluación bloqueada espacialmente para acotar esta preocupación (2026-09-09,
+Random Forest, configuración comparable al modelo de producción): remover las dos
+características de población (\code{pe\_population\_n}, \code{pe\_pop\_density\_n})
+reduce el PR-AUC de prueba de \num{0.876} a \num{0.711} (una caída de \num{0.165}
+puntos), confirmando que la población aporta un peso predictivo sustancial y no
+redundante en lugar de ser incidental al conjunto; retener dos municipios completos
+(\SI{47}{\percent} de los \ageb{}s) en lugar de una división aleatoria del 30\% reduce
+aún más el PR-AUC, a \num{0.629}, mientras que el ROC-AUC es comparativamente estable
+(\num{0.909} frente a \num{0.961} con división aleatoria). Ninguno de los dos resultados
+prueba circularidad ---la población impulsa legítimamente la necesidad de transporte a
+través de canales independientes de su papel en la construcción del objetivo, y una
+puntuación bloqueada espacialmente más baja es el comportamiento esperado, no anómalo,
+de cualquier modelo entrenado con datos espacialmente autocorrelacionados--- pero ambos
+confirman que el riesgo específico era real y no hipotético: el PR-AUC de producción de
+\num{0.877}--\num{0.883} (\cref{sec:res-w3}) debe leerse como una cota superior bajo
+condiciones optimistas (división aleatoria, todas las características), no como el
+desempeño garantizado del modelo en una ciudad genuinamente nueva o en una
+re-especificación ciega a la población (\cref{sec:disc-limitations}).
 
 \section{Priorización Nodo--Lugar--Personas (W4)}
 \label{sec:w4}
@@ -217,6 +264,49 @@ donde $\ell_{\text{tramo}}$ es el tramo en línea recta de las anclas del candid
 candidatos se ordenan por clasificación no dominada (Pareto) minimizando
 $(-f_1, f_2, -f_3)$.
 
+$f_1$, tal como se define arriba, es una fracción \emph{promedio} no atendida ponderada
+por demanda (una tasa, acotada en $[0,\kappa]$, necesaria para que sea conmensurable con
+$f_2$ y $f_3$ dentro de la puntuación compuesta, \cref{eq:final-w5} más abajo) y no un
+total. Esto tiene una consecuencia, diagnosticada empíricamente en \cref{sec:res-w6}:
+$f_1$ favorece mecánicamente a candidatos pequeños y geográficamente homogéneos sobre
+otros más grandes que necesariamente abarcan territorio más variado, con independencia de
+cuál atiende más demanda real no satisfecha. Se reporta una cantidad absoluta
+complementaria,
+\begin{equation}
+  f_1^{\text{tot}} = \sum_{i\in S} D_i\, \kappa\, u_i,
+  \label{eq:f1-total}
+\end{equation}
+el mismo numerador sin la división normalizadora, junto a $f_1$ por esta razón siempre
+que ambos difieran; $f_1^{\text{tot}}$ no está acotado a $[0,\kappa]$ y no se incorpora a
+la puntuación compuesta, pero es una cantidad válida y directamente comparable para la
+clasificación de Pareto, ya que la dominancia de Pareto solo requiere una dirección de
+preferencia consistente, no una escala común. La puntuación compuesta usada para
+reportar un único número accionable permanece como
+\begin{equation}
+  \text{compuesta} = w_1 \tfrac{f_1}{\kappa} + w_2\Bigl(1 - \tfrac{f_2}{\ell_{\max}}\Bigr)
+    + w_3 f_3, \qquad (w_1,w_2,w_3) = (0.50,\,0.25,\,0.25),
+  \label{eq:final-w5}
+\end{equation}
+
+El factor de ganancia $\kappa$ y la restricción de frontera en \cref{sec:w6} responden a
+dos preguntas deliberadamente distintas y no deben confundirse. La \emph{conectividad}
+(premiada por $\kappa$, y exigida a las anclas de frontera por construcción) pregunta si
+un candidato tiene un punto físico de abordaje o transbordo hacia la red existente ---un
+requisito de ingeniería para que un corredor funcione como parte del sistema, con
+independencia de de dónde provenga su demanda. La \emph{redundancia} (evaluada por
+separado, mediante la prueba de traslape Jaccard de \ageb{}s servidos usada en
+\cref{sec:w7} y aplicada a los corredores generados en \cref{sec:res-w6}) pregunta si un
+candidato duplica espacialmente una ruta existente. Un corredor puede, y los corredores
+factibles de \zmg lo hacen, conectar con la red en un extremo mientras sirve una
+alineación enteramente nueva a lo largo de su trayecto; las dos propiedades son
+independientes, y solo la segunda amenaza la afirmación de \cref{sec:intro-preguntas} de
+``evaluados por necesidad genuina... en lugar de por su acuerdo con la red existente''.
+En el conjunto de candidatos actual esta distinción no incide en los ordenamientos
+reportados: todo corredor factible de \zmg ya conecta con la red existente
+(\cref{sec:res-w6}), de modo que los cuatro reciben el mismo $\kappa=0.50$ y el término de
+conectividad no los diferencia. Solo importaría al comparar un candidato desconectado
+contra uno conectado, un caso no ejercido en los resultados reportados.
+
 \section{Generación de corredores (W6)}
 \label{sec:w6}
 
@@ -229,10 +319,28 @@ diámetro}) del árbol de expansión mínima de las anclas, ensamblada a partir 
 segmentos reales de la red vial. La factibilidad usa la razón de rectitud por anclas
 de la \cref{eq:constraints} en lugar de una razón de rodeo por extremos, porque esta
 última penaliza en exceso a un corredor de cobertura de demanda que legítimamente se
-curva. A cada corredor factible se le asigna un modo por umbral de demanda (tren
+curva. Esta sustitución se motivó originalmente por un solo corredor (\code{W6\_G02},
+\cref{sec:res-w6}); la \cref{tab:directness-comparison} reporta ambas métricas para el
+conjunto completo de candidatos para mostrar que el efecto de la sustitución no se
+limita a ese caso único. A cada corredor factible se le asigna un modo por umbral de demanda (tren
 ligero $\ge \num{75000}$, autobús de tránsito rápido $\ge \num{15000}$, autobús
 local en otro caso, viajes por día). La \cref{fig:corridors} muestra los cuatro
 corredores factibles de \zmg.
+
+Dos de las constantes fijas en \cref{eq:constraints,eq:objectives} se someten a prueba
+de sensibilidad en otro lugar y dos no, y la diferencia se revela aquí en lugar de
+dejarse implícita. El tope de rectitud por anclas de \num{1.8} se barrió sobre
+$[1.6, 1.9]$ y el conjunto factible es invariante en ese rango, lo que confirma que se
+ubica en una meseta estable y no en un borde arbitrario; los umbrales de asignación de
+modo (\num{75000}/\num{15000}) se reportan con una tabla de sensibilidad de doble vía
+(BRT fijo mientras varía el umbral de tren ligero sobre $\{50000, 75000, 100000\}$, y a
+la inversa) en el reporte técnico complementario. El corte de categoría de brecha por
+quintil conjunto (\cref{eq:gap}) y las demás constantes de restricción W5 (el piso de
+demanda de \num{500} viajes/día, la banda de espaciamiento de paradas de
+\SIrange{300}{1000}{\metre}, el tope de longitud de \SI{30}{\kilo\metre}) no se han
+barrido individualmente; se heredan de la práctica convencional de planeación de
+transporte en lugar de derivarse de los propios datos de \zmg, y su sensibilidad
+permanece como un punto abierto para trabajo futuro.
 
 \begin{algorithm}[htbp]
 \caption{Generación de corredores por anclas de frontera (W6)}

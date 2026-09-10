@@ -30,19 +30,50 @@ contribution.
 are shaped as real paths (a minimum-spanning-tree diameter trunk on the road graph) and
 judged by anchor-directness rather than endpoint detour (\cref{sec:w6}), the generator
 produces at least one substantive, feasible, merit-passing corridor---\code{W6\_G02},
-\SI{12.1}{\kilo\metre}, \SI{56}{\percent} High-gap, non-redundant, \num{73}rd-percentile
-demand efficiency. It also surfaces lower-efficiency connectors alongside it, and it does
-not reconstruct built rail lines---an expected outcome, since reconstruction is a weak
-proxy for merit (\cref{sec:disc-reconstruction}). The generative layer is thus a genuine
-but bounded contribution.
+\SI{12.1}{\kilo\metre}, \SI{56}{\percent} High-gap, best served-\ageb Jaccard
+non-redundancy \num{0.18} (though a shape-overlap measure with an existing premium
+route is a less clean \SI{42}{\percent}, \cref{sec:res-w6}), \num{73}rd-percentile
+demand efficiency. The anchor-directness substitution for endpoint-detour is not
+narrowly tuned to this one corridor: reported side by side for the full candidate set
+(\cref{tab:directness-comparison}), it rescues three of four feasible \zmg corridors
+from what would otherwise be near-uniform rejection under endpoint-detour. The
+generator also surfaces lower-efficiency connectors alongside \code{W6\_G02}, and it
+does not reconstruct built rail lines---an expected outcome, since reconstruction is a
+weak proxy for merit (\cref{sec:disc-reconstruction}). One further qualification is
+necessary and is not swept into a footnote: the merit tests and the framework's own W5
+Pareto ranking, as originally defined, disagreed on which corridor is best---\code{W6\_G03},
+not \code{W6\_G02}, was the sole Pareto-non-dominated feasible corridor under every tested
+objective weighting (\cref{sec:res-w6,sec:disc-generative}). Diagnosing why resolved the
+disagreement rather than merely disclosing it: $f_1$'s rate formulation mechanically
+favored small, homogeneous candidates, and an absolute-coverage companion
+($f_1^{\text{tot}}$, \cref{eq:f1-total}) recovers a genuine four-way Pareto front in which
+\emph{none} of the four feasible corridors dominates the others. The real choice the
+generator presents is therefore a scale-versus-targeting-purity trade-off---fund fewer,
+larger corridors addressing more absolute unmet demand (\code{W6\_G02}, \code{W6\_G01}) or
+a smaller, highly-targeted connector (\code{W6\_G03})---not an unresolved internal
+contradiction. The generative layer is thus a genuine but bounded contribution whose
+internal evaluation criteria are now reconciled, and its headline corridor,
+\code{W6\_G02}, should still be read as a hypothesis for a feasibility study, not as a
+specification of mode, alignment, or cost (\cref{sec:concl-recommendations}).
 
-\paragraph{RQ4 -- Transferability.} \emph{Yes, end-to-end.} The full W1--W8 pipeline runs
-without bespoke re-engineering on two contrasting metropolitan areas---Toluca (large,
-sixteen municipalities) and Aguascalientes (compact, three)---re-deriving demand,
-diagnosis, weights, corridors, and audit from each city's own Tier-1 and \textsc{gtfs}
-data (\cref{ch:transferability}). The diagnostic differentiates the three metros
-sensibly by unmet-demand share, and each city's weighting re-derives from its own data
-rather than inheriting \zmg's.
+\paragraph{RQ4 -- Transferability.} \emph{Yes, within Mexico's national data ecosystem,
+end-to-end.} The full W1--W8 pipeline runs on two contrasting metropolitan
+areas---Toluca (large, sixteen municipalities) and Aguascalientes (compact,
+three)---re-deriving demand, diagnosis, weights, corridors, and audit from each
+city's own Tier-1 and \textsc{gtfs} data (\cref{ch:transferability}). The diagnostic
+differentiates the three metros sensibly by unmet-demand share, each city's
+weighting re-derives from its own data rather than inheriting \zmg's, and the
+demand/equity alignment finding of \cref{sec:disc-equity} replicates in both
+transfer cities (\cref{tab:equity-transfer}). ``Without bespoke re-engineering''
+requires one qualification: several fixed constants (the \num{1.8} anchor-directness
+cap, the \SI{300}{\metre} stop-spacing floor, demand thresholds) are carried over
+unchanged rather than re-derived, and one of them---the stop-spacing floor---is the
+direct, demonstrated cause of Toluca's W7 audit returning zero feasible routes
+against its \SI{43}{\metre}-median-spacing network. This is read here as an artifact
+of that specific constant rather than of the diagnostic or generative logic, but it
+is a real, not merely theoretical, limit on ``no re-engineering,'' and the two
+transfer cities share \zmg's national data infrastructure rather than testing a
+different country's.
 
 \section{Practical recommendations}
 \label{sec:concl-recommendations}
@@ -53,11 +84,20 @@ as the primary product: it ranks where unmet demand is concentrated at a resolut
 than any single line, and it can be recomputed cheaply as census and \textsc{gtfs} data
 are updated. Second, use the route audit (\cref{sec:w7}) to flag low-demand, indirect,
 and redundant existing routes for review---in the transfer cities it surfaced substantial
-parallel-service redundancy that is a candidate for rationalization. Third, read the
-generated corridors as \emph{hypotheses to be studied}, not as final alignments: the
-merit-passing corridor is a defensible starting point for a feasibility study, but the
-generator's characterized limitations mean its output should inform, not replace,
-engineering and community process.
+parallel-service redundancy that is a candidate for rationalization---though in
+concessioned systems like Toluca's, where roughly thirty independent operators run the
+flagged routes, ``review'' in practice means a multi-year negotiation and
+formalization process, not an internal scheduling exercise, and the audit's practical
+value there is in quantifying the scale of the parallelism problem for a negotiating
+agency rather than in directly specifying which routes to cut. Third, and repeated
+here deliberately rather than confined to this paragraph alone, read \emph{every}
+generated corridor---including \code{W6\_G02}---as a \emph{hypothesis to be studied},
+not as a final alignment: the multi-objective function has no capital-cost or
+right-of-way term, so a merit-passing corridor is at most a defensible starting point
+for a feasibility study that must independently establish mode, alignment, and cost;
+it is not itself that feasibility study, and the generator's characterized
+limitations mean its output should inform, not replace, engineering and community
+process.
 
 \section{Future work}
 \label{sec:concl-future}
@@ -71,8 +111,16 @@ travel-time impedance on the road graph would improve absolute demand magnitudes
 and applying it to the transfer cities would test whether the learned relationship between
 place characteristics and unmet demand is itself portable. Fourth, a \emph{hybrid corridor
 shaper} that switches between diameter-trunk and travelling-salesman routing where the
-latter remains feasible, which the exploratory analysis suggests would marginally improve
-coverage without sacrificing feasibility. Beyond these, the clearest external validation
+latter remains feasible. Exploratory testing quantifies rather than merely asserts this:
+for \code{W6\_G00} a full-terminal TSP path is a small, still-feasible win (+2 AGEBs, +9,500
+trips/day, anchor-directness 1.76 versus the 1.8 cap); for \code{W6\_G01}, the group with
+the largest gap between the two shapers, TSP would capture roughly twice the demand
+(+12 AGEBs, +89,000 trips/day) but pushes the route to 31.8 km, past the 30 km cap, making
+it infeasible. The diameter trunk's dropped demand is therefore the price of feasibility
+for the larger candidates, not an unexamined shortcoming, and a hybrid shaper's expected
+gain is bounded by the one small win it would recover (\code{W6\_G00}) against the one
+larger gain it would forfeit to infeasibility (\code{W6\_G01}) under the current length
+cap. Beyond these, the clearest external validation
 would come from observed ridership on any corridor that is eventually built along a
 generated alignment---the counterfactual that, by construction, no purely ex-ante study
 can supply.

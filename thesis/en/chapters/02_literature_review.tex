@@ -28,16 +28,36 @@ because it is descriptive and low-data---node and place indices can be assembled
 network and land-use variables alone---but in its original form it is static and says
 nothing about \emph{latent demand} or about where new nodes ought to be placed.
 
-Recent extensions add dimensions to the original two. \textcite{liu2024nprv} propose an
-NP--RV formulation that augments node and place with ridership and vitality terms and
-couple it with gradient-boosted trees and \textsc{shap} interpretability, moving the
-tradition from description toward prediction. This thesis adopts a Node--Place--People
-(\nppv) variant: it retains node and place, foregrounds a \emph{people} dimension
-(population, dependency, and equity attributes), and---crucially---removes the vitality
-term from the prioritization weighting because, in the study area, the only available
-vitality proxy is resolved at the municipality level and therefore collapses to a binary
-``has-premium-transit'' flag that reintroduces exactly the supply-following circularity
-the thesis sets out to avoid (\cref{sec:w4}).
+Recent extensions add dimensions to the original two, generally coupling the enlarged
+indicator set with machine learning. \textcite{su2022nodeplace} augment node and place
+with a ridership term and interpret it with \textsc{shap}, moving the tradition from
+description toward prediction; \textcite{aminipishro2022nprt} instead add both ridership
+and time-of-day as a fourth and third dimension (an NP--RT rather than NP--RV
+formulation), classifying stations with a K-means/Cube method. Neither adds a
+\emph{vitality} term specifically, and no verified paper matching an ``NP--RV''
+node--place--ridership--vitality formulation could be located during a 2026-09-09
+literature-review pass; an earlier draft of this chapter cited such a paper, which is
+removed here rather than left unverifiable. The broader pattern the two verified papers
+above illustrate---augmenting Node--Place with an outcome variable and an interpretable
+learner---is the one this thesis follows structurally, while departing from it on the
+outcome variable itself (\cref{sec:lit-ml}).
+
+Bertolini's own later extension pairs the model with an explicit accessibility measure
+across multiple European metropolitan areas rather than a ridership/vitality term
+\parencite{papa2015tod}, which is the closer lineage antecedent to the accessibility- and
+coverage-gap-based extension developed in this thesis (\cref{sec:w3}). This thesis adopts
+a Node--Place--People (\nppv) variant: it retains node and place, foregrounds a
+\emph{people} dimension (population, dependency, and equity attributes), and---crucially---
+removes the vitality term from the prioritization weighting because, in the study area, the
+only available vitality proxy is resolved at the municipality level and therefore collapses
+to a binary ``has-premium-transit'' flag that reintroduces exactly the supply-following
+circularity the thesis sets out to avoid (\cref{sec:w4}). This exclusion is reported here as
+a data-availability limitation of the specific vitality proxy available in \zmg, not as a
+theoretical claim that vitality is dispensable in principle for a Node--Place--type model;
+an AGEB-resolution vitality proxy (e.g., from pedestrian counts or a demand-independent
+activity-intensity measure) remains an open direction, and the renamed \nppv{} label should
+be read as scoped to this application rather than as a general claim that a vitality or
+ridership dimension is dispensable for Node--Place extensions generally.
 
 \section{Travel demand estimation}
 \label{sec:lit-demand}
@@ -84,10 +104,16 @@ scores high only when latent demand is genuinely unmet by current supply. This c
 to two related strands: the ``transit desert'' literature, which contrasts transit supply
 against demand at fine spatial resolution \parencite{jiao2013deserts}, and the
 social-need gap tradition, which weights under-supply by the social needs of the
-population it affects \parencite{currie2010gaps}. The framework reframes these as a
-continuous, demand-weighted quantity and, because demand and supply are constructed
-independently, produces a dependent variable that a supervised model can learn without
-simply memorizing the existing network.
+population it affects \parencite{currie2010gaps}. Closer still is
+\textcite{almamun2011servicegaps}'s accessibility-based transit need index, which compares
+a need index against an accessibility index at a similarly fine resolution specifically to
+identify service gaps---the same two-index-comparison structure this thesis's coverage-gap
+ratio (\cref{eq:gap}) implements. The framework's contribution relative to this existing
+gap-index tradition is not the comparison structure itself, which is well established, but
+feeding the resulting gap directly forward as a supervised-learning target
+(\cref{sec:lit-ml}) rather than stopping at a descriptive map. Because demand and supply
+are constructed independently, this produces a dependent variable that a supervised model
+can learn without simply memorizing the existing network.
 
 \section{Multi-criteria decision analysis and objective weighting}
 \label{sec:lit-mcda}
@@ -99,22 +125,57 @@ are hard to transfer between cities. This thesis instead uses objective weightin
 combining the CRITIC method \parencite{diakoulaki1995critic}---which weights a criterion
 by its contrast intensity and its independence from the others---with the Entropy Weight
 Method, which weights by the dispersion of each criterion's values as measured by Shannon
-entropy \parencite{shannon1948}. Both are data-driven: they read the weights off the
-indicator matrix itself, which makes the prioritization reproducible and, importantly,
-re-derivable from scratch in a new city without re-eliciting expert judgments. Equity is
+entropy \parencite{shannon1948}. Both are data-driven in the specific sense that the final
+weight-assignment step reads the weights off the indicator matrix itself, which makes the
+prioritization reproducible and re-derivable from scratch in a new city without
+re-eliciting expert judgments \emph{for that step}. This does not remove analyst judgment
+from the pipeline altogether: which fourteen indicators enter the matrix, how they are
+grouped into the Node/Place/People taxonomy, which normalization rule (log-transform versus
+plain min--max) each receives, and the equal-weighted CRITIC--EWM ensemble average are all
+upstream choices made by the analyst, not read off the data. \Cref{sec:area-integrity}'s
+own account of a marginalization-index sign-and-imputation correction, which shifted the
+mean equity score by several tenths, is direct evidence of how consequential these upstream,
+non-``objective'' choices can be; CRITIC/EWM removes expert judgment from the final
+aggregation step, not from the framework as a whole. Equity is
 handled not by manipulating these weights but by an explicit, separable additive term
 built from marginalization and social-lag indices
 \parencite{conapo_marginacion2020, coneval_rezago2020}, so that its contribution to the
 final score is transparent and can be reported with and without (\cref{eq:equity}). This
 separable treatment reflects a growing view that transport equity should be an explicit
 objective rather than an implicit by-product \parencite{martens2016, pereira2017justice}.
+The qualification above---that CRITIC/EWM's objectivity is confined to the final
+aggregation step---is not merely a self-critique: \textcite{mukhametzyanov2021critic}'s
+comparative analysis of Entropy, CRITIC, and standard-deviation weighting finds that
+formal decision-matrix-based weighting is not always well-behaved, which is independent
+confirmation that these methods' ``objective'' framing needs the same qualification this
+thesis applies to it. This combination of CRITIC-family weighting with a separate
+gap/accessibility analysis is not unique to this thesis: \textcite{rathod2024critic}
+apply the same pairing---CRITIC-MCDM weighting alongside a transit accessibility
+performance-gap analysis---to Surat, India, a 2024 precedent for treating the
+prioritization layer and the gap diagnostic as related but distinct components, as this
+thesis does across W3 and W4.
+
+A specific, checkable failure mode the literature above identifies is high correlation
+among indicators: CRITIC's weight formula discounts a criterion for correlating with
+others, but the Entropy Weight Method does not, so an ensemble average of the two only
+partially corrects for redundant indicators. A correlation check of the fourteen
+Node--Place--People indicators (recomputed 2026-09-09) finds three pairs above the common
+$|r|>0.8$ multicollinearity threshold---\code{p\_poi\_density\_n}~/~\code{p\_retail\_
+density\_n} ($r=0.93$), \code{n\_intersections\_n}~/~\code{n\_street\_density\_n}
+($r=0.828$), and \code{pe\_population\_n}~/~\code{pe\_pop\_density\_n} ($r=0.812$)---out
+of a mean absolute off-diagonal correlation of \num{0.335}. None of the three pairs is
+surprising (each pairs a count with a closely related density or rate), and CRITIC's own
+weighting already discounts them; the check is reported here because it is the concrete
+diagnostic the failure-mode literature calls for, not because it overturns the weighting
+result.
 
 \section{Machine learning for station and corridor siting}
 \label{sec:lit-ml}
 
 A substantial literature applies supervised learning to transit siting.
-\textcite{niu2023rf} use random forests to predict station suitability, and the broader
-NP-RV line \parencite{liu2024nprv} pairs gradient boosting with \textsc{shap} values
+\textcite{niu2023rf} use random forests to predict station suitability, and the
+Node-Place-machine-learning line reviewed above \parencite{su2022nodeplace,
+aminipishro2022nprt} pairs tree-based models with \textsc{shap} values
 \parencite{lundberg2017shap} for interpretability. The framework here uses the same tools
 ---random forests \parencite{breiman2001rf} and gradient-boosted trees
 \parencite{chen2016xgboost, ke2017lightgbm}, read through \textsc{shap}---but
@@ -124,22 +185,54 @@ current supply, it can only learn to reproduce the status quo and will report hi
 accuracy for a circular reason. The thesis makes this failure mode explicit: an earlier
 version of its own pipeline trained on a cluster-derived label and reported near-perfect
 recovery accuracy that carried no planning information, and it was retired in favor of a
-model trained on the independent coverage-gap target (\cref{sec:w3}). The methodological
-point---that interpretability tools cannot rescue a circular target, and that the target
-itself must be constructed independently of supply---is a central lesson of this work.
+model trained on the independent coverage-gap target (\cref{sec:w3}).
+
+This specific transit-siting circularity is not an isolated observation about one
+pipeline's history; it is a special case of a mechanism given precise formal treatment in
+three more mature literatures, introduced in \cref{sec:intro-circularity} and elaborated
+here. \textcite{kaufman2012leakage} name and formalize the general data-mining failure
+mode---\emph{leakage}, the use of target-derived information the model should not
+legitimately have access to---of which a supply-derived siting label is one instance.
+\textcite{lakkaraju2017selectivelabels}'s \emph{selective labels problem} gives the
+sharpest statistical account of exactly why this particular instance of leakage is
+unavoidable by construction rather than merely a data-quality defect: whenever an outcome
+is observed only conditional on a prior decision (their bail-release setting; here, a
+prior siting decision), no amount of additional data or modeling sophistication recovers
+the counterfactual outcome for units where the decision went the other way. Empirically,
+\textcite{lum2016predict} and, more rigorously, \textcite{ensign2018runaway} show that
+predictive-policing models trained on where police were previously sent reproduce and can
+amplify that historical pattern rather than detecting where crime genuinely concentrates,
+a runaway feedback loop with the identical logical structure---train on where the
+intervention already happened, and the model can only relearn the intervention's own
+footprint---and \textcite{flynn2022spacetime} raise the same concern specifically for
+spatial infrastructure allocation. Grounding the thesis's circularity argument in this
+established, cross-disciplinary body of work, rather than treating it as an ad hoc
+observation about one pipeline's history, is one of the corrections made during a
+2026-09-09 literature-review pass. The methodological point---that interpretability tools
+cannot rescue a selectively-labeled target, and that the target itself must be constructed
+independently of the prior decision it would otherwise encode---is a central lesson of
+this work, and one with precedent well beyond transit planning.
 
 \section{Network design and corridor generation}
 \label{sec:lit-network}
 
 Generating candidate corridors from a set of priority locations is a network-design
 problem, part of the broad literature on transit-network design
-\parencite{guihaire2008, farahani2013review}. The relevant heuristic tradition is the
+\parencite{guihaire2008, farahani2013review}, of which \textcite{kepaptsoglou2009review}'s
+review---organizing the field by design objectives, operating-environment parameters, and
+solution approach---remains the standard reference point for classifying a new method such
+as this thesis's W5/W6 combination. The relevant heuristic tradition is the
 Steiner tree in graphs---connecting a set of required (terminal) nodes at minimum cost,
 possibly through additional intermediate nodes---for which \textcite{takahashi1980} give
 a classic shortest-path-based approximation and \textcite{kmb1981steiner} a fast
-minimum-spanning-tree-based one, the family of relatives used here. These heuristics are
-attractive for corridor generation because they operate directly on the road graph and
-produce connected, buildable geometry from scattered demand anchors.
+minimum-spanning-tree-based one, the family of relatives used here. Spanning-tree-based
+transit design is not purely historical: a 2026 case study applies the same underlying
+idea---a tabu-search-refined spanning tree minimizing total passenger-kilometres---to the
+Canberra bus network \parencite{suguira2026spanningtree}, evidence that the heuristic
+family remains in active use for real-network (re)design, though as a preprint that
+result should be weighted accordingly. These heuristics are attractive for corridor
+generation because they operate directly on the road graph and produce connected,
+buildable geometry from scattered demand anchors.
 
 Their limitation, which the thesis characterizes in detail, is that a tree built to
 minimize connection cost among anchors is not the same object as a good \emph{corridor}.
@@ -149,7 +242,24 @@ select for few, near-collinear anchors regardless of the demand a corridor actua
 serves, confounding feasibility with anchor sparsity. \Cref{sec:w6} re-architects the
 generator around a diameter-trunk shaper and an anchor-directness feasibility metric that
 measure the right thing, and \cref{ch:discussion} reports both what this fixes and the
-residual limitation that remains.
+residual limitation that remains. A separate positioning point, relative to
+\textcite{kepaptsoglou2009review}'s taxonomy, is more favorable to this thesis's design
+than an earlier draft of this section suggested. Academic multi-objective TNDP research
+has moved toward many-objective Pareto exploration that avoids imposing fixed weights at
+all, and \textcite{silva2022mo} note this directly: it is genuinely difficult for
+transportation experts to act on a raw Pareto front, or to combine objectives in a way
+that adapts flexibly as priorities change, which is precisely why applied practice still
+leans on weighted-sum scalarization despite its inability to reach non-convex regions of
+the trade-off space. Rather than treating one approach as simply superseding the other,
+\textcite{silva2022mo} argue single- and multi-objective framings are best combined
+synergistically. The composite score in \cref{eq:objectives} does exactly this: it blends
+$f_1$, efficiency, and $f_3$ at fixed weights (0.50/0.25/0.25) \emph{alongside}, not
+instead of, genuine Pareto ranking (\cref{fig:pareto}), giving a reader both an
+actionable single number and the full non-dominated set to inspect. This hybrid is
+consistent with, rather than behind, how the field currently reconciles academic and
+applied practice on this question---though, as \cref{sec:res-w6,sec:disc-generative}
+show, having both is only useful if the composite score and the Pareto ranking actually
+agree, which for this thesis's own candidate set they do not.
 
 \section{Research gap}
 \label{sec:lit-gap}
@@ -160,10 +270,21 @@ models estimate flows but are seldom fed forward into an explicit gap diagnostic
 studies describe stations but do not generate corridors; machine-learning siting work
 frequently trains on supply-derived targets; and corridor-generation heuristics are rarely
 evaluated against genuine unmet need rather than against the network that already exists.
-The gap this thesis addresses is therefore an integrative and methodological one: a
-demand-driven framework that (i) estimates demand from Tier-1 data alone, (ii) diagnoses
-the coverage gap with a target constructed independently of supply and validates it
-out-of-sample, (iii) generates and evaluates candidate corridors on need, non-redundancy,
-and demand efficiency, and (iv) transfers end-to-end to metropolitan areas of contrasting
-size without bespoke re-engineering. The methodology in \cref{ch:methodology} is organized
-to close exactly this gap.
+This is not to say the diagnostic half of this claim is without antecedent:
+\textcite{foth2013equitable} construct essentially the same accessibility-versus-social-need
+overlay used here as a spatial equity diagnostic for Toronto, and \textcite{camporeale2019equity}
+directly address network-design solutions evaluated against horizontal and vertical equity
+principles rather than cost or coverage alone---the same territory this thesis's generative
+layer (\cref{sec:w5,sec:w6}) occupies. What is not combined in either of those works, nor
+elsewhere in the reviewed literature, is the specific chain this thesis closes: a Tier-1-only
+demand estimate, fed into a non-circular supervised retrain, coupled to an MST-diameter-trunk
+generator gated on anchor-directness, and the whole chain transferred end-to-end across
+metropolitan areas of contrasting size. The gap this thesis addresses is therefore narrower
+than ``an integrative pipeline'' per se---closely related integrative diagnostics and
+equity-aware generators already exist---and is better stated as: a demand-driven framework
+that (i) estimates demand from Tier-1 data alone, (ii) diagnoses the coverage gap with a
+target constructed independently of supply and validates it out-of-sample, (iii) generates
+and evaluates candidate corridors on need, non-redundancy, and demand efficiency, and (iv)
+transfers end-to-end to metropolitan areas of contrasting size without bespoke
+re-engineering. The methodology in \cref{ch:methodology} is organized to close exactly this
+narrower, but still unaddressed, combination.

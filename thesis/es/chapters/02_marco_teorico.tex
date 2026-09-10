@@ -30,16 +30,40 @@ y de bajos requerimientos de datos ---los índices de nodo y lugar se arman solo
 variables de red y de uso de suelo---, pero en su forma original es estático y nada dice
 sobre la \emph{demanda latente} ni sobre dónde deberían colocarse nuevos nodos.
 
-Extensiones recientes agregan dimensiones a las dos originales. \textcite{liu2024nprv}
-proponen una formulación NP--RV que añade términos de afluencia y vitalidad, y la acoplan
-con árboles potenciados por gradiente e interpretabilidad \textsc{shap}, moviendo la
-tradición de la descripción hacia la predicción. Esta tesis adopta una variante
+Extensiones recientes agregan dimensiones a las dos originales, generalmente acoplando el
+conjunto ampliado de indicadores con aprendizaje automático. \textcite{su2022nodeplace}
+añaden a nodo y lugar un término de afluencia y lo interpretan con \textsc{shap}, moviendo
+la tradición de la descripción hacia la predicción; \textcite{aminipishro2022nprt} en
+cambio añaden tanto afluencia como hora del día como cuarta y tercera dimensión (una
+formulación NP--RT, no NP--RV), clasificando estaciones con un método K-means/Cubo.
+Ninguno añade un término de \emph{vitalidad} específicamente, y no pudo localizarse
+ningún artículo verificado que corresponda a una formulación ``NP--RV''
+nodo--lugar--afluencia--vitalidad durante una revisión de literatura del 2026-09-09; una
+versión anterior de este capítulo citaba tal artículo, el cual se retira aquí en lugar de
+dejarse sin verificar. El patrón más amplio que ilustran los dos artículos verificados
+anteriores ---aumentar Nodo--Lugar con una variable de resultado y un modelo
+interpretable--- es el que sigue esta tesis estructuralmente, aunque se aparta de él en la
+variable de resultado misma (\cref{sec:marco-aprendizaje}).
+
+La propia extensión posterior de Bertolini empareja el modelo con una medida explícita de
+accesibilidad a través de varias zonas metropolitanas europeas en lugar de un término de
+afluencia/vitalidad \parencite{papa2015tod}, la cual es el antecedente de linaje más
+cercano a la extensión basada en accesibilidad y brecha de cobertura desarrollada en esta
+tesis (\cref{sec:w3}). Esta tesis adopta una variante
 Nodo--Lugar--Personas (\nppv): conserva nodo y lugar, pone en primer plano una dimensión
 de \emph{personas} (población, dependencia y atributos de equidad) y ---de manera
 crucial--- retira el término de vitalidad de la ponderación de priorización porque, en el
 área de estudio, el único proxy de vitalidad disponible está resuelto a nivel municipal y
 por tanto colapsa a una bandera binaria de ``tiene transporte prémium'' que reintroduce
-justo la circularidad de seguir a la oferta que la tesis busca evitar (\cref{sec:w4}).
+justo la circularidad de seguir a la oferta que la tesis busca evitar (\cref{sec:w4}). Esta
+exclusión se reporta aquí como una limitación de disponibilidad de datos del proxy de
+vitalidad específico disponible en \zmg, no como una afirmación teórica de que la vitalidad
+sea prescindible en principio para un modelo de tipo Nodo--Lugar; un proxy de vitalidad a
+resolución de \ageb (p. ej., a partir de conteos peatonales o una medida de intensidad de
+actividad independiente de la demanda) sigue siendo una dirección abierta, y la etiqueta
+\nppv{} renombrada debe leerse como acotada a esta aplicación y no como una afirmación
+general de que una dimensión de afluencia o vitalidad sea prescindible para las
+extensiones Nodo--Lugar en general.
 
 \section{Estimación de la demanda de viajes}
 \label{sec:marco-demanda}
@@ -87,10 +111,17 @@ oferta actual. Esto conecta con dos vertientes afines: la literatura de ``desier
 transporte'', que contrapone la oferta de transporte a la demanda a resolución espacial
 fina \parencite{jiao2013deserts}, y la tradición de brecha por necesidad social, que
 pondera la subprovisión por las necesidades sociales de la población afectada
-\parencite{currie2010gaps}. El marco las reformula como una cantidad continua ponderada por
-demanda y, dado que demanda y oferta se construyen de forma independiente, produce una
-variable dependiente que un modelo supervisado puede aprender sin memorizar simplemente la
-red existente.
+\parencite{currie2010gaps}. Más cercano aún es el índice de necesidad de transporte basado
+en accesibilidad de \textcite{almamun2011servicegaps}, que compara un índice de necesidad
+contra un índice de accesibilidad a una resolución igualmente fina específicamente para
+identificar brechas de servicio ---la misma estructura de comparación de dos índices que
+implementa aquí el cociente de brecha de cobertura de esta tesis (\cref{eq:gap}). La
+contribución del marco respecto a esta tradición de índice de brecha ya existente no es la
+estructura de comparación en sí, que está bien establecida, sino propagar la brecha
+resultante directamente como objetivo de aprendizaje supervisado (\cref{sec:marco-aprendizaje})
+en lugar de detenerse en un mapa descriptivo. Dado que demanda y oferta se construyen de
+forma independiente, esto produce una variable dependiente que un modelo supervisado puede
+aprender sin memorizar simplemente la red existente.
 
 \section{Análisis multicriterio y ponderación objetiva}
 \label{sec:marco-multicriterio}
@@ -102,9 +133,46 @@ sesgo del analista y son difíciles de transferir entre ciudades. Esta tesis usa
 ponderación objetiva, combinando el método CRITIC \parencite{diakoulaki1995critic} ---que
 pondera un criterio por su intensidad de contraste y su independencia de los demás--- con
 el método de entropía, que pondera por la dispersión de los valores de cada criterio medida
-por la entropía de Shannon \parencite{shannon1948}. Ambos son basados en datos: leen los
-pesos de la propia matriz de indicadores, lo que hace la priorización reproducible y, sobre
-todo, re-derivable desde cero en una ciudad nueva sin volver a elicitar juicios de expertos.
+por la entropía de Shannon \parencite{shannon1948}. Ambos son basados en datos en el
+sentido específico de que el paso final de asignación de pesos lee los pesos de la propia
+matriz de indicadores, lo que hace la priorización reproducible y re-derivable desde cero
+en una ciudad nueva sin volver a elicitar juicios de expertos \emph{para ese paso}. Esto no
+elimina el juicio del analista de la metodología en su conjunto: qué catorce indicadores
+entran a la matriz, cómo se agrupan en la taxonomía Nodo/Lugar/Personas, qué regla de
+normalización (transformación logarítmica frente a min--max simple) recibe cada uno, y el
+promedio de conjunto CRITIC--EWM con pesos iguales son todas decisiones del analista
+tomadas río arriba, no leídas de los datos. El propio relato de
+\cref{sec:datos-integridad} sobre una corrección de signo e imputación del índice de
+marginación, que desplazó la puntuación media de equidad en varias décimas, es evidencia
+directa de cuán consecuentes pueden ser estas decisiones río arriba, no ``objetivas'';
+CRITIC/EWM retira el juicio experto del paso final de agregación, no de la metodología en
+su conjunto. Esta calificación no es meramente una autocrítica: el análisis comparativo de
+\textcite{mukhametzyanov2021critic} sobre la ponderación por entropía, CRITIC y desviación
+estándar encuentra que la ponderación formal basada en la matriz de decisión no siempre se
+comporta bien, lo cual confirma de forma independiente que el encuadre ``objetivo'' de
+estos métodos necesita la misma calificación que esta tesis le aplica. Esta combinación de
+ponderación de la familia CRITIC con un análisis independiente de brecha/accesibilidad no
+es exclusiva de esta tesis: \textcite{rathod2024critic} aplican el mismo emparejamiento
+---ponderación CRITIC-MCDM junto con un análisis de brecha de desempeño de accesibilidad de
+transporte--- a Surat, India, un antecedente de 2024 para tratar la capa de priorización y
+el diagnóstico de brecha como componentes relacionados pero distintos, tal como hace esta
+tesis entre W3 y W4.
+
+Un modo de falla específico y verificable que identifica la literatura anterior es la alta
+correlación entre indicadores: la fórmula de peso de CRITIC descuenta a un criterio por
+correlacionar con otros, pero el Método de Peso por Entropía no lo hace, de modo que un
+promedio de conjunto de ambos solo corrige parcialmente por indicadores redundantes. Una
+revisión de correlación de los catorce indicadores Nodo--Lugar--Personas (recalculada el
+2026-09-09) encuentra tres pares por encima del umbral convencional de multicolinealidad
+$|r|>0.8$---\code{p\_poi\_density\_n}~/~\code{p\_retail\_density\_n} ($r=0.93$),
+\code{n\_intersections\_n}~/~\code{n\_street\_density\_n} ($r=0.828$), y
+\code{pe\_population\_n}~/~\code{pe\_pop\_density\_n} ($r=0.812$)---sobre una correlación
+media absoluta fuera de la diagonal de \num{0.335}. Ninguno de los tres pares es
+sorprendente (cada uno empareja un conteo con una densidad o tasa estrechamente
+relacionada), y la propia ponderación de CRITIC ya los descuenta; la verificación se
+reporta aquí porque es el diagnóstico concreto que exige la literatura sobre modos de
+falla, no porque revierta el resultado de la ponderación.
+
 La equidad no se maneja manipulando estos pesos sino con un término aditivo explícito y
 separable, construido a partir de índices de marginación y rezago social
 \parencite{conapo_marginacion2020, coneval_rezago2020}, de modo que su contribución a la
@@ -118,7 +186,8 @@ ser un objetivo explícito y no un subproducto implícito
 
 Una literatura considerable aplica aprendizaje supervisado a la ubicación de transporte.
 \textcite{niu2023rf} usan bosques aleatorios para predecir la idoneidad de estaciones, y
-la línea NP-RV \parencite{liu2024nprv} combina potenciación por gradiente con valores
+la línea de aprendizaje automático Nodo--Lugar revisada arriba \parencite{su2022nodeplace,
+aminipishro2022nprt} combina modelos basados en árboles con valores
 \textsc{shap} \parencite{lundberg2017shap} para interpretabilidad. El marco aquí usa las
 mismas herramientas ---bosques aleatorios \parencite{breiman2001rf} y árboles potenciados
 por gradiente \parencite{chen2016xgboost, ke2017lightgbm}, leídos a través de
@@ -129,22 +198,58 @@ reproducir el statu quo y reportará alta exactitud por una razón circular. La 
 explícito este modo de falla: una versión anterior de su propia metodología se entrenó
 sobre una etiqueta derivada de un agrupamiento y reportó una exactitud de recuperación casi
 perfecta que no portaba información de planeación, y fue retirada en favor de un modelo
-entrenado sobre el objetivo independiente de brecha de cobertura (\cref{sec:w3}). El punto
-metodológico ---que las herramientas de interpretabilidad no pueden rescatar un objetivo
-circular, y que el objetivo mismo debe construirse con independencia de la oferta--- es una
-lección central de este trabajo.
+entrenado sobre el objetivo independiente de brecha de cobertura (\cref{sec:w3}).
+
+Esta circularidad específica de la ubicación de transporte no es una observación aislada
+sobre la historia de una sola metodología; es un caso particular de un mecanismo al que se
+ha dado tratamiento formal preciso en tres literaturas más maduras, introducidas en
+\cref{sec:intro-circularidad} y desarrolladas aquí. \textcite{kaufman2012leakage} nombran y
+formalizan el modo de falla general en minería de datos ---la \emph{fuga}, el uso de
+información derivada del objetivo a la que el modelo no debería tener acceso legítimo---
+del cual una etiqueta de ubicación derivada de la oferta es una instancia.
+\textcite{lakkaraju2017selectivelabels} con su \emph{problema de las etiquetas selectivas}
+da el relato estadístico más agudo de por qué esta instancia particular de fuga es
+inevitable por construcción y no meramente un defecto de calidad de datos: siempre que un
+resultado se observa solo condicionado a una decisión previa (en su contexto, la libertad
+bajo fianza; aquí, una decisión previa de ubicación), ninguna cantidad de datos o
+sofisticación adicional de modelado recupera el resultado contrafactual para las unidades
+donde la decisión fue en sentido contrario. Empíricamente, \textcite{lum2016predict} y, de
+forma más rigurosa, \textcite{ensign2018runaway} muestran que los modelos de vigilancia
+predictiva entrenados sobre dónde se envió previamente a la policía reproducen y pueden
+amplificar ese patrón histórico en lugar de detectar dónde se concentra genuinamente el
+crimen, un bucle de retroalimentación descontrolado con la estructura lógica idéntica
+---entrenar sobre dónde ya ocurrió la intervención, y el modelo solo puede reaprender la
+huella de la propia intervención--- y \textcite{flynn2022spacetime} plantean la misma
+preocupación específicamente para la asignación espacial de infraestructura. Fundamentar el
+argumento de circularidad de la tesis en este cuerpo de trabajo establecido y
+transdisciplinario, en lugar de tratarlo como una observación ad hoc sobre la historia de
+una metodología, es una de las correcciones hechas durante una revisión de literatura del
+2026-09-09. El punto metodológico ---que las herramientas de interpretabilidad no pueden
+rescatar un objetivo con etiquetado selectivo, y que el objetivo mismo debe construirse con
+independencia de la decisión previa que de otro modo codificaría--- es una lección central
+de este trabajo, y una con antecedentes mucho más allá de la planeación de transporte.
 
 \section{Diseño de redes y generación de corredores}
 \label{sec:marco-redes}
 
 Generar corredores candidatos a partir de un conjunto de ubicaciones prioritarias es un
 problema de diseño de redes, parte de la amplia literatura de diseño de redes de transporte
-\parencite{guihaire2008, farahani2013review}. La tradición heurística relevante es el árbol
+\parencite{guihaire2008, farahani2013review}, de la cual la revisión de
+\textcite{kepaptsoglou2009review} ---que organiza el campo por objetivos de diseño,
+parámetros del entorno de operación y método de solución--- sigue siendo el punto de
+referencia estándar para clasificar un método nuevo como la combinación W5/W6 de esta
+tesis. La tradición heurística relevante es el árbol
 de Steiner en grafos ---conectar un conjunto de nodos requeridos (terminales) a costo
 mínimo, posiblemente a través de nodos intermedios adicionales---, para el que
 \textcite{takahashi1980} dan una aproximación clásica basada en caminos más cortos y
 \textcite{kmb1981steiner} una rápida basada en árbol de expansión mínima, la familia de
-parientes usada aquí. Estas heurísticas resultan atractivas para la generación de corredores
+parientes usada aquí. El diseño de transporte basado en árbol de expansión no es
+puramente histórico: un estudio de caso de 2026 aplica la misma idea subyacente ---un
+árbol de expansión refinado por búsqueda tabú que minimiza el total de
+pasajeros-kilómetro--- a la red de autobuses de Canberra \parencite{suguira2026spanningtree},
+evidencia de que la familia heurística sigue en uso activo para el (re)diseño de redes
+reales, aunque al ser un preprint ese resultado debe ponderarse en consecuencia. Estas
+heurísticas resultan atractivas para la generación de corredores
 porque operan directamente sobre el grafo vial y producen geometría conectada y construible
 a partir de anclas de demanda dispersas.
 
@@ -157,7 +262,26 @@ un corredor realmente atiende, confundiendo factibilidad con escasez de anclas.
 \Cref{sec:w6} rearquitectura el generador en torno a un modelador de tronco por diámetro y
 una métrica de factibilidad por rectitud respecto a las anclas, que miden lo correcto, y
 \cref{ch:discusion} reporta tanto lo que esto corrige como la limitación residual que
-persiste.
+persiste. Un punto de posicionamiento aparte, relativo a la taxonomía de
+\textcite{kepaptsoglou2009review}, resulta más favorable al diseño de esta tesis de lo que
+sugería una versión anterior de esta sección. La investigación académica de TNDP
+multiobjetivo se ha movido hacia la exploración de Pareto multiobjetivo que evita imponer
+pesos fijos del todo, y \textcite{silva2022mo} lo señalan directamente: es genuinamente
+difícil para los expertos en transporte actuar sobre un frente de Pareto crudo, o combinar
+objetivos de manera que se adapte con flexibilidad conforme cambian las prioridades, que es
+precisamente por qué la práctica aplicada aún se apoya en la escalarización por suma
+ponderada pese a su incapacidad de alcanzar regiones no convexas del espacio de
+compensación. En lugar de tratar un enfoque como simplemente superado por el otro,
+\textcite{silva2022mo} argumentan que los encuadres de uno y de varios objetivos se
+combinan mejor de forma sinérgica. La puntuación compuesta en \cref{eq:objectives} hace
+exactamente eso: combina $f_1$, eficiencia y $f_3$ con pesos fijos (0.50/0.25/0.25)
+\emph{junto a}, no en lugar de, la clasificación de Pareto genuina (\cref{fig:pareto}), lo
+cual da al lector tanto un número único accionable como el conjunto no dominado completo
+para inspeccionar. Este híbrido es consistente con, y no está rezagado respecto a, cómo el
+campo concilia actualmente la práctica académica y la aplicada en esta cuestión ---aunque,
+como muestran \cref{sec:res-w6,sec:disc-generative}, tener ambos solo es útil si la
+puntuación compuesta y la clasificación de Pareto realmente concuerdan, cosa que para el
+conjunto de candidatos propio de esta tesis no ocurre.
 
 \section{Vacío de investigación}
 \label{sec:marco-vacio}
@@ -168,11 +292,26 @@ Los modelos de demanda estiman flujos pero pocas veces se propagan hacia un diag
 explícito de brecha; los estudios Nodo--Lugar describen estaciones pero no generan
 corredores; el trabajo de ubicación con aprendizaje automático frecuentemente entrena sobre
 objetivos derivados de la oferta; y las heurísticas de generación de corredores rara vez se
-evalúan contra necesidad genuina en lugar de contra la red que ya existe. El vacío que
-aborda esta tesis es, por tanto, integrador y metodológico: un marco basado en la demanda
+evalúan contra necesidad genuina en lugar de contra la red que ya existe. Esto no quiere
+decir que la mitad diagnóstica de esta afirmación carezca de antecedentes:
+\textcite{foth2013equitable} construyen esencialmente la misma superposición de
+accesibilidad frente a necesidad social usada aquí como diagnóstico espacial de equidad
+para Toronto, y \textcite{camporeale2019equity} abordan directamente soluciones de diseño
+de redes evaluadas contra principios de equidad horizontal y vertical en lugar de solo
+costo o cobertura ---el mismo territorio que ocupa la capa generativa de esta tesis
+(\cref{sec:w5,sec:w6}). Lo que no está combinado en ninguno de esos trabajos, ni en el
+resto de la literatura revisada, es la cadena específica que cierra esta tesis: una
+estimación de demanda basada solo en Nivel~1, alimentada a un reentrenamiento supervisado
+no circular, acoplada a un generador de tronco por diámetro de árbol de expansión mínima
+con puerta de factibilidad por rectitud respecto a las anclas, y toda la cadena
+transferida de extremo a extremo entre zonas metropolitanas de tamaño contrastante. El
+vacío que aborda esta tesis es, por tanto, más acotado que ``una metodología
+integradora'' en sí misma ---ya existen diagnósticos integradores y generadores
+sensibles a la equidad estrechamente relacionados--- y se establece mejor como: un marco
+basado en la demanda
 que (i) estima la demanda solo con datos de Nivel~1, (ii) diagnostica la brecha de
 cobertura con un objetivo construido con independencia de la oferta y lo valida fuera de
 muestra, (iii) genera y evalúa corredores candidatos por necesidad, no redundancia y
 eficiencia de demanda, y (iv) se transfiere de extremo a extremo a zonas metropolitanas de
 tamaño contrastante sin rediseño a la medida. La metodología del \cref{ch:metodologia} se
-organiza para cerrar exactamente este vacío.
+organiza para cerrar exactamente esta combinación más acotada, pero aún no abordada.

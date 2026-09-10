@@ -100,4 +100,5 @@ def evaluate_objective(
         transfer_penalty=penalty,
         composite_score=composite,
         total_score=composite - penalty,
+        f1_total=weighted_gain,          # exploratory: absolute (un-normalized) version of f1
     )

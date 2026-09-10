@@ -2,6 +2,190 @@
 % Shared bibliography for both language versions.
 % =============================================================================
 
+@misc{silva2022mo,
+  author = {Silva, Vasco D. and Finamore, Anna and Henriques, Rui},
+  title  = {On the Role of Multi-Objective Optimization to the Transit Network
+            Design Problem},
+  year   = {2022},
+  note   = {Added 2026-09-09 (literature review, deep-research pass) --
+            arXiv:2201.11616. Argues single- and multi-objective (weighted-sum
+            vs. Pareto) TNDP approaches are best combined synergistically
+            rather than one superseding the other; directly informs the
+            correctness assessment of this thesis's W5 weighted-composite +
+            Pareto hybrid (network-design literature section).}
+}
+
+@article{rathod2024critic,
+  author  = {Rathod, Rohit and Joshi, Gaurang and Arkatkar, Shriniwas},
+  title   = {Evaluation of Spatiotemporal Transit Accessibility: Weighted
+             Indexing Using the {CRITIC-MCDM} Approach and Performance Gap
+             Analysis},
+  journal = {Journal of Advanced Transportation},
+  year    = {2024},
+  doi     = {10.1155/2024/6343594},
+  note    = {Added 2026-09-09 (literature review, deep-research pass) -- a
+             2024, peer-reviewed, near-exact structural precedent for this
+             thesis's own combination of CRITIC-MCDM weighting with a
+             transit-accessibility gap analysis (Surat, India case study).}
+}
+
+@article{kaufman2012leakage,
+  author  = {Kaufman, Shachar and Rosset, Saharon and Perlich, Claudia and
+             Stitelman, Ori},
+  title   = {Leakage in Data Mining: Formulation, Detection, and Avoidance},
+  journal = {ACM Transactions on Knowledge Discovery from Data},
+  year    = {2012},
+  volume  = {6},
+  number  = {4},
+  pages   = {1--21},
+  doi     = {10.1145/2382577.2382579},
+  note    = {Added 2026-09-09 (literature review) -- the canonical data-mining
+             definition of leakage (``information about the target that
+             should not be legitimately available'') grounds the thesis's own
+             repeated ``no leakage'' language (\cref{sec:w3,sec:disc-diagnostic})
+             in its source terminology.}
+}
+
+@inproceedings{lakkaraju2017selectivelabels,
+  author    = {Lakkaraju, Himabindu and Kleinberg, Jon and Leskovec, Jure and
+               Ludwig, Jens and Mullainathan, Sendhil},
+  title     = {The Selective Labels Problem: Evaluating Algorithmic
+               Predictions in the Presence of Unobservables},
+  booktitle = {Proceedings of the 23rd ACM SIGKDD International Conference on
+               Knowledge Discovery and Data Mining (KDD)},
+  year      = {2017},
+  pages     = {275--284},
+  doi       = {10.1145/3097983.3098066},
+  note      = {Added 2026-09-09 (literature review) -- the precise formal
+             statement of the thesis's circularity problem: an outcome is
+             observed only conditional on a prior human/institutional
+             decision (there, bail release; here, a prior siting decision),
+             which is exactly why a ``has-a-stop'' label cannot be treated as
+             an unconditional measure of need.}
+}
+
+@misc{flynn2022spacetime,
+  author = {Flynn, Cheryl and Guha, Aritra and Majumdar, Subhabrata and
+            Srivastava, Divesh and Zhou, Zhengyi},
+  title  = {Towards Algorithmic Fairness in Space-Time: Filling in Black
+            Holes},
+  year   = {2022},
+  note   = {Added 2026-09-09 (literature review) -- arXiv:2211.04568, a
+            position/vision paper (not peer-reviewed research); cited only for
+            its framing of spatio-temporal feedback loops in infrastructure
+            allocation (e.g., broadband, historical redlining), the
+            spatial-data-specific analogue of the thesis's circularity
+            argument.}
+}
+
+@article{aminipishro2022nprt,
+  author  = {Amini Pishro, Arash and Yang, Qingfei and Zhang, Sheng and Amini
+             Pishro, Mehran and Zhang, Zhonglai and Zhao, Yiqun and Postel,
+             Vincent and Huang, Dianyou and Li, Wenzhong},
+  title   = {Node, Place, Ridership, and Time Model for Rail-Transit Stations:
+             A Case Study},
+  journal = {Scientific Reports},
+  year    = {2022},
+  volume  = {12},
+  pages   = {16120},
+  doi     = {10.1038/s41598-022-20209-4},
+  note    = {Added 2026-09-09 (literature review) -- real Node-Place extension
+             (adding ridership and time, not vitality) using MLR + K-means/Cube
+             classification; cited alongside \texttt{su2022nodeplace} in place of
+             the deleted, unverifiable \texttt{liu2024nprv}.}
+}
+
+@article{ensign2018runaway,
+  author  = {Ensign, Danielle and Friedler, Sorelle A. and Neville, Scott and
+             Scheidegger, Carlos and Venkatasubramanian, Suresh},
+  title   = {Runaway Feedback Loops in Predictive Policing},
+  journal = {Proceedings of Machine Learning Research (Conference on Fairness,
+             Accountability, and Transparency)},
+  year    = {2018},
+  volume  = {81},
+  pages   = {160--171},
+  note    = {Added 2026-09-09 (literature review) -- formalizes, in a closely
+             analogous domain, exactly the circularity mechanism this thesis
+             argues against for transit siting: a model trained on where an
+             intervention already occurred reproduces and amplifies that
+             pattern rather than detecting genuine underlying need. Builds on
+             \textcite{lum2016predict}.}
+}
+
+@article{lum2016predict,
+  author  = {Lum, Kristian and Isaac, William},
+  title   = {To Predict and Serve?},
+  journal = {Significance},
+  year    = {2016},
+  volume  = {13},
+  number  = {5},
+  pages   = {14--19},
+  doi     = {10.1111/j.1740-9713.2016.00960.x},
+  note    = {Added 2026-09-09 (literature review) -- earliest widely-cited
+             demonstration of the predictive-policing feedback loop; see
+             \textcite{ensign2018runaway} for the formal treatment.}
+}
+
+@article{mukhametzyanov2021critic,
+  author  = {Mukhametzyanov, Ilyas},
+  title   = {Specific Character of Objective Methods for Determining Weights
+             of Criteria in {MCDM} Problems: Entropy, {CRITIC}, {SD}},
+  journal = {Decision Making: Applications in Management and Engineering},
+  year    = {2021},
+  volume  = {4},
+  number  = {2},
+  pages   = {76--105},
+  doi     = {10.31181/dmame210402076a},
+  note    = {Added 2026-09-09 (literature review) -- direct critical-MCDA
+             source showing objective weighting methods (Entropy, CRITIC,
+             standard deviation) are not always correct/well-behaved,
+             supporting the thesis's own qualification of its ``no expert
+             weighting'' claim (MCDA/objective-weighting literature section).}
+}
+
+@article{almamun2011servicegaps,
+  author  = {Al Mamun, Md. Shah and Lownes, Nicholas E.},
+  title   = {Measuring Service Gaps: Accessibility-Based Transit Need Index},
+  journal = {Transportation Research Record},
+  year    = {2011},
+  volume  = {2217},
+  number  = {1},
+  pages   = {153--161},
+  doi     = {10.3141/2217-19},
+  note    = {Added 2026-09-09 (literature review) -- direct methodological
+             antecedent for this thesis's coverage-gap construction: a
+             transit-need index compared against an accessibility index to
+             identify service gaps, at a similarly fine spatial resolution.}
+}
+
+@article{kepaptsoglou2009review,
+  author  = {Kepaptsoglou, Konstantinos and Karlaftis, Matthew},
+  title   = {Transit Route Network Design Problem: Review},
+  journal = {Journal of Transportation Engineering},
+  year    = {2009},
+  volume  = {135},
+  number  = {8},
+  pages   = {491--505},
+  doi     = {10.1061/(ASCE)0733-947X(2009)135:8(491)},
+  note    = {Added 2026-09-09 (literature review) -- the canonical TNDP review,
+             complementing \parencite{guihaire2008,farahani2013review} already
+             cited; its design-objectives/solution-approach taxonomy is the
+             standard reference point for classifying this thesis's W5/W6
+             approach.}
+}
+
+@article{suguira2026spanningtree,
+  author  = {Sugiura, Satoshi and others},
+  title   = {Urban Transit Network Design Using Spanning Tree: A Case Study of
+             {C}anberra Transit Network},
+  journal = {arXiv preprint arXiv:2604.15754},
+  year    = {2026},
+  note    = {Added 2026-09-09 (literature review) -- PREPRINT, not
+             peer-reviewed; cited only as evidence that spanning-tree-based
+             transit network (re)design has current, independent real-network
+             precedent, not as a peer-reviewed authority.}
+}
+
 @article{bertolini1999,
   author  = {Bertolini, Luca},
   title   = {Spatial Development Patterns and Public Transport: The Application
@@ -24,21 +208,79 @@
   pages     = {331--345}
 }
 
-@article{liu2024nprv,
-  author  = {Liu, and others},
-  title   = {A Node--Place--Ridership--Vitality Framework for Transit Station
-             Assessment Using Machine Learning and {SHAP}},
+@article{su2022nodeplace,
+  author  = {Su, Shiliang and Wang, Zhihui and Li, Bingjie and Kang, Mengjun},
+  title   = {Deciphering the Influence of {TOD} on Metro Ridership: An
+             Integrated Approach of Extended Node-Place Model and Interpretable
+             Machine Learning with Planning Implications},
   journal = {Journal of Transport Geography},
-  year    = {2024},
-  note    = {Placeholder entry -- complete with final citation details}
+  year    = {2022},
+  volume  = {104},
+  pages   = {103455},
+  doi     = {10.1016/j.jtrangeo.2022.103455}
 }
 
 @article{niu2023rf,
-  author  = {Niu, and others},
-  title   = {Random Forest Modelling of Metro Station Site Suitability},
-  journal = {Transportation Research Part A},
+  author  = {Niu, Quanfu and Wang, Guohua and Liu, Bo and others},
+  title   = {Selection and Prediction of Metro Station Sites Based on Spatial
+             Data and Random Forest: A Study of {L}anzhou, {C}hina},
+  journal = {Scientific Reports},
   year    = {2023},
-  note    = {Placeholder entry -- complete with final citation details}
+  volume  = {13},
+  pages   = {22542},
+  doi     = {10.1038/s41598-023-49877-6},
+  note    = {Corrected 2026-09-09 (thesis review): the placeholder had claimed
+             a different title and venue (\emph{Transportation Research Part
+             A}). Verified via web search -- same author surname, year, and
+             method/topic (random forest + spatial data for metro station
+             siting); no closer match found. Please confirm this is the
+             intended source.}
+}
+
+@article{foth2013equitable,
+  author  = {Foth, Nicole and Manaugh, Kevin and El-Geneidy, Ahmed M.},
+  title   = {Towards Equitable Transit: Examining Transit Accessibility and
+             Social Need in {T}oronto, {C}anada, 1996--2006},
+  journal = {Journal of Transport Geography},
+  year    = {2013},
+  volume  = {29},
+  pages   = {1--10},
+  doi     = {10.1016/j.jtrangeo.2012.12.008},
+  note    = {Added 2026-09-09 (thesis review, R2/domain reviewer) -- closest
+             direct antecedent to the coverage-gap diagnostic's construction
+             (accessibility overlaid against social need); cite and
+             distinguish in \texttt{sec:lit-gap}.}
+}
+
+@article{camporeale2019equity,
+  author  = {Camporeale, Rosalia and Caggiani, Leonardo and Ottomanelli, Michele},
+  title   = {Modeling Horizontal and Vertical Equity in the Public Transport
+             Design Problem: A Case Study},
+  journal = {Transportation Research Part A: Policy and Practice},
+  year    = {2019},
+  volume  = {125},
+  pages   = {184--206},
+  doi     = {10.1016/j.tra.2018.04.006},
+  note    = {Added 2026-09-09 (thesis review, R2/domain reviewer) -- closest
+             direct antecedent to the W5/W6 generative layer's equity-aware
+             network-design evaluation; cite and distinguish in
+             \texttt{sec:lit-gap}.}
+}
+
+@article{papa2015tod,
+  author  = {Papa, Enrica and Bertolini, Luca},
+  title   = {Accessibility and Transit-Oriented Development in {E}uropean
+             Metropolitan Areas},
+  journal = {Journal of Transport Geography},
+  year    = {2015},
+  volume  = {47},
+  pages   = {70--83},
+  doi     = {10.1016/j.jtrangeo.2015.07.003},
+  note    = {Added 2026-09-09 (thesis review, R2/domain reviewer) -- Bertolini's
+             own accessibility-based extension of the Node--Place model across
+             multiple cities; the single closest antecedent to this thesis's
+             combination of Node--Place with an accessibility/coverage-gap
+             layer; cite in \texttt{sec:lit-nodeplace}.}
 }
 
 @article{takahashi1980,

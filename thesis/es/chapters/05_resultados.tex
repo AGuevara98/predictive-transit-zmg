@@ -116,8 +116,15 @@ $\overline{F} = \num{0.4131}$ con $\alpha = \num{0.20}$; la media baja de equida
 esperada, ya que \zmg es predominantemente de baja marginación. Un análisis de
 sensibilidad sobre $\alpha \in \{0.10, 0.20, 0.30\}$ confirma que la priorización es
 robusta: el ordenamiento correlaciona con la línea base de $\alpha = \num{0.20}$ en
-Spearman $\ge \num{0.98}$, de modo que el peso de equidad cambia cuáles \ageb{}s
-específicos encabezan la lista sin alterar la estructura general.
+Spearman $\ge \num{0.98}$. Esta robustez de correlación agregada, sin embargo,
+subestima cuánto mueve $\alpha$ a \ageb{}s específicos dentro y fuera de la cima de la
+lista: el top-50 coincide con el top-50 de la línea base $\alpha=0.20$ en solo
+\num{36}--\num{37} de \num{50} \ageb{}s entre los dos valores fuera de línea base, el
+top-100 en \num{78}--\num{82} de \num{100}, y la pertenencia a quintil cambia para el
+\SI{14}{\percent}--\SI{16}{\percent} de todos los \ageb{}s. El peso de equidad, por
+tanto, cambia cuáles \ageb{}s específicos encabezan la lista --- una cantidad relevante
+para la decisión de una agencia de planeación que lee una lista corta ordenada --- aun
+cuando no altera la estructura general que reporta la correlación agregada.
 
 \section{Corredores generados (W6)}
 \label{sec:res-w6}
@@ -155,17 +162,126 @@ W6\_G05 & 5.4  & 14 & 80234  & Tren ligero & {--} \\
   \label{fig:pareto}
 \end{figure}
 
-El resultado más destacado es \code{W6\_G02}: un corredor sustantivo de
-\SI{12.1}{\kilo\metre} y \num{25} \ageb{}s que transporta una estimación de
-\num{192357} viajes/día. En las pruebas de mérito introducidas para la validación
-(\cref{sec:res-w8}) es el único corredor factible que pasa las tres: el
+En las pruebas de mérito de tres ejes introducidas para la validación (\cref{sec:res-w8}),
+\code{W6\_G02} es el único corredor factible que pasa las tres: el
 \SI{56}{\percent} de sus \ageb{}s servidos son de brecha alta (frente a la línea base
-metropolitana de \SI{20.7}{\percent}), no es redundante con las rutas existentes
-(mejor Jaccard \num{0.18}) y su demanda por kilómetro se ubica en el percentil
-\num{73} de la red existente. \code{W6\_G03} también pasa, pero es un tramo corto de
-\SI{2.4}{\kilo\metre}, mientras que \code{W6\_G00} y \code{W6\_G01} atienden necesidad
-real pero son conectores de menor eficiencia ---un resultado mixto pero caracterizado
-honestamente que se discute en el \cref{ch:discusion}.
+metropolitana de \SI{20.7}{\percent}), no es redundante en la medida Jaccard de \ageb{}s
+servidos (mejor Jaccard \num{0.18}) y su demanda por kilómetro se ubica en el percentil
+\num{73} de la red existente. Una segunda medida de traslape basada en forma, calculada en
+el mismo paso de validación, es menos limpia: la alineación de \code{W6\_G02} pasa dentro
+de \SI{400}{\metre} de la ruta prémium existente MP-C03 durante el \SI{42}{\percent} de su
+longitud muestreada ---una cifra sustancialmente mayor que el traslape Jaccard por
+conjunto de \ageb{}s, y leída aquí como corroboración de que una alineación trazada por
+planificadores sigue un terreno similar, al costo de una salvedad sobre qué tan
+\emph{único} es en realidad el trazo del corredor; ambas cifras deben reportarse juntas
+en lugar de solo la cifra de Jaccard.
+
+Este resultado de las pruebas de mérito, sin embargo, no debe leerse aislado de la
+función de evaluación formal propia de la metodología. La \cref{tab:pareto-w5} reporta
+los valores objetivo W5 sin procesar y el rango de Pareto (no dominado) para cada
+candidato. Bajo dominancia estricta de Pareto, \code{W6\_G03} es el único corredor
+factible de rango 1 (no dominado): domina estrictamente a \emph{todos los demás
+candidatos, factibles o no}, en los tres objetivos simultáneamente (mayor ganancia de
+demanda $f_1$, menor longitud, mayor equidad media $f_3$). \code{W6\_G02} ---el corredor
+que señalan las pruebas de mérito--- está dominado dos veces, tanto por \code{W6\_G00}
+como por \code{W6\_G03}, y ocupa el \emph{último} lugar (rango de Pareto 3) entre los
+cuatro corredores factibles. Esto no es un artefacto de los pesos específicos de la
+puntuación compuesta (\num{0.50}/\num{0.25}/\num{0.25}, \cref{eq:objectives}): un barrido
+completo de \num{231} combinaciones alternativas de pesos no negativos sobre una
+cuadrícula simplex de \num{0.05} encuentra a \code{W6\_G03} con la puntuación más alta
+bajo \emph{todas} las combinaciones probadas, lo cual se sigue directamente de la
+dominancia estricta de Pareto y se mantendría para cualquier ponderación.
+
+\begin{table}[htbp]
+\centering
+\caption{Valores objetivo W5 y rango de Pareto para los cinco candidatos (2026-09-09,
+  recalculado a partir de \code{features.route\_candidates} y verificado contra esa
+  tabla). Rango 1 = no dominado. $f_1$ y $f_3$ se maximizan, $f_2$ se minimiza.}
+\label{tab:pareto-w5}
+\begin{tabular}{l S[table-format=1.3] S[table-format=2.2] S[table-format=1.3] c c}
+\toprule
+Corredor & {$f_1$ (ganancia)} & {$f_2$ (km)} & {$f_3$ (equidad)} & Rango Pareto & Factible \\
+\midrule
+W6\_G00 & 0.301 & 7.32  & 0.338 & 2 & Sí \\
+W6\_G01 & 0.270 & 23.00 & 0.347 & 2 & Sí \\
+W6\_G02 & 0.164 & 12.13 & 0.265 & 3 & Sí \\
+W6\_G03 & 0.357 & 2.44  & 0.349 & 1 & Sí \\
+W6\_G05 & 0.125 & 5.40  & 0.271 & 2 & No  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Las dos lentes de evaluación discrepan porque miden cosas distintas.
+Las pruebas de mérito premian la demanda absoluta, la proporción absoluta de brecha alta
+y la eficiencia de demanda relativa a la \emph{red existente}; el objetivo W5 $f_1$ es un
+\emph{promedio} ponderado por demanda de la fracción no atendida sobre los propios
+\ageb{}s servidos del corredor ---una tasa, no un total. Las cinco anclas de
+\code{W6\_G03} son aparentemente uniformemente de brecha alta, de modo que su promedio es
+alto pese a transportar una fracción de la demanda absoluta de \code{W6\_G02}
+(\num{35784} frente a \num{192357} viajes/día); \code{W6\_G02} sirve a una \emph{mezcla}
+ponderada por demanda de niveles de brecha a lo largo de sus \num{25} \ageb{}s, lo cual
+reduce su promedio aunque atiende mucha más demanda no satisfecha en términos absolutos.
+
+Esto es verificable, no solo afirmado. Defínase $f_1^{\text{tot}} = \sum_{i\in S} D_i\,
+\kappa\, u_i$, el mismo numerador que en \cref{eq:objectives} sin dividir entre
+$\sum_{i\in S} D_i$ ---una ganancia absoluta, no por unidad, ponderada por demanda.
+Recalcular la dominancia de Pareto sobre $(f_1^{\text{tot}}, f_2, f_3)$ para los cuatro
+corredores factibles (2026-09-09, mediante la ruta de código de producción
+\code{evaluate\_objective}, no una reimplementación) da $f_1^{\text{tot}} = \num{19873}$,
+\num{26100}, \num{31608}, \num{12791} para \code{W6\_G00}--\code{W6\_G03}
+respectivamente, y \emph{los cuatro se vuelven mutuamente no dominados} ---\code{W6\_G03}
+ya no domina al conjunto. Este es el resultado más revelador: bajo la formulación de
+tasa, \code{W6\_G03} gana con independencia de los pesos objetivo no porque sea
+inequívocamente el mejor, sino porque ``pequeño'' y ``corto'' se mueven juntos para él,
+sin dejar una compensación real que los demás objetivos puedan romper; un problema
+multiobjetivo genuinamente en competencia no debería producir un candidato que domine
+absolutamente bajo cualquier ponderación posible, y el hecho de que aquí ocurriera era en
+sí mismo una señal de que la formulación de tasa de $f_1$ estaba midiendo mal la
+compensación, no de que \code{W6\_G03} fuera en secreto el candidato más fuerte.
+
+Corregir esto reencuadra la elección en lugar de resolverla a un único ganador:
+\code{W6\_G02} y \code{W6\_G01} atienden sustancialmente más demanda absoluta no
+satisfecha por kilómetro (\num{2606} y \num{1135} unidades de demanda/km) que
+\code{W6\_G03} (\num{12791}/2.44 = \num{5242}/km es lo más alto, pero en un corredor un
+orden de magnitud menor), de modo que la elección real, antes no revelada, es entre un
+número menor de corredores más grandes y consecuentes, y un conector muy focalizado pero
+menor ---una compensación genuina entre escala y pureza de focalización que una agencia
+de planeación debe hacer explícita, no un error que la tesis deba resolver en nombre del
+lector. La \cref{sec:disc-generative} retoma esto con la recomendación que se sigue de
+ello.
+
+La sustitución de rectitud por anclas en lugar de rodeo por extremos (\cref{sec:w6}) se
+motivó por la geometría específica de \code{W6\_G02}, así que vale la pena preguntar si
+su efecto se limita a ese caso. La \cref{tab:directness-comparison} reporta ambas
+métricas para el conjunto completo de candidatos: no es así. El rodeo por extremos
+aprobaría solo a \code{W6\_G03} (un tramo casi colineal de dos anclas) y rechazaría por
+igual a \code{W6\_G00}, \code{W6\_G01} y \code{W6\_G02}, cada uno superando el tope de
+\num{1.8} por un margen amplio (\num{2.84}, \num{2.02} y \num{2.09} respectivamente). La
+rectitud por anclas aprueba a los tres. La sustitución tiene, por tanto, un efecto amplio
+y sistemático entre los candidatos multi-ancla ---rescatando a tres corredores, no
+ajustando estrechamente uno solo--- lo cual es una historia sustancialmente distinta, y
+más defendible, que la que puede contar un solo ejemplo trabajado por sí mismo.
+
+\begin{table}[htbp]
+\centering
+\caption{Rectitud por anclas frente a rodeo por extremos para el conjunto completo de
+  candidatos (route\_km sin cambio entre métricas; solo difiere el denominador).
+  Recalculado el 2026-09-09 re-ejecutando el generador contra la base de datos en vivo;
+  la columna de rectitud por anclas y las longitudes de ruta reproducen la
+  \cref{tab:corridors} exactamente.}
+\label{tab:directness-comparison}
+\begin{tabular}{l S[table-format=2.2] S[table-format=1.2] S[table-format=1.2] c c}
+\toprule
+Corredor & {km} & {Rectitud por anclas} & {Rodeo por extremos} & {¿Pasa anclas?} & {¿Pasa extremos?} \\
+\midrule
+W6\_G00 & 7.32  & 1.44 & 2.84 & Sí & No \\
+W6\_G01 & 23.00 & 1.16 & 2.02 & Sí & No \\
+W6\_G02 & 12.13 & 1.54 & 2.09 & Sí & No \\
+W6\_G03 & 2.44  & 1.25 & 1.36 & Sí & Sí \\
+W6\_G05 & 5.40  & 1.93 & 2.69 & No  & No \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Auditoría de rutas existentes (W7)}
 \label{sec:res-w7}
@@ -239,6 +355,12 @@ instantánea \textsc{gtfs} de 2024 es anterior a la apertura en diciembre de 202
 Línea~4 de SITEUR, por lo que el diagnóstico trata el corredor de la Línea~4 como
 desatendido. Sus \ageb{}s muestran \num{1.6} veces la tasa metropolitana de brecha
 alta, confirmando fuera de muestra que el índice de brecha de cobertura señala
-corredores que los planificadores decidieron construir de forma independiente. Esto
-corrobora la capa de \emph{diagnóstico}; no prueba que el generador hubiera producido
-la Línea~4, distinción que se desarrolla en el \cref{ch:discusion}.
+corredores que los planificadores decidieron construir de forma independiente. Este es
+un único experimento natural ($n=1$), reportado aquí como una razón simple sin intervalo
+de confianza ni prueba de significancia contra la tasa base de un modelo que ya marca al
+\SI{20.7}{\percent} de la metrópoli como de brecha alta; debe leerse como corroboración
+direccional, no como una prueba estadísticamente cuantificada, y más casos fuera de
+muestra (conforme se abran futuras líneas, o mediante las pruebas retrospectivas
+multilínea del \cref{ch:transferibilidad}) fortalecerían considerablemente la
+afirmación. Esto corrobora la capa de \emph{diagnóstico}; no prueba que el generador
+hubiera producido la Línea~4, distinción que se desarrolla en el \cref{ch:discusion}.

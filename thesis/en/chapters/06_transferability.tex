@@ -21,10 +21,19 @@ downloadable \textsc{gtfs}.
 Every stage runs through the same code as \zmg, invoked as
 \code{w9\_run\_*.py -{}-city \{tol,ags\}}, reusing the pure \zmg functions over
 per-city configuration. Tier-1 inputs (census, \textsc{denue}, street network) are
-national and therefore available everywhere; equity indices come from the same
-CONAPO and CONEVAL products. No local Origin--Destination survey exists for either
-city, so the calibrated $\beta = \num{1.2005}$ is transferred from \zmg; because the
-size-comparison metrics below are ratios, they are insensitive to this choice.
+national---available for any Mexican city through the same federal statistical
+agencies (INEGI, DENUE, CONAPO, CONEVAL)---rather than general in the sense of
+working in any country; the transfer claim below should accordingly be read as
+transfer \emph{within Mexico's national data ecosystem}, not yet as transfer across
+different countries' statistical infrastructures. No local Origin--Destination
+survey exists for either city, so the calibrated $\beta = \num{1.2005}$ is
+transferred from \zmg; because the size-comparison metrics below are ratios, they
+are insensitive to this choice for cross-city \emph{ordering}, though this is a
+weaker claim than saying absolute demand magnitudes are insensitive to it---and
+within \zmg itself, recalibrating $\beta$ from \num{2.0} to \num{1.2005} was found to
+materially reshape where demand concentrates (\cref{sec:res-w2}), so an untested
+assumption that an uncalibrated prior only shifts magnitude, not relative structure,
+in a new city is carried forward here rather than demonstrated.
 
 \section{Demand and coverage-gap transfer}
 \label{sec:transf-diagnosis}
@@ -74,6 +83,33 @@ largest objective weight in both transfer cities (Toluca \num{0.182}, Aguascalie
 \num{0.247}), whereas in \zmg the employment and population terms led. Because the
 weights are data-driven (CRITIC$\,\times\,$EWM), this shift is a feature: the method
 adapts its emphasis to each city's own indicator structure.
+
+A related question, not previously reported, is whether the finding that
+diagnostic priority and equity priority are ``largely aligned'' in \zmg
+(\cref{sec:disc-equity}) survives transfer, given that the transfer cities' equity
+input is a coarser ordinal proxy (\cref{sec:transf-limits}). \Cref{tab:equity-transfer}
+answers this directly: the Spearman correlation between the coverage-gap index and
+the equity score is positive and of similar magnitude in all three cities, and
+High-gap \ageb{}s carry a substantially higher mean equity score than other \ageb{}s
+in every case. The alignment finding is therefore not a \zmg-specific artifact of the
+continuous marginalization/social-lag inputs; it replicates under the coarser ordinal
+proxy used in the transfer cities.
+
+\begin{table}[htbp]
+\centering
+\caption{Coverage-gap/equity-score alignment across the three cities (computed
+  2026-09-09 from the live coverage-gap and prioritization tables/CSVs).}
+\label{tab:equity-transfer}
+\begin{tabular}{l S[table-format=4.0] S[table-format=1.3] S[table-format=1.3] S[table-format=1.3]}
+\toprule
+City & {$n$} & {Spearman $\rho$} & {Mean equity, High-gap} & {Mean equity, other} \\
+\midrule
+\zmg           & 1881 & 0.518 & 0.288 & 0.211 \\
+Toluca         & 538  & 0.475 & 0.409 & 0.260 \\
+Aguascalientes & 356  & 0.506 & 0.426 & 0.250 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 Corridor generation produces substantive, feasible corridors in both cities
 (\cref{tab:transfer-corridors}). Toluca's best feasible corridor, \code{W6\_G01}

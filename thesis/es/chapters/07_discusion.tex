@@ -66,19 +66,63 @@ cobertura de demanda que legítimamente se curva.
 Rearquitecturar el generador en torno a anclas de frontera, un tronco de
 \emph{diámetro} del árbol de expansión mínima ensamblado de calles reales y una
 compuerta de factibilidad por \emph{rectitud de anclas} (\cref{sec:w6}) cambió el
-veredicto. En sus propios términos el generador ahora produce al menos un corredor
+veredicto. En las pruebas de mérito de tres ejes, el generador ahora produce al menos un corredor
 sustantivo, factible y meritorio: \code{W6\_G02} atiende \SI{12.1}{\kilo\metre} y
 \num{25} \ageb{}s, de los cuales el \SI{56}{\percent} son de brecha alta (frente a la
 línea base de \SI{20.7}{\percent}), no es redundante con la red existente (mejor
 Jaccard \num{0.18}) y se ubica en el percentil \num{73} de demanda por kilómetro. Esta
 es una línea real, no un tramo.
 
-El éxito es parcial, sin embargo, y la tesis no lo exagera. Junto a \code{W6\_G02}, el
-generador también arroja conectores de menor eficiencia (\code{W6\_G00} y
+El éxito es parcial, y de una manera más específica de lo que caracterizaban versiones
+anteriores de este capítulo: el veredicto de las pruebas de mérito y la propia función
+multiobjetivo W5 de la metodología discrepan sobre cuál corredor es el mejor. La
+\cref{tab:pareto-w5} muestra que bajo dominancia estricta de Pareto ---no sensible a
+ninguna elección de pesos objetivo--- \code{W6\_G03}, no \code{W6\_G02}, es el único
+corredor factible no dominado; \code{W6\_G02} está dominado en los tres objetivos tanto
+por \code{W6\_G00} como por \code{W6\_G03}. Esto no es tanto una contradicción como una
+tensión antes no señalada entre dos nociones distintas de un ``buen'' corredor: las
+pruebas de mérito (y la intuición del lector) favorecen a \code{W6\_G02} porque atiende
+la mayor demanda absoluta no satisfecha a una escala que parece una línea real de
+transporte; el objetivo W5 favorece a \code{W6\_G03} porque su conjunto pequeño y
+uniformemente de brecha alta de anclas le da la mejor tasa \emph{promedio} de
+focalización ponderada por demanda. Una metodología que reporta una función
+multiobjetivo formal no debería reportar selectivamente solo la lente de evaluación que
+favorece su ejemplo narrativo preferido; esta asimetría se corrige aquí en lugar de en
+una revisión futura.
+
+Probar una variante de cobertura absoluta de $f_1$ (\cref{sec:res-w6}) resuelve esto de
+una manera más útil que simplemente elegir una lente sobre la otra: no es que
+\code{W6\_G03} sea en secreto el candidato más fuerte bajo una ponderación ``más
+justa'', sino que la formulación de tasa de $f_1$ estaba estructuralmente sesgada hacia
+candidatos pequeños y geográficamente compactos, ya que un corredor corto puede
+permanecer enteramente dentro de un bolsón homogéneo de alta necesidad mientras que uno
+más largo necesariamente promedia algo de territorio de paso de menor necesidad para
+seguir siendo una trayectoria conectada y construible. El hecho de que \code{W6\_G03}
+ganara bajo \emph{todas} las ponderaciones objetivo probadas (\cref{sec:res-w6}) era en
+sí mismo la señal: una compensación multiobjetivo genuina no debería producir un
+candidato que domine absolutamente sin importar los pesos. Corregir $f_1$ a un total
+absoluto ponderado por demanda elimina el artefacto y devuelve un frente de Pareto
+genuino de cuatro vías ---\code{W6\_G02} y \code{W6\_G01} atienden sustancialmente más
+demanda total no satisfecha, \code{W6\_G03} sigue siendo el más eficiente en demanda por
+kilómetro, y ninguno domina a los demás. La elección que en realidad presenta el
+generador de esta tesis a un planificador es, por tanto, real: financiar menos
+corredores, más grandes, que atiendan más necesidad absoluta no satisfecha, o un
+conector pequeño y muy focalizado que es eficiente por kilómetro pero modesto en
+escala. Recomendar a \code{W6\_G02} como resultado principal es defendible en estos
+términos ---para una única inversión de capital insignia, el impacto absoluto es el
+criterio más relevante para la decisión--- pero la tesis debe decirlo explícitamente en
+lugar de dejar que una métrica de tasa no examinada implique que las dos lentes
+simplemente medían lo mismo de forma distinta. Junto a ambos,
+el generador también arroja conectores de menor eficiencia (\code{W6\_G00} y
 \code{W6\_G01}) que atienden necesidad real pero puntúan bajo en demanda por
 kilómetro. La limitación residual es arquitectónica ---el número fijo de anclas, el
 agrupamiento espacial y el tronco del árbol de expansión no pueden alcanzar cada
-bolsón de brecha alta--- y ahora se mide en lugar de solo afirmarse.
+bolsón de brecha alta--- y ahora se mide en lugar de solo afirmarse. Una segunda
+limitación independiente, también ahora medida en lugar de solo afirmada, es que el
+$f_1$ basado en tasa de la función objetivo necesita el complemento de cobertura
+absoluta anterior para leerse correctamente; la metodología de producción sigue
+reportando por defecto la versión de tasa (\cref{sec:w5}), de modo que cualquier
+re-ejecución futura de esta evaluación debería calcular y reportar ambas.
 
 \section{La reconstrucción es un proxy débil del mérito de un corredor}
 \label{sec:disc-reconstruction}
@@ -121,7 +165,14 @@ rezago social---, de modo que priorizar la demanda no atendida y priorizar la
 desventaja están, en \zmg, en gran medida alineados y no en tensión. La corrección del
 signo y la imputación del índice de marginación (documentada en el capítulo de datos)
 importa aquí: un término de equidad que hubiera premiado silenciosamente a las zonas
-menos marginadas habría invertido esta conclusión.
+menos marginadas habría invertido esta conclusión. Esta alineación no es meramente una
+coincidencia dentro de \zmg de la geografía demográfica de una sola ciudad: la
+\cref{tab:equity-transfer} muestra la misma correlación positiva entre brecha de
+cobertura y puntuación de equidad, de magnitud similar, en ambas ciudades de
+transferencia bajo su proxy de equidad ordinal más grueso, lo cual es cierta evidencia
+de que la alineación refleja una regularidad más general de la demanda de transporte no
+atendida y la desventaja social coubicándose en periferias mexicanas en crecimiento, y
+no un artefacto específico de los propios indicadores de \zmg.
 
 \section{Limitaciones}
 \label{sec:disc-limitations}
@@ -138,5 +189,51 @@ muy próximas. Lo más importante: los corredores \emph{generados} se validan so
 forma indirecta ---por necesidad, no redundancia y eficiencia de demanda--- y no contra
 afluencia observada, porque no existe afluencia contrafactual para líneas que nunca se
 construyeron. La capa de diagnóstico, en cambio, tiene un anclaje fuera de muestra en la
-Línea~4. Esta asimetría es el límite honesto de la contribución: un diagnóstico
+Línea~4, aunque ese anclaje es en sí mismo un caso único reportado sin intervalo de
+confianza (\cref{sec:res-w8}) y debe leerse como corroboración direccional y no como una
+prueba estadísticamente cuantificada. Esta asimetría es el límite honesto de la
+contribución: un diagnóstico
 validado, y un generador caracterizado cuya efectividad se mide en sus propios términos.
+
+Dos limitaciones adicionales, surgidas durante una revisión del 2026-09-09, se
+documentan aquí. Primero, la afirmación de ``sin fuga'' del reentrenamiento supervisado
+(\cref{sec:w3}) se había verificado solo contra la exclusión directa de columnas de
+oferta de transporte; una ablación de características y una reevaluación bloqueada
+espacialmente de seguimiento (\cref{sec:w3}) confirmaron que la preocupación era real y
+no hipotética: remover las características de población cuesta \num{0.165} puntos de
+PR-AUC de prueba, y una retención espacial a nivel municipal cuesta \num{0.247} puntos
+respecto a la configuración de división aleatoria de producción. El PR-AUC de
+producción de \num{0.877}--\num{0.883} debe leerse en consecuencia como una cota
+superior bajo condiciones de evaluación optimistas. Segundo, un intento durante esta
+revisión de reproducir la comparación de $R^2$ entre el prior y el calibrado de W2 sacó
+a la luz una no-reproducibilidad que una investigación de seguimiento acotó pero no
+cerró por completo. Re-ejecutar el mismo código de calibración contra la base de datos
+en vivo devolvió $\beta^\star = \num{1.0025}$ y $n=2140$ pares de zonas, en lugar del
+$\beta^\star = \num{1.2005}$, $n=\num{1993}$ reportado en toda esta tesis y en tres
+ejecuciones históricas previas de calibración registradas en
+\code{features.w2\_calibration}. La investigación de seguimiento descartó varias causas
+candidatas en lugar de confirmar una: (i) las producciones agregadas, la demanda de
+transporte y la tasa vehicular media de \code{features.ageb\_trip\_ends} coinciden
+exactamente con los valores reportados en \cref{sec:res-w1}; (ii) el modelo
+gravitacional W1 (\cref{sec:w1}) se re-ejecutó desde cero y reprodujo el mismo conteo de
+filas de la matriz OD y el mismo flujo total (neto del corte documentado de
+almacenamiento disperso $\ge\num{0.5}$, que por diseño excluye una larga cola de flujos
+muy pequeños y no es en sí mismo un defecto); (iii) \code{src/w2\_gravity\_calibration.py}
+no se ha modificado desde antes de que se produjera el resultado de \num{1.2005}; y sin
+embargo recalibrar contra la salida de W1 recién confirmada sigue devolviendo
+$\beta^\star=\num{1.0025}$, no \num{1.2005}. Con la matriz OD y las capas de generación
+de viajes ahora confirmadas de forma independiente como reproducibles y el script de
+calibración sin cambios, el candidato restante es la ruta de datos del lado de la
+encuesta \textsc{eod} (la unión espacial \ageb-a-zona o las geometrías de zona
+subyacentes) a un grano más fino de lo que puede revelar el \emph{conteo de
+coincidencias} \ageb-a-zona (que es estable en 1,822/63); no sobrevive ninguna
+instantánea de la base de datos en vivo de la fecha de la ejecución original de
+\num{1.2005} contra la cual comparar directamente, razón por la cual esto pudo acotarse
+pero no cerrarse. Dada la magnitud de re-derivar cada etapa posterior (W1, W3, W4, W6,
+W7, W8) bajo un $\beta$ distinto, la cifra actualmente reproducible de \num{1.0025} no
+se adoptó en esta tesis; se conserva la cifra reportada de \num{1.2005}, consistente con
+tres ejecuciones históricas previas, en espera de recuperar el entorno computacional
+original o de una decisión explícita de re-derivar los resultados de la tesis bajo la
+nueva cifra. Esto se señala en lugar de resolverse en silencio porque incide
+precisamente en el tipo de afirmación de reproducibilidad que la \cref{sec:datos-integridad}
+por lo demás se esmera en documentar.
